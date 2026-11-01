@@ -27,5 +27,6 @@
   "hud.puddlejumper.on.shield": "ACTIVE",
   "hud.puddlejumper.off.shield": "off",
   "key.puddlejumper.target": "Cycle target",
-  "hud.puddlejumper.no_target": "none (Tab)"
+  "hud.puddlejumper.no_target": "none (Tab)",
+  "hud.puddlejumper.hull": "Hull: %s %%"
 }

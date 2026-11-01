@@ -64,8 +64,11 @@ Der Jumper bekommt keinen Rückstoß: Explosionen, Treffer, Spieler, Mobs oder W
 (Schaden nimmt er trotzdem, außer mit aktivem Schild).
 Der Schutzschild legt eine sanft wabernde Energieblase mit verschwommenem Wasser-Effekt um den Jumper
 und macht ihn unzerstörbar; Treffer lassen die Blase kurz aufleuchten.
-Beim Abfeuern einer Drohne wird die Tarnung deaktiviert. Zerstört wird er wie ein Boot, nur deutlich
-robuster; dabei fallen Item und Ladung heraus.
+Beim Abfeuern einer Drohne wird die Tarnung deaktiviert.
+Die Hülle hält 240 Punkte aus (Diamantschwert: ~35 Schläge, ~23 kritische) – auch im Kreativmodus. Ein
+fremder Drohnentreffer kostet 60 %: die erste Drohne übersteht der Jumper knapp, die zweite zerstört ihn.
+Nach 30 s ohne Schaden repariert sich die Hülle langsam selbst (1 Punkt/s). Beim Zerstören fallen Item und
+Ladung heraus (im Kreativmodus nur die Ladung).
 
 ## Projektaufbau
 

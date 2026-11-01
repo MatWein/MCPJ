@@ -189,14 +189,37 @@ public class JumperGameTests {
         h.succeed();
     }
 
+    /** Eine fremde Drohne übersteht der Jumper knapp, die zweite zerstört ihn (Treffer + Explosion zählen einmal). */
+    @GameTest(template = "platform")
+    public static void survivesOneDroneNotTwo(GameTestHelper h) {
+        PuddleJumperEntity target = spawnJumper(h, 12, 2, 12, 0);
+        PuddleJumperEntity attacker = spawnJumper(h, 4, 2, 4, 0);
+        var owner = h.makeMockPlayer();
+        DroneEntity d1 = new DroneEntity(h.getLevel(), owner, attacker, target);
+        target.hurt(h.getLevel().damageSources().thrown(d1, owner), 8f);
+        target.hurt(h.getLevel().damageSources().thrown(d1, owner), 30f); // gleiche Drohne (Explosion) -> ignoriert
+        float after = target.getHealth() / PuddleJumperEntity.MAX_HEALTH;
+        h.assertTrue(target.isAlive(), "Jumper hat die erste Drohne nicht überlebt");
+        h.assertTrue(Math.abs(after - 0.4f) < 0.01f, "Erwarte 40 % Hülle nach einer Drohne, ist " + after);
+        DroneEntity d2 = new DroneEntity(h.getLevel(), owner, attacker, target);
+        target.hurt(h.getLevel().damageSources().thrown(d2, owner), 8f);
+        h.assertTrue(target.isRemoved(), "Zweite Drohne hat den Jumper nicht zerstört");
+        h.succeed();
+    }
+
     /** Genug Schaden zerstört den Jumper; Item und Ladung fallen heraus. */
     @GameTest(template = "platform")
     public static void breaksAndDrops(GameTestHelper h) {
         PuddleJumperEntity j = spawnJumper(h, 12, 2, 12, 0);
         j.getCargo().setItem(5, new ItemStack(Items.GOLD_INGOT, 9));
         DamageSource src = h.getLevel().damageSources().generic();
-        for (int i = 0; i < 10 && j.isAlive(); i++) j.hurt(src, 8f);
+        int hits = 0;
+        while (j.isAlive() && hits < 200) {
+            j.hurt(src, 7f); // Diamantschwert
+            hits++;
+        }
         h.assertTrue(j.isRemoved(), "Jumper wurde nicht zerstört");
+        h.assertTrue(hits >= 20, "Jumper hält zu wenig aus: nur " + hits + " Schläge");
         h.runAfterDelay(1, () -> {
             var items = h.getLevel().getEntitiesOfClass(ItemEntity.class, j.getBoundingBox().inflate(4));
             boolean jumperItem = items.stream().anyMatch(e -> e.getItem().is(ModRegistry.PUDDLE_JUMPER_ITEM.get()));

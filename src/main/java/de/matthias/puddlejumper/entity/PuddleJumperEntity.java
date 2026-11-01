@@ -72,13 +72,19 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     public static final int DRONE_COOLDOWN = 15;
     /** Gondel-Position im Modell (muss zu tools/build_model.py passen). */
     public static final float POD_X = 4.95f, POD_Y = 4.3f, POD_REAR_Z = -12.2f;
-    private static final float BREAK_DAMAGE = 600f;
+    /** Hüllenintegrität: Diamantschwert (7) braucht 35 normale bzw. ~23 kritische Schläge. */
+    public static final float MAX_HEALTH = 240f;
+    /** Ein (fremder) Drohnentreffer kostet 60 % der Hülle: die erste übersteht er knapp, die zweite nicht. */
+    private static final float DRONE_HIT_FRACTION = 0.6f;
+    /** Selbstreparatur: nach 30 s ohne Schaden 1 Punkt pro Sekunde. */
+    private static final int REPAIR_DELAY = 600, REPAIR_INTERVAL = 20;
 
     private static final EntityDataAccessor<Boolean> DATA_CLOAKED = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_SHIELD = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_PODS_OUT = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_HURT_TIME = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> DATA_HURT_DIR = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> DATA_HEALTH = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> DATA_DAMAGE = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.FLOAT);
 
     private static final DustParticleOptions ION = new DustParticleOptions(new Vector3f(0.45f, 0.75f, 1.0f), 0.6f);
@@ -116,6 +122,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private float yawVelocity;
     /** Selbst berechnete Geschwindigkeit; Fremdimpulse (Explosionen, Stöße, Treffer) werden damit verworfen. */
     private Vec3 ownVelocity = Vec3.ZERO;
+    private int ticksSinceDamage = REPAIR_DELAY;
+    @Nullable private java.util.UUID lastDroneHit;
     /** Drehung, die der Pilot noch mitmachen muss (wird in positionRider angewendet -> ruckelfrei). */
     private float riderYawDelta;
     /** Einblend-Animation Schild/Tarnung (0..1) und kurzes Aufleuchten bei Treffern. */
@@ -144,6 +152,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         entityData.define(DATA_HURT_TIME, 0);
         entityData.define(DATA_HURT_DIR, 1);
         entityData.define(DATA_DAMAGE, 0f);
+        entityData.define(DATA_HEALTH, MAX_HEALTH);
     }
 
     public boolean isCloaked() { return entityData.get(DATA_CLOAKED); }
@@ -160,6 +169,9 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     public void setHurtTime(int v) { entityData.set(DATA_HURT_TIME, v); }
     public int getHurtDir() { return entityData.get(DATA_HURT_DIR); }
     public void setHurtDir(int v) { entityData.set(DATA_HURT_DIR, v); }
+    public float getHealth() { return entityData.get(DATA_HEALTH); }
+    public void setHealth(float v) { entityData.set(DATA_HEALTH, Mth.clamp(v, 0f, MAX_HEALTH)); }
+    /** Nur für die Wackel-Animation bei Treffern (klingt ab). */
     public float getDamage() { return entityData.get(DATA_DAMAGE); }
     public void setDamage(float v) { entityData.set(DATA_DAMAGE, v); }
 
@@ -397,6 +409,11 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         lastServerPos = pos;
 
         for (Entity e : getPassengers()) e.resetFallDistance();
+
+        // Antiker-Technik: langsame Selbstreparatur, wenn eine Weile kein Schaden kam
+        if (++ticksSinceDamage >= REPAIR_DELAY && getHealth() < MAX_HEALTH && tickCount % REPAIR_INTERVAL == 0) {
+            setHealth(getHealth() + 1f);
+        }
     }
 
     private static float approach(float cur, float target, float step) {
@@ -610,15 +627,25 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             return false;
         }
 
+        // Drohnen: fester Anteil der Hülle; Treffer + Explosion derselben Drohne zählen nur einmal
+        if (source.getDirectEntity() instanceof DroneEntity drone) {
+            if (drone.getUUID().equals(lastDroneHit)) return false;
+            lastDroneHit = drone.getUUID();
+            float full = MAX_HEALTH * DRONE_HIT_FRACTION;
+            amount = source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION) ? Math.min(full, amount * full / 25f) : full;
+        }
+
         setHurtDir(-getHurtDir());
         setHurtTime(10);
-        markHurt();
-        setDamage(getDamage() + amount * 10f);
+        setDamage(Math.min(200f, getDamage() + amount * 10f));
+        setHealth(getHealth() - amount);
+        ticksSinceDamage = 0;
         gameEvent(GameEvent.ENTITY_DAMAGE, attacker);
         playSound(SoundEvents.ANVIL_LAND, 0.25f, 1.6f);
 
+        // Kreativ: gleiche Haltbarkeit, beim Zerstören fällt aber kein Item heraus (wie bei Booten)
         boolean creative = attacker instanceof Player p && p.getAbilities().instabuild;
-        if (creative || getDamage() > BREAK_DAMAGE) {
+        if (getHealth() <= 0f) {
             if (!creative && level().getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DOENTITYDROPS)) {
                 spawnAtLocation(ModRegistry.PUDDLE_JUMPER_ITEM.get());
             }
@@ -694,6 +721,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     protected void readAdditionalSaveData(CompoundTag tag) {
         setCloaked(tag.getBoolean("Cloaked"));
         setShielded(tag.getBoolean("Shielded"));
+        setHealth(tag.contains("Health") ? tag.getFloat("Health") : MAX_HEALTH);
         cargo.clearContent();
         ListTag list = tag.getList("Cargo", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
@@ -707,6 +735,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putBoolean("Cloaked", isCloaked());
         tag.putBoolean("Shielded", isShielded());
+        tag.putFloat("Health", getHealth());
         ListTag list = new ListTag();
         for (int i = 0; i < cargo.getContainerSize(); i++) {
             ItemStack stack = cargo.getItem(i);

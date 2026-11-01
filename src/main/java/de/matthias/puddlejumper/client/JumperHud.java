@@ -24,7 +24,7 @@ public final class JumperHud {
         Font font = mc.font;
 
         int x = 8;
-        int lines = 8;
+        int lines = 9;
         int y = height - 12 - lines * 11;
         g.fill(x - 4, y - 4, x + 160, y + lines * 11, 0x80102028);
         g.fill(x - 4, y - 4, x - 2, y + lines * 11, 0xFF7FE6F2);
@@ -33,6 +33,9 @@ public final class JumperHud {
         line(g, font, x, y, Component.translatable("hud.puddlejumper.title"), GOLD);
         line(g, font, x, y += 11, Component.translatable("hud.puddlejumper.speed", String.format("%.1f", mps)), TEAL);
         line(g, font, x, y += 11, Component.translatable("hud.puddlejumper.altitude", Mth.floor(j.getY())), TEAL);
+        float hull = j.getHealth() / PuddleJumperEntity.MAX_HEALTH;
+        int hullColor = hull > 0.6f ? TEAL : hull > 0.3f ? GOLD : 0xFF5040;
+        line(g, font, x, y += 11, Component.translatable("hud.puddlejumper.hull", Math.round(hull * 100)), hullColor);
         line(g, font, x, y += 11, state("cloak", j.isCloaked()), j.isCloaked() ? GOLD : GREY);
         line(g, font, x, y += 11, state("shield", j.isShielded()), j.isShielded() ? TEAL : GREY);
         line(g, font, x, y += 11, state("pods", j.podAnim > 0.5f), j.podAnim > 0.5f ? TEAL : GREY);
