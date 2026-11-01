@@ -47,6 +47,7 @@ public final class ClientModEvents {
         event.register(KeyBindings.CLOAK);
         event.register(KeyBindings.SHIELD);
         event.register(KeyBindings.PODS);
+        event.register(KeyBindings.TARGET);
     }
 
     @SubscribeEvent
@@ -57,5 +58,6 @@ public final class ClientModEvents {
     @SubscribeEvent
     public static void registerOverlays(RegisterGuiOverlaysEvent event) {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "jumper_hud", JumperHud::render);
+        event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "jumper_targets", TargetMarkers::render);
     }
 }

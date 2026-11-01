@@ -27,7 +27,7 @@ public class JumperEngineSound extends AbstractTickableSoundInstance {
 
     @Override
     public void tick() {
-        if (jumper.isRemoved() || !jumper.isVehicle()) {
+        if (jumper.isRemoved() || !jumper.enginesRunning()) {
             volume -= 0.05f;
             if (volume <= 0f) stop();
             return;
@@ -36,7 +36,7 @@ public class JumperEngineSound extends AbstractTickableSoundInstance {
         y = jumper.getY() + 1.0;
         z = jumper.getZ();
         float speed = (float) Math.min(jumper.clientSpeed, 1.3);
-        float target = 0.35f + speed * 0.5f;
+        float target = (jumper.isVehicle() ? 0.35f : 0.25f) + speed * 0.5f;
         if (jumper.isCloaked()) target *= 0.5f;
         volume += (target - volume) * 0.1f;
         pitch = 0.75f + speed * 0.4f;

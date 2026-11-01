@@ -30,7 +30,9 @@ import java.util.UUID;
 public class DroneEntity extends Projectile {
     private static final int MAX_LIFE = 320;
     private static final double MAX_SPEED = 1.1;
-    private static final float DAMAGE = 16f;
+    private static final float DAMAGE = 8f;
+    /** Explosionsstärke beim Einschlag (Creeper: 3). Blöcke nur bei aktivem mobGriefing. */
+    private static final float EXPLOSION_POWER = 2.0f;
     private static final DustParticleOptions TRAIL = new DustParticleOptions(new Vector3f(1.0f, 0.78f, 0.25f), 1.1f);
 
     private int life;
@@ -59,7 +61,7 @@ public class DroneEntity extends Projectile {
 
         if (!level().isClientSide) {
             if (++life > MAX_LIFE) {
-                burst(position());
+                fizzle(position());
                 discard();
                 return;
             }
@@ -110,11 +112,16 @@ public class DroneEntity extends Projectile {
 
     @Override
     protected boolean canHitEntity(Entity e) {
-        if (!super.canHitEntity(e) || e instanceof DroneEntity) return false;
-        if (e instanceof PuddleJumperEntity j && j.getUUID().equals(jumperId)) return false;
-        if (e instanceof PuddleJumperPart p && p.getParent().getUUID().equals(jumperId)) return false;
+        return super.canHitEntity(e) && !(e instanceof DroneEntity) && !isFriendly(e);
+    }
+
+    /** Eigener Jumper (inkl. Bug/Heck), Pilot und Mitflieger - werden weder getroffen noch von der Explosion verletzt. */
+    public boolean isFriendly(Entity e) {
+        if (e instanceof PuddleJumperEntity j && j.getUUID().equals(jumperId)) return true;
+        if (e instanceof PuddleJumperPart p && p.getParent().getUUID().equals(jumperId)) return true;
+        if (e.getVehicle() instanceof PuddleJumperEntity j && j.getUUID().equals(jumperId)) return true;
         Entity owner = getOwner();
-        return owner == null || !e.isPassengerOfSameVehicle(owner);
+        return owner != null && (e == owner || e.isPassengerOfSameVehicle(owner));
     }
 
     @Override
@@ -123,23 +130,31 @@ public class DroneEntity extends Projectile {
         hit.hurt(damageSources().thrown(this, getOwner()), DAMAGE);
         Vec3 push = getDeltaMovement().normalize().scale(0.6);
         hit.push(push.x, 0.25, push.z);
-        burst(result.getLocation());
+        explode(result.getLocation());
         discard();
     }
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
-        burst(result.getLocation());
+        explode(result.getLocation());
         discard();
     }
 
-    private void burst(Vec3 at) {
+    /** Echte Explosion (wie Creeper, etwas kleiner) plus goldene Funken. */
+    private void explode(Vec3 at) {
         if (level() instanceof ServerLevel sl) {
-            sl.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y, at.z, 1, 0, 0, 0, 0);
-            sl.sendParticles(TRAIL, at.x, at.y, at.z, 20, 0.4, 0.4, 0.4, 0.05);
-            sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 12, 0.3, 0.3, 0.3, 0.3);
-            sl.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_EXPLODE, SoundSource.NEUTRAL, 0.6f, 1.7f);
+            sl.explode(this, at.x, at.y, at.z, EXPLOSION_POWER, Level.ExplosionInteraction.MOB);
+            sl.sendParticles(TRAIL, at.x, at.y, at.z, 24, 0.5, 0.5, 0.5, 0.05);
+            sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 16, 0.4, 0.4, 0.4, 0.4);
+        }
+    }
+
+    /** Lebensdauer abgelaufen: verpufft ohne Explosion. */
+    private void fizzle(Vec3 at) {
+        if (level() instanceof ServerLevel sl) {
+            sl.sendParticles(TRAIL, at.x, at.y, at.z, 12, 0.3, 0.3, 0.3, 0.03);
+            sl.playSound(null, at.x, at.y, at.z, SoundEvents.FIRE_EXTINGUISH, SoundSource.NEUTRAL, 0.4f, 1.8f);
         }
     }
 

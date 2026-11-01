@@ -25,5 +25,7 @@
   "key.puddlejumper.shield": "Schutzschild umschalten",
   "hud.puddlejumper.shield": "Schild: %s",
   "hud.puddlejumper.on.shield": "AKTIV",
-  "hud.puddlejumper.off.shield": "aus"
+  "hud.puddlejumper.off.shield": "aus",
+  "key.puddlejumper.target": "Ziel wechseln",
+  "hud.puddlejumper.no_target": "keins (Tab)"
 }

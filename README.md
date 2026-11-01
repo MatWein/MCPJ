@@ -39,13 +39,14 @@ Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
 | Drehen | `A` / `D` |
 | Steigen / Sinken | `Leertaste` / `Strg` (Sprint-Taste) |
 | Umschauen | Maus (bewegt nur die Kamera; die Kamera dreht beim Kurven mit) |
-| Drohne abfeuern | Linksklick (zielt auf anvisiertes Wesen, sonst nächster Feind vor dem Schiff) |
+| Ziel wechseln | `Tab` (nächstgelegenes zuerst, dann immer das nächstgelegene noch nicht gewählte; nach dem letzten: kein Ziel; nach 3 s Pause beginnt es wieder beim nächsten) |
+| Drohne abfeuern | Linksklick (fliegt zum gewählten Ziel, egal wohin man schaut; ohne Ziel zum nächsten Feind vor dem Schiff) |
 | Tarnung an/aus | `C` |
 | Schutzschild an/aus | `V` |
 | Antriebsgondeln aus/ein | `G` (sonst automatisch: gelandet eingefahren, in der Luft ausgefahren; beim Feuern immer aus) |
 | Aussteigen | `Shift` |
 
-Die Tasten `C`, `V` und `G` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
+Die Tasten `C`, `V`, `G` und `Tab` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
 
 Der Jumper ist träge: Er beschleunigt und dreht gemächlich und rollt aus. Ohne Eingabe bremst er ab und
 schwebt auf der Stelle – auch wenn man in der Luft aussteigt, bleibt er dort stehen. Die Düsen leuchten,
@@ -55,6 +56,12 @@ vorherige Ansicht.
 Getarnt ist das Schiff für andere unsichtbar, nur eine sehr dezente Energieblase verrät es; es bleibt
 aber fest (man kann nicht hindurchlaufen). Der Pilot sieht sein Schiff als schwachen Leuchtumriss.
 Mobs verlieren den Piloten aus den Augen.
+Im Jumper werden alle Lebewesen und andere (ungetarnte) Puddle Jumper in 64 Blöcken Umkreis dezent
+markiert – Feinde rot, Jumper cyan, sonst weiß; das gewählte Ziel kräftig mit Name und Entfernung. Drohnen explodieren beim Einschlag (etwas kleiner als ein Creeper,
+Blockschaden nur bei aktivem `mobGriefing`); der eigene Jumper und Pilot bleiben verschont.
+Das Triebwerk ist auch von außen zu hören, solange es läuft (in der Luft oder mit Pilot).
+Der Jumper bekommt keinen Rückstoß: Explosionen, Treffer, Spieler, Mobs oder Wasserströmung verschieben ihn nicht
+(Schaden nimmt er trotzdem, außer mit aktivem Schild).
 Der Schutzschild legt eine sanft wabernde Energieblase mit verschwommenem Wasser-Effekt um den Jumper
 und macht ihn unzerstörbar; Treffer lassen die Blase kurz aufleuchten.
 Beim Abfeuern einer Drohne wird die Tarnung deaktiviert. Zerstört wird er wie ein Boot, nur deutlich
@@ -63,7 +70,7 @@ robuster; dabei fallen Item und Ladung heraus.
 ## Projektaufbau
 
 ```
-assets/                               Original-Vorlage (OBJ, Textur, Sound)
+assets/                               Original-Vorlage (OBJ + Textur), Basis für tools/build_model.py
 tools/build_model.py                  erzeugt das verbesserte Modell + Texturatlas + Drohne + Item-Icon
 tools/preview.py                      Software-Renderer für Vorschaubilder (python3 tools/preview.py out.png [--open])
 tools/make_test_structure.py          GameTest-Plattform
@@ -83,7 +90,7 @@ src/main/java/de/matthias/puddlejumper/
 
 - **Antriebsgondeln** links/rechts (halbe Schiffslänge, mit Lamellen), je zwei blaue Düsenfenster,
   Ausleger und gelbe Drohnen-Ports
-- **Textur** in doppelter Auflösung im Oliv-Khaki der Serie (Vorlage: `assets/bilder/`), mit eingravierten
+- **Textur** in doppelter Auflösung im Oliv-Khaki der Serie, mit eingravierten
   Paneellinien und kupferfarbenem Fensterrahmen – Rumpf, Unterseite und Gondeln einheitlich
 - **Drohne** (goldener, leuchtender Körper mit Schweifen) und ein gerendertes Item-Icon
 

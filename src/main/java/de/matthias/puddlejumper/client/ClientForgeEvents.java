@@ -10,6 +10,11 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
+import org.lwjgl.glfw.GLFW;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.ViewportEvent;
@@ -46,6 +51,7 @@ public final class ClientForgeEvents {
         if (event.phase != TickEvent.Phase.END) return;
         PuddleJumperEntity jumper = ClientState.pilotedJumper();
         if (Minecraft.getInstance().player != null) updateCamera(jumper != null);
+        while (KeyBindings.TARGET.consumeClick()) {} // wird über InputEvent.Key behandelt
         if (jumper == null) {
             ClientState.target = null;
             // Tastendrücke außerhalb des Jumpers verwerfen
@@ -57,7 +63,27 @@ public final class ClientForgeEvents {
         while (KeyBindings.CLOAK.consumeClick()) send(JumperActionPacket.Action.CLOAK, -1);
         while (KeyBindings.SHIELD.consumeClick()) send(JumperActionPacket.Action.SHIELD, -1);
         while (KeyBindings.PODS.consumeClick()) send(JumperActionPacket.Action.PODS, -1);
-        ClientState.updateTarget(jumper);
+        ClientState.validateTarget(jumper);
+    }
+
+    /** Tab im Jumper: Ziel durchschalten (eigener Tasten-Kontext, außerhalb bleibt Tab die Spielerliste). */
+    @SubscribeEvent
+    public static void onKey(InputEvent.Key event) {
+        if (event.getAction() != GLFW.GLFW_PRESS || Minecraft.getInstance().screen != null) return;
+        PuddleJumperEntity jumper = ClientState.pilotedJumper();
+        if (jumper != null && KeyBindings.TARGET.getKey().getValue() == event.getKey()) {
+            ClientState.cycleTarget(jumper);
+            Minecraft.getInstance().getSoundManager().play(
+                    SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.get(), ClientState.target != null ? 1.6f : 1.0f, 0.25f));
+        }
+    }
+
+    /** Im Jumper liegt Tab auf der Zielerfassung - Spielerliste dort ausblenden. */
+    @SubscribeEvent
+    public static void onRenderOverlay(RenderGuiOverlayEvent.Pre event) {
+        if (event.getOverlay().id().equals(VanillaGuiOverlay.PLAYER_LIST.id()) && ClientState.pilotedJumper() != null) {
+            event.setCanceled(true);
+        }
     }
 
     /** Linksklick im Jumper = Drohne abfeuern statt Angriff. */

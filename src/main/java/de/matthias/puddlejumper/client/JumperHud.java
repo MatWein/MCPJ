@@ -24,9 +24,9 @@ public final class JumperHud {
         Font font = mc.font;
 
         int x = 8;
-        int lines = 7;
+        int lines = 8;
         int y = height - 12 - lines * 11;
-        g.fill(x - 4, y - 4, x + 150, y + lines * 11, 0x80102028);
+        g.fill(x - 4, y - 4, x + 160, y + lines * 11, 0x80102028);
         g.fill(x - 4, y - 4, x - 2, y + lines * 11, 0xFF7FE6F2);
 
         double mps = j.clientSpeed * 20.0;
@@ -42,13 +42,10 @@ public final class JumperHud {
         Component drone = Component.translatable("hud.puddlejumper.drones",
                 Component.translatable(ready ? "hud.puddlejumper.ready" : "hud.puddlejumper.loading"));
         line(g, font, x, y += 11, drone, ready ? GOLD : GREY);
-
-        // Zielanzeige mittig unter dem Fadenkreuz
-        if (ClientState.target != null) {
-            Component t = Component.translatable("hud.puddlejumper.target", ClientState.target.getDisplayName());
-            int w = font.width(t);
-            g.drawString(font, t, (width - w) / 2, height / 2 + 12, GOLD, true);
-        }
+        Component target = ClientState.target != null ? ClientState.target.getDisplayName()
+                : Component.translatable("hud.puddlejumper.no_target");
+        int targetColor = ClientState.target != null ? TargetMarkers.colorFor(ClientState.target, true) & 0xFFFFFF : GREY;
+        line(g, font, x, y += 11, Component.translatable("hud.puddlejumper.target", target), targetColor);
     }
 
     private static Component state(String key, boolean on) {

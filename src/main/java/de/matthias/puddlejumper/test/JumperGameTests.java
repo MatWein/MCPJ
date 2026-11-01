@@ -56,7 +56,11 @@ public class JumperGameTests {
                 AABB box = zombie.getBoundingBox().move(j.getX() - zombie.getX(), j.getY() - zombie.getY(), j.getZ() + off - zombie.getZ());
                 h.assertTrue(!h.getLevel().noCollision(zombie, box), "Kein Widerstand bei Offset " + off);
             }
-            h.assertTrue(h.getLevel().noCollision(j, j.getBoundingBox()), "Jumper kollidiert mit sich selbst");
+            // eigene Bug-/Heck-Teile dürfen den Jumper nicht blockieren (andere Entities hier ignorieren:
+            // das Test-Framework kann mehrere Tests nacheinander auf derselben Fläche ausführen)
+            for (var part : j.getParts()) {
+                h.assertTrue(!j.canCollideWith(part), "Jumper kollidiert mit eigenem Teil");
+            }
             h.succeed();
         });
     }
@@ -115,6 +119,60 @@ public class JumperGameTests {
         h.succeedWhen(() -> {
             h.assertTrue(zombie.getHealth() < startHealth || !zombie.isAlive(), "Zombie wurde nicht getroffen");
             h.assertTrue(j.getDamage() == 0, "Drohne hat den eigenen Jumper beschädigt");
+        });
+    }
+
+    /** Andere Jumper sind gültige Ziele: eine Drohne von A trifft B, A bleibt heil. */
+    @GameTest(template = "platform", timeoutTicks = 300)
+    public static void droneHitsOtherJumper(GameTestHelper h) {
+        PuddleJumperEntity a = spawnJumper(h, 4, 2, 4, 0);
+        PuddleJumperEntity b = spawnJumper(h, 18, 2, 18, 90f);
+        h.assertTrue(a.isValidTarget(b), "Anderer Jumper sollte erfassbar sein");
+        h.assertTrue(!a.isValidTarget(a), "Eigener Jumper darf kein Ziel sein");
+        h.runAfterDelay(2, () -> {
+            DroneEntity drone = new DroneEntity(h.getLevel(), h.makeMockPlayer(), a, b);
+            Vec3 start = a.position().add(0, 2.5, 0);
+            drone.setPos(start.x, start.y, start.z);
+            drone.setDeltaMovement(new Vec3(0, 0.3, 0.4));
+            h.getLevel().addFreshEntity(drone);
+        });
+        h.succeedWhen(() -> {
+            h.assertTrue(b.getDamage() > 0 || !b.isAlive(), "Ziel-Jumper wurde nicht getroffen");
+            h.assertTrue(a.getDamage() == 0, "Eigener Jumper wurde beschädigt");
+        });
+    }
+
+    /** Die Explosion einer eigenen Drohne verschont den Jumper, trifft aber Mobs daneben. */
+    @GameTest(template = "platform")
+    public static void droneExplosionSparesOwnJumper(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 2, 12, 0);
+        Zombie zombie = h.spawn(EntityType.ZOMBIE, new BlockPos(12, 2, 17));
+        zombie.setNoAi(true);
+        float startHealth = zombie.getHealth();
+        DroneEntity drone = new DroneEntity(h.getLevel(), h.makeMockPlayer(), j, null);
+        Vec3 at = j.position().add(0, 1, 4.2);
+        drone.setPos(at.x, at.y, at.z);
+        h.getLevel().addFreshEntity(drone);
+        h.getLevel().explode(drone, at.x, at.y, at.z, 2.0f, net.minecraft.world.level.Level.ExplosionInteraction.NONE);
+        h.assertTrue(j.isAlive() && j.getDamage() == 0, "Eigene Drohnen-Explosion hat den Jumper beschädigt: " + j.getDamage());
+        h.assertTrue(zombie.getHealth() < startHealth, "Explosion hat den Zombie nicht getroffen");
+        h.succeed();
+    }
+
+    /** Kein Rückstoß: Explosion und Stöße verschieben einen schwebenden Jumper nicht. */
+    @GameTest(template = "platform", timeoutTicks = 100)
+    public static void noKnockback(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 5, 12, 0);
+        h.runAfterDelay(2, () -> {
+            Vec3 start = j.position();
+            h.getLevel().explode(null, j.getX() + 2, j.getY() + 1, j.getZ(), 3.0f, net.minecraft.world.level.Level.ExplosionInteraction.NONE);
+            j.push(2, 1, 2);
+            j.setDeltaMovement(j.getDeltaMovement().add(3, 0, 3)); // wie Explosions-Rückstoß
+            h.runAfterDelay(20, () -> {
+                h.assertTrue(j.position().distanceTo(start) < 0.01, "Jumper wurde verschoben: " + j.position().subtract(start));
+                h.assertTrue(j.getDamage() > 0, "Explosion sollte trotzdem Schaden machen");
+                h.succeed();
+            });
         });
     }
 

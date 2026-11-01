@@ -114,6 +114,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     /** 0..1, wie stark die Düsen glühen (schwebend/fliegend an, gelandet aus). */
     public float engineGlow, engineGlowO;
     private float yawVelocity;
+    /** Selbst berechnete Geschwindigkeit; Fremdimpulse (Explosionen, Stöße, Treffer) werden damit verworfen. */
+    private Vec3 ownVelocity = Vec3.ZERO;
     /** Drehung, die der Pilot noch mitmachen muss (wird in positionRider angewendet -> ruckelfrei). */
     private float riderYawDelta;
     /** Einblend-Animation Schild/Tarnung (0..1) und kurzes Aufleuchten bei Treffern. */
@@ -149,6 +151,11 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     public boolean isShielded() { return entityData.get(DATA_SHIELD); }
     public void setShielded(boolean v) { entityData.set(DATA_SHIELD, v); }
     public boolean isPodsOut() { return entityData.get(DATA_PODS_OUT); }
+
+    /** Triebwerke laufen: in der Luft (auch ohne Pilot) oder mit Pilot an Bord. */
+    public boolean enginesRunning() {
+        return isVehicle() || !onGround();
+    }
     public int getHurtTime() { return entityData.get(DATA_HURT_TIME); }
     public void setHurtTime(int v) { entityData.set(DATA_HURT_TIME, v); }
     public int getHurtDir() { return entityData.get(DATA_HURT_DIR); }
@@ -217,6 +224,18 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         return new AABB(getX() + f.x - hw, getY(), getZ() + f.z - hw, getX() + f.x + hw, getY() + HEIGHT, getZ() + f.z + hw);
     }
 
+    /** Hitbox des ganzen Schiffs (Bug, Mitte, Heck). */
+    public AABB fullBoundingBox() {
+        return getBoundingBox().minmax(segmentBox(SEGMENT_OFFSET)).minmax(segmentBox(-SEGMENT_OFFSET));
+    }
+
+    /** Kann dieser Jumper das Ziel erfassen? Lebewesen und andere (ungetarnte) Jumper, nicht sich selbst/Insassen. */
+    public boolean isValidTarget(@Nullable Entity e) {
+        if (e == null || !e.isAlive() || e.isRemoved() || e.isSpectator() || e == this || hasPassenger(e)) return false;
+        if (e instanceof PuddleJumperEntity other) return !other.isCloaked();
+        return e instanceof LivingEntity;
+    }
+
     @Override
     public AABB getBoundingBoxForCulling() {
         return getBoundingBox().inflate(4.5, 1.0, 4.5);
@@ -231,6 +250,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
         super.tick();
         tickLerp();
+        setDeltaMovement(ownVelocity); // keinerlei Rückstoß von außen
 
         if (isControlledByLocalInstance()) {
             if (getControllingPassenger() instanceof Player pilot) {
@@ -239,8 +259,10 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
                 idlePhysics();
             }
             moveWithSegments(getDeltaMovement());
+            ownVelocity = getDeltaMovement();
         } else {
             setDeltaMovement(Vec3.ZERO);
+            ownVelocity = Vec3.ZERO;
         }
 
         updateParts();
@@ -542,7 +564,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         entityData.set(DATA_PODS_OUT, true);
 
         Entity target = targetId >= 0 ? level().getEntity(targetId) : null;
-        if (!(target instanceof LivingEntity le) || !le.isAlive() || target.distanceToSqr(this) > 96 * 96 || hasPassenger(target)) {
+        if (!isValidTarget(target) || target.distanceToSqr(this) > 96 * 96) {
             target = findAutoTarget();
         }
 
@@ -580,7 +602,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         if (level().isClientSide || isRemoved()) return true;
         Entity attacker = source.getEntity();
         if (attacker != null && hasPassenger(attacker)) return false;
-        if (source.getDirectEntity() instanceof DroneEntity) return false;
+        if (source.getDirectEntity() instanceof DroneEntity drone && drone.isFriendly(this)) return false;
         if (isShielded()) {
             // Schild: unzerstörbar, Treffer lässt die Blase kurz aufleuchten
             level().broadcastEntityEvent(this, EVENT_SHIELD_HIT);
@@ -629,6 +651,18 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     @Override
     public boolean isPushable() {
+        return false;
+    }
+
+    /** Kein Rückstoß: weder Spieler/Mobs noch Treffer können den Jumper wegschieben. */
+    @Override
+    public void push(double x, double y, double z) {}
+
+    @Override
+    public void push(Entity other) {}
+
+    @Override
+    public boolean isPushedByFluid() {
         return false;
     }
 

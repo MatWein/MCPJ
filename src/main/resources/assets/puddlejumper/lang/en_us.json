@@ -25,5 +25,7 @@
   "key.puddlejumper.shield": "Toggle shield",
   "hud.puddlejumper.shield": "Shield: %s",
   "hud.puddlejumper.on.shield": "ACTIVE",
-  "hud.puddlejumper.off.shield": "off"
+  "hud.puddlejumper.off.shield": "off",
+  "key.puddlejumper.target": "Cycle target",
+  "hud.puddlejumper.no_target": "none (Tab)"
 }
