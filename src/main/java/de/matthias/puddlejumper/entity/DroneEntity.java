@@ -66,14 +66,16 @@ public class DroneEntity extends Projectile {
                 return;
             }
             if ((target == null || !target.isAlive()) && life % 5 == 0) target = acquireTarget(v);
-            double speed = Math.min(MAX_SPEED, v.length() + 0.035);
+            // unter Wasser: halbe Geschwindigkeit, träger
+            boolean water = isInWater();
+            double speed = Math.min(water ? MAX_SPEED * 0.5 : MAX_SPEED, v.length() + (water ? 0.015 : 0.035));
             Vec3 dir = v.lengthSqr() > 1.0e-6 ? v.normalize() : new Vec3(0, 0, 1);
             if (target != null && target.isAlive()) {
                 Vec3 delta = target.getBoundingBox().getCenter().subtract(position());
                 Vec3 to = delta.normalize();
                 // träge Lenkung auf Distanz, im Nahbereich stärker (sonst kreist die Drohne ums Ziel)
                 double near = Mth.clamp(1.0 - delta.length() / 10.0, 0.0, 1.0);
-                double turn = life < 8 ? 0.04 : 0.12 + 0.35 * near;
+                double turn = (life < 8 ? 0.04 : 0.12 + 0.35 * near) * (water ? 0.6 : 1.0);
                 dir = dir.lerp(to, turn).normalize();
                 // in engen Kurven abbremsen
                 speed *= 0.75 + 0.25 * Math.max(0, dir.dot(to));
@@ -91,7 +93,9 @@ public class DroneEntity extends Projectile {
                 double t = random.nextDouble();
                 level().addParticle(TRAIL, getX() - v.x * t, getY() + 0.15 - v.y * t, getZ() - v.z * t, 0, 0, 0);
             }
-            if (random.nextInt(3) == 0) {
+            if (isInWater()) {
+                level().addParticle(ParticleTypes.BUBBLE, getX(), getY() + 0.15, getZ(), -v.x * 0.2, 0.05, -v.z * 0.2);
+            } else if (random.nextInt(3) == 0) {
                 level().addParticle(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 0.15, getZ(), 0, 0, 0);
             }
         }

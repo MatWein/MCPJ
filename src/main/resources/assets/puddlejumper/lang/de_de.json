@@ -28,5 +28,9 @@
   "hud.puddlejumper.off.shield": "aus",
   "key.puddlejumper.target": "Ziel wechseln",
   "hud.puddlejumper.no_target": "keins (Tab)",
-  "hud.puddlejumper.hull": "Hülle: %s %%"
+  "hud.puddlejumper.hull": "Hülle: %s %%",
+  "key.puddlejumper.strafe_left": "Seitlich links",
+  "key.puddlejumper.strafe_right": "Seitlich rechts",
+  "key.puddlejumper.cargo": "Laderaum öffnen",
+  "hud.puddlejumper.water_warning": "  WASSER!"
 }

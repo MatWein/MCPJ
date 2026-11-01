@@ -48,10 +48,21 @@ public final class ClientForgeEvents {
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+        if (event.phase == TickEvent.Phase.START) {
+            // Im Jumper liegen Q/E auf Seitwärtsflug: Wegwerfen und Inventar unterdrücken (vor Vanilla-Auswertung)
+            if (ClientState.pilotedJumper() != null) {
+                Minecraft mc = Minecraft.getInstance();
+                if (KeyBindings.STRAFE_LEFT.getKey().equals(mc.options.keyDrop.getKey())) while (mc.options.keyDrop.consumeClick()) {}
+                if (KeyBindings.STRAFE_RIGHT.getKey().equals(mc.options.keyInventory.getKey())) while (mc.options.keyInventory.consumeClick()) {}
+            }
+            return;
+        }
         PuddleJumperEntity jumper = ClientState.pilotedJumper();
         if (Minecraft.getInstance().player != null) updateCamera(jumper != null);
         while (KeyBindings.TARGET.consumeClick()) {} // wird über InputEvent.Key behandelt
+        while (KeyBindings.CARGO.consumeClick()) {}
+        while (KeyBindings.STRAFE_LEFT.consumeClick()) {}
+        while (KeyBindings.STRAFE_RIGHT.consumeClick()) {}
         if (jumper == null) {
             ClientState.target = null;
             // Tastendrücke außerhalb des Jumpers verwerfen
@@ -71,6 +82,10 @@ public final class ClientForgeEvents {
     public static void onKey(InputEvent.Key event) {
         if (event.getAction() != GLFW.GLFW_PRESS || Minecraft.getInstance().screen != null) return;
         PuddleJumperEntity jumper = ClientState.pilotedJumper();
+        if (jumper != null && KeyBindings.CARGO.getKey().getValue() == event.getKey()) {
+            Minecraft.getInstance().player.sendOpenInventory(); // Server öffnet den Laderaum (HasCustomInventoryScreen)
+            return;
+        }
         if (jumper != null && KeyBindings.TARGET.getKey().getValue() == event.getKey()) {
             ClientState.cycleTarget(jumper);
             Minecraft.getInstance().getSoundManager().play(

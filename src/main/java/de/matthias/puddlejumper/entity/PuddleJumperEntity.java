@@ -76,8 +76,9 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     public static final float MAX_HEALTH = 240f;
     /** Ein (fremder) Drohnentreffer kostet 60 % der Hülle: die erste übersteht er knapp, die zweite nicht. */
     private static final float DRONE_HIT_FRACTION = 0.6f;
-    /** Selbstreparatur: nach 30 s ohne Schaden 1 Punkt pro Sekunde. */
-    private static final int REPAIR_DELAY = 600, REPAIR_INTERVAL = 20;
+    /** Unter Wasser: Faktor für Schub/Drehung, eigene Dämpfung, Hüllenschaden pro Sekunde (ohne Schild). */
+    private static final double WATER_ACCEL = 0.5, WATER_DRAG_THRUST = 0.955, WATER_DRAG_IDLE = 0.92;
+    private static final float WATER_DAMAGE = 1f;
 
     private static final EntityDataAccessor<Boolean> DATA_CLOAKED = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_SHIELD = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
@@ -122,7 +123,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private float yawVelocity;
     /** Selbst berechnete Geschwindigkeit; Fremdimpulse (Explosionen, Stöße, Treffer) werden damit verworfen. */
     private Vec3 ownVelocity = Vec3.ZERO;
-    private int ticksSinceDamage = REPAIR_DELAY;
     @Nullable private java.util.UUID lastDroneHit;
     /** Drehung, die der Pilot noch mitmachen muss (wird in positionRider angewendet -> ruckelfrei). */
     private float riderYawDelta;
@@ -293,27 +293,36 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
      */
     private void flyControlled(Player pilot) {
         FlightInput in = FlightInput.source.get();
+        boolean water = isSubmerged();
+        double accel = water ? ACCEL * WATER_ACCEL : ACCEL;
 
-        yawVelocity = yawVelocity * TURN_DRAG - in.turn() * TURN_ACCEL; // A (turn > 0) = links
+        yawVelocity = yawVelocity * TURN_DRAG - in.turn() * TURN_ACCEL * (water ? 0.5f : 1f); // A (turn > 0) = links
         if (in.turn() == 0 && Math.abs(yawVelocity) < 0.02f) yawVelocity = 0;
         setYRot(getYRot() + yawVelocity);
         riderYawDelta += yawVelocity;
 
-        double fwdAccel = in.forward() > 0 ? ACCEL : ACCEL * 0.6;
-        Vec3 acc = forward().scale(in.forward() * fwdAccel).add(0, in.vertical() * ACCEL * 0.8, 0);
+        double fwdAccel = in.forward() > 0 ? accel : accel * 0.6;
+        Vec3 acc = forward().scale(in.forward() * fwdAccel)
+                .add(left().scale(in.strafe() * accel * 0.7))          // Q/E: seitlich ohne Drehung
+                .add(0, in.vertical() * accel * 0.8, 0);
 
-        boolean idle = in.forward() == 0 && in.vertical() == 0;
-        Vec3 v = getDeltaMovement().scale(idle ? DRAG_IDLE : DRAG_THRUST).add(acc);
+        boolean idle = in.forward() == 0 && in.vertical() == 0 && in.strafe() == 0;
+        double drag = water ? (idle ? WATER_DRAG_IDLE : WATER_DRAG_THRUST) : (idle ? DRAG_IDLE : DRAG_THRUST);
+        Vec3 v = getDeltaMovement().scale(drag).add(acc);
         if (v.lengthSqr() > MAX_SPEED * MAX_SPEED) v = v.normalize().scale(MAX_SPEED);
         if (idle && v.lengthSqr() < 1.0e-5) v = Vec3.ZERO;
         setDeltaMovement(v);
     }
 
-    /** Ohne Pilot: Schwebe-Modus. Der Jumper rollt aus und bleibt in der Luft stehen. */
+    /** Ohne Pilot: Schwebe-Modus. Der Jumper rollt aus und bleibt stehen - in der Luft wie unter Wasser. */
     private void idlePhysics() {
-        Vec3 v = getDeltaMovement().scale(onGround() ? 0.6 : DRAG_IDLE);
-        if (isInWater()) v = v.add(0, 0.03, 0);
+        Vec3 v = getDeltaMovement().scale(onGround() ? 0.6 : isSubmerged() ? WATER_DRAG_IDLE : DRAG_IDLE);
         setDeltaMovement(v.lengthSqr() < 1.0e-5 ? Vec3.ZERO : v);
+    }
+
+    /** Mindestens zur Hälfte unter Wasser. */
+    public boolean isSubmerged() {
+        return getFluidHeight(net.minecraft.tags.FluidTags.WATER) > HEIGHT * 0.5;
     }
 
     /** Bewegung mit Kollision aller drei Segmente (Mitte über move(), Bug/Heck vorab geprüft). */
@@ -410,9 +419,13 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
         for (Entity e : getPassengers()) e.resetFallDistance();
 
-        // Antiker-Technik: langsame Selbstreparatur, wenn eine Weile kein Schaden kam
-        if (++ticksSinceDamage >= REPAIR_DELAY && getHealth() < MAX_HEALTH && tickCount % REPAIR_INTERVAL == 0) {
-            setHealth(getHealth() + 1f);
+        // Wassereinbruch: ohne Schild 1 Hüllenpunkt pro Sekunde
+        if (tickCount % 20 == 0 && isSubmerged() && !isShielded()) {
+            applyHullDamage(WATER_DAMAGE, null, false);
+            if (level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                Vec3 p = position().add(0, HEIGHT * 0.7, 0);
+                sl.sendParticles(ParticleTypes.BUBBLE, p.x, p.y, p.z, 12, 1.2, 0.4, 1.2, 0.05);
+            }
         }
     }
 
@@ -635,15 +648,21 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             amount = source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION) ? Math.min(full, amount * full / 25f) : full;
         }
 
-        setHurtDir(-getHurtDir());
-        setHurtTime(10);
-        setDamage(Math.min(200f, getDamage() + amount * 10f));
-        setHealth(getHealth() - amount);
-        ticksSinceDamage = 0;
-        gameEvent(GameEvent.ENTITY_DAMAGE, attacker);
-        playSound(SoundEvents.ANVIL_LAND, 0.25f, 1.6f);
+        applyHullDamage(amount, attacker, true);
+        return true;
+    }
 
-        // Kreativ: gleiche Haltbarkeit, beim Zerstören fällt aber kein Item heraus (wie bei Booten)
+    /** Hülle beschädigen; bei 0 zerstören (Item + Ladung fallen heraus, Kreativ: nur Ladung). */
+    private void applyHullDamage(float amount, @Nullable Entity attacker, boolean feedback) {
+        if (feedback) {
+            setHurtDir(-getHurtDir());
+            setHurtTime(10);
+            setDamage(Math.min(200f, getDamage() + amount * 10f));
+            playSound(SoundEvents.ANVIL_LAND, 0.25f, 1.6f);
+        }
+        setHealth(getHealth() - amount);
+        gameEvent(GameEvent.ENTITY_DAMAGE, attacker);
+
         boolean creative = attacker instanceof Player p && p.getAbilities().instabuild;
         if (getHealth() <= 0f) {
             if (!creative && level().getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DOENTITYDROPS)) {
@@ -652,7 +671,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             Containers.dropContents(level(), this, cargo);
             discard();
         }
-        return true;
     }
 
     @Override

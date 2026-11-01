@@ -176,6 +176,39 @@ public class JumperGameTests {
         });
     }
 
+    private static void fillWater(GameTestHelper h) {
+        for (int x = 8; x <= 16; x++)
+            for (int y = 2; y <= 6; y++)
+                for (int z = 6; z <= 18; z++)
+                    h.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.WATER);
+    }
+
+    /** Unter Wasser verliert der Jumper ohne Schild Hülle und treibt nicht auf. */
+    @GameTest(template = "platform", timeoutTicks = 120)
+    public static void waterDamagesHull(GameTestHelper h) {
+        fillWater(h);
+        PuddleJumperEntity j = spawnJumper(h, 12, 3, 12, 0);
+        h.runAfterDelay(50, () -> {
+            h.assertTrue(j.isSubmerged(), "Jumper sollte untergetaucht sein");
+            h.assertTrue(j.getHealth() < PuddleJumperEntity.MAX_HEALTH, "Kein Wasserschaden: " + j.getHealth());
+            h.assertTrue(Math.abs(j.getY() - h.absoluteVec(new Vec3(0, 3, 0)).y) < 0.01, "Jumper ist aufgetrieben: y=" + j.getY());
+            h.succeed();
+        });
+    }
+
+    /** Mit aktivem Schild nimmt der Jumper unter Wasser keinen Schaden. */
+    @GameTest(template = "platform", timeoutTicks = 120)
+    public static void shieldBlocksWater(GameTestHelper h) {
+        fillWater(h);
+        PuddleJumperEntity j = spawnJumper(h, 12, 3, 12, 0);
+        j.setShielded(true);
+        h.runAfterDelay(50, () -> {
+            h.assertTrue(j.isSubmerged(), "Jumper sollte untergetaucht sein");
+            h.assertTrue(j.getHealth() == PuddleJumperEntity.MAX_HEALTH, "Schaden trotz Schild: " + j.getHealth());
+            h.succeed();
+        });
+    }
+
     /** Mit aktivem Schild ist der Jumper unzerstörbar. */
     @GameTest(template = "platform")
     public static void shieldMakesIndestructible(GameTestHelper h) {

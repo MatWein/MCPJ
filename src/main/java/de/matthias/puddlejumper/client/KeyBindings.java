@@ -26,6 +26,10 @@ public final class KeyBindings {
     public static final KeyMapping SHIELD = key("key.puddlejumper.shield", GLFW.GLFW_KEY_V, KeyConflictContext.IN_GAME);
     public static final KeyMapping PODS = key("key.puddlejumper.pods", GLFW.GLFW_KEY_G, KeyConflictContext.IN_GAME);
     public static final KeyMapping TARGET = key("key.puddlejumper.target", GLFW.GLFW_KEY_TAB, IN_JUMPER);
+    // Im Jumper: Q/E seitlich fliegen (statt Wegwerfen/Inventar), I öffnet den Laderaum
+    public static final KeyMapping STRAFE_LEFT = key("key.puddlejumper.strafe_left", GLFW.GLFW_KEY_Q, IN_JUMPER);
+    public static final KeyMapping STRAFE_RIGHT = key("key.puddlejumper.strafe_right", GLFW.GLFW_KEY_E, IN_JUMPER);
+    public static final KeyMapping CARGO = key("key.puddlejumper.cargo", GLFW.GLFW_KEY_I, IN_JUMPER);
 
     private KeyBindings() {}
 

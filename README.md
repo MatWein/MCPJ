@@ -34,9 +34,10 @@ Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
 |---|---|
 | Einsteigen | Rechtsklick auf den Jumper |
 | Laderaum öffnen (von außen) | Schleichen + Rechtsklick |
-| Laderaum öffnen (als Pilot) | Inventar-Taste (`E`) |
+| Laderaum öffnen (als Pilot) | `I` |
 | Vor / zurück | `W` / `S` (in Bugrichtung) |
 | Drehen | `A` / `D` |
+| Seitlich fliegen (ohne Drehung) | `Q` / `E` (im Jumper statt Wegwerfen/Inventar) |
 | Steigen / Sinken | `Leertaste` / `Strg` (Sprint-Taste) |
 | Umschauen | Maus (bewegt nur die Kamera; die Kamera dreht beim Kurven mit) |
 | Ziel wechseln | `Tab` (nächstgelegenes zuerst, dann immer das nächstgelegene noch nicht gewählte; nach dem letzten: kein Ziel; nach 3 s Pause beginnt es wieder beim nächsten) |
@@ -46,7 +47,7 @@ Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
 | Antriebsgondeln aus/ein | `G` (sonst automatisch: gelandet eingefahren, in der Luft ausgefahren; beim Feuern immer aus) |
 | Aussteigen | `Shift` |
 
-Die Tasten `C`, `V`, `G` und `Tab` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
+Die Tasten `C`, `V`, `G`, `Tab`, `Q`/`E` und `I` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
 
 Der Jumper ist träge: Er beschleunigt und dreht gemächlich und rollt aus. Ohne Eingabe bremst er ab und
 schwebt auf der Stelle – auch wenn man in der Luft aussteigt, bleibt er dort stehen. Die Düsen leuchten,
@@ -67,7 +68,10 @@ und macht ihn unzerstörbar; Treffer lassen die Blase kurz aufleuchten.
 Beim Abfeuern einer Drohne wird die Tarnung deaktiviert.
 Die Hülle hält 240 Punkte aus (Diamantschwert: ~35 Schläge, ~23 kritische) – auch im Kreativmodus. Ein
 fremder Drohnentreffer kostet 60 %: die erste Drohne übersteht der Jumper knapp, die zweite zerstört ihn.
-Nach 30 s ohne Schaden repariert sich die Hülle langsam selbst (1 Punkt/s). Beim Zerstören fallen Item und
+Eine Selbstreparatur gibt es nicht.
+Unter Wasser ist alles träger: Der Jumper beschleunigt und dreht langsamer (max. ~5 m/s), Drohnen fliegen
+halb so schnell. Ist er mindestens zur Hälfte untergetaucht, verliert er ohne Schild 1 Hüllenpunkt pro
+Sekunde (HUD-Warnung). Beim Zerstören fallen Item und
 Ladung heraus (im Kreativmodus nur die Ladung).
 
 ## Projektaufbau

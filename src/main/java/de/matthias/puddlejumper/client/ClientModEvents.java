@@ -32,8 +32,16 @@ public final class ClientModEvents {
         LocalPlayer p = mc.player;
         if (p == null || mc.screen != null) return FlightInput.NONE;
         float up = (mc.options.keyJump.isDown() ? 1f : 0f) - (mc.options.keySprint.isDown() ? 1f : 0f);
-        // A/D (leftImpulse) dreht das Schiff, die Maus steuert nur die Kamera
-        return new FlightInput(p.input.forwardImpulse, p.input.leftImpulse, up);
+        // A/D (leftImpulse) dreht das Schiff, Q/E fliegen seitlich, die Maus steuert nur die Kamera
+        float strafe = (isDown(KeyBindings.STRAFE_LEFT) ? 1f : 0f) - (isDown(KeyBindings.STRAFE_RIGHT) ? 1f : 0f);
+        return new FlightInput(p.input.forwardImpulse, p.input.leftImpulse, up, strafe);
+    }
+
+    /** Taste direkt abfragen (Q/E sind auch Vanilla-Tasten - so ist die Zuordnung eindeutig). */
+    private static boolean isDown(net.minecraft.client.KeyMapping key) {
+        var k = key.getKey();
+        return k.getType() == com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM
+                && com.mojang.blaze3d.platform.InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), k.getValue());
     }
 
     @SubscribeEvent
@@ -48,6 +56,9 @@ public final class ClientModEvents {
         event.register(KeyBindings.SHIELD);
         event.register(KeyBindings.PODS);
         event.register(KeyBindings.TARGET);
+        event.register(KeyBindings.STRAFE_LEFT);
+        event.register(KeyBindings.STRAFE_RIGHT);
+        event.register(KeyBindings.CARGO);
     }
 
     @SubscribeEvent

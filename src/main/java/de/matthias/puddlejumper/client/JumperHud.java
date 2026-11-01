@@ -35,7 +35,12 @@ public final class JumperHud {
         line(g, font, x, y += 11, Component.translatable("hud.puddlejumper.altitude", Mth.floor(j.getY())), TEAL);
         float hull = j.getHealth() / PuddleJumperEntity.MAX_HEALTH;
         int hullColor = hull > 0.6f ? TEAL : hull > 0.3f ? GOLD : 0xFF5040;
-        line(g, font, x, y += 11, Component.translatable("hud.puddlejumper.hull", Math.round(hull * 100)), hullColor);
+        Component hullText = Component.translatable("hud.puddlejumper.hull", Math.round(hull * 100));
+        if (j.isSubmerged() && !j.isShielded()) {
+            hullText = hullText.copy().append(Component.translatable("hud.puddlejumper.water_warning"));
+            if ((j.tickCount / 10) % 2 == 0) hullColor = 0xFF5040; // blinkt
+        }
+        line(g, font, x, y += 11, hullText, hullColor);
         line(g, font, x, y += 11, state("cloak", j.isCloaked()), j.isCloaked() ? GOLD : GREY);
         line(g, font, x, y += 11, state("shield", j.isShielded()), j.isShielded() ? TEAL : GREY);
         line(g, font, x, y += 11, state("pods", j.podAnim > 0.5f), j.podAnim > 0.5f ? TEAL : GREY);
