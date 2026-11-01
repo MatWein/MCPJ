@@ -75,6 +75,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private static final float BREAK_DAMAGE = 600f;
 
     private static final EntityDataAccessor<Boolean> DATA_CLOAKED = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_SHIELD = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_PODS_OUT = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_HURT_TIME = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> DATA_HURT_DIR = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
@@ -113,6 +114,12 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     /** 0..1, wie stark die Düsen glühen (schwebend/fliegend an, gelandet aus). */
     public float engineGlow, engineGlowO;
     private float yawVelocity;
+    /** Drehung, die der Pilot noch mitmachen muss (wird in positionRider angewendet -> ruckelfrei). */
+    private float riderYawDelta;
+    /** Einblend-Animation Schild/Tarnung (0..1) und kurzes Aufleuchten bei Treffern. */
+    public float shieldAnim, shieldAnimO, cloakAnim, cloakAnimO;
+    public int shieldFlash;
+    private static final byte EVENT_SHIELD_HIT = 60;
 
     public PuddleJumperEntity(EntityType<? extends PuddleJumperEntity> type, Level level) {
         super(type, level);
@@ -130,6 +137,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     @Override
     protected void defineSynchedData() {
         entityData.define(DATA_CLOAKED, false);
+        entityData.define(DATA_SHIELD, false);
         entityData.define(DATA_PODS_OUT, false);
         entityData.define(DATA_HURT_TIME, 0);
         entityData.define(DATA_HURT_DIR, 1);
@@ -138,6 +146,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     public boolean isCloaked() { return entityData.get(DATA_CLOAKED); }
     public void setCloaked(boolean v) { entityData.set(DATA_CLOAKED, v); }
+    public boolean isShielded() { return entityData.get(DATA_SHIELD); }
+    public void setShielded(boolean v) { entityData.set(DATA_SHIELD, v); }
     public boolean isPodsOut() { return entityData.get(DATA_PODS_OUT); }
     public int getHurtTime() { return entityData.get(DATA_HURT_TIME); }
     public void setHurtTime(int v) { entityData.set(DATA_HURT_TIME, v); }
@@ -253,8 +263,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         yawVelocity = yawVelocity * TURN_DRAG - in.turn() * TURN_ACCEL; // A (turn > 0) = links
         if (in.turn() == 0 && Math.abs(yawVelocity) < 0.02f) yawVelocity = 0;
         setYRot(getYRot() + yawVelocity);
-        pilot.setYRot(pilot.getYRot() + yawVelocity);
-        pilot.setYHeadRot(pilot.getYHeadRot() + yawVelocity);
+        riderYawDelta += yawVelocity;
 
         double fwdAccel = in.forward() > 0 ? ACCEL : ACCEL * 0.6;
         Vec3 acc = forward().scale(in.forward() * fwdAccel).add(0, in.vertical() * ACCEL * 0.8, 0);
@@ -309,6 +318,11 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
         podAnimO = podAnim;
         podAnim = approach(podAnim, isPodsOut() ? 1f : 0f, 0.035f);
+        shieldAnimO = shieldAnim;
+        shieldAnim = approach(shieldAnim, isShielded() ? 1f : 0f, 0.06f);
+        cloakAnimO = cloakAnim;
+        cloakAnim = approach(cloakAnim, isCloaked() ? 1f : 0f, 0.05f);
+        if (shieldFlash > 0) shieldFlash--;
 
         // Düsen: gelandet aus (mit Pilot nur Standglühen), schwebend an, mit Tempo heller
         engineGlowO = engineGlow;
@@ -416,6 +430,13 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     protected void positionRider(Entity passenger, MoveFunction move) {
         if (!hasPassenger(passenger)) return;
         // Pilotensitz vorne im Cockpit (Modell z ~ 6.3)
+        // Pilot dreht mit dem Schiff - hier (nach dem Reset der alten Blickrichtung) statt im Schiffs-Tick,
+        // sonst springt die Kamera jeden Tick ohne Interpolation
+        if (riderYawDelta != 0 && passenger == getControllingPassenger()) {
+            passenger.setYRot(passenger.getYRot() + riderYawDelta);
+            passenger.setYHeadRot(passenger.getYHeadRot() + riderYawDelta);
+            riderYawDelta = 0;
+        }
         Vec3 f = forward().scale(6.3 * MODEL_SCALE);
         move.accept(passenger, getX() + f.x, getY() + getPassengersRidingOffset() + passenger.getMyRidingOffset(), getZ() + f.z);
     }
@@ -484,6 +505,10 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         if (getControllingPassenger() != player) return;
         switch (action) {
             case CLOAK -> toggleCloak();
+            case SHIELD -> {
+                setShielded(!isShielded());
+                playSound(isShielded() ? SoundEvents.BEACON_POWER_SELECT : SoundEvents.BEACON_DEACTIVATE, 1.0f, isShielded() ? 1.4f : 1.8f);
+            }
             case PODS -> {
                 podsOverride = !isPodsOut();
                 podsTimer = 0;
@@ -556,6 +581,12 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         Entity attacker = source.getEntity();
         if (attacker != null && hasPassenger(attacker)) return false;
         if (source.getDirectEntity() instanceof DroneEntity) return false;
+        if (isShielded()) {
+            // Schild: unzerstörbar, Treffer lässt die Blase kurz aufleuchten
+            level().broadcastEntityEvent(this, EVENT_SHIELD_HIT);
+            playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f, 1.6f);
+            return false;
+        }
 
         setHurtDir(-getHurtDir());
         setHurtTime(10);
@@ -573,6 +604,15 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             discard();
         }
         return true;
+    }
+
+    @Override
+    public void handleEntityEvent(byte id) {
+        if (id == EVENT_SHIELD_HIT) {
+            shieldFlash = 10;
+        } else {
+            super.handleEntityEvent(id);
+        }
     }
 
     @Override
@@ -619,6 +659,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         setCloaked(tag.getBoolean("Cloaked"));
+        setShielded(tag.getBoolean("Shielded"));
         cargo.clearContent();
         ListTag list = tag.getList("Cargo", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
@@ -631,6 +672,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     @Override
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putBoolean("Cloaked", isCloaked());
+        tag.putBoolean("Shielded", isShielded());
         ListTag list = new ListTag();
         for (int i = 0; i < cargo.getContainerSize(); i++) {
             ItemStack stack = cargo.getItem(i);

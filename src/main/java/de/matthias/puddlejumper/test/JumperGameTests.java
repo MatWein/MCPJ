@@ -118,6 +118,19 @@ public class JumperGameTests {
         });
     }
 
+    /** Mit aktivem Schild ist der Jumper unzerstörbar. */
+    @GameTest(template = "platform")
+    public static void shieldMakesIndestructible(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 2, 12, 0);
+        j.setShielded(true);
+        DamageSource src = h.getLevel().damageSources().generic();
+        for (int i = 0; i < 50; i++) j.hurt(src, 20f);
+        j.hurt(h.getLevel().damageSources().playerAttack(h.makeMockPlayer()), 1000f);
+        h.assertTrue(j.isAlive() && !j.isRemoved(), "Jumper wurde trotz Schild zerstört");
+        h.assertTrue(j.getDamage() == 0, "Schild hat Schaden durchgelassen: " + j.getDamage());
+        h.succeed();
+    }
+
     /** Genug Schaden zerstört den Jumper; Item und Ladung fallen heraus. */
     @GameTest(template = "platform")
     public static void breaksAndDrops(GameTestHelper h) {

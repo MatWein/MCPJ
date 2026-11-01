@@ -1,7 +1,7 @@
 # Puddle Jumper – Minecraft-Mod (Forge 1.20.1 / 47.4.16)
 
 Ein fliegbarer Puddle Jumper aus *Stargate Atlantis*, ca. 8 Blöcke lang, mit Tarnung,
-Laderaum, ausfahrbaren Antriebsgondeln und zielsuchenden Drohnen.
+Schutzschild, Laderaum, ausfahrbaren Antriebsgondeln und zielsuchenden Drohnen.
 
 ## Bauen & Starten
 
@@ -41,18 +41,22 @@ Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
 | Umschauen | Maus (bewegt nur die Kamera; die Kamera dreht beim Kurven mit) |
 | Drohne abfeuern | Linksklick (zielt auf anvisiertes Wesen, sonst nächster Feind vor dem Schiff) |
 | Tarnung an/aus | `C` |
+| Schutzschild an/aus | `V` |
 | Antriebsgondeln aus/ein | `G` (sonst automatisch: gelandet eingefahren, in der Luft ausgefahren; beim Feuern immer aus) |
 | Aussteigen | `Shift` |
 
-Die Tasten `C` und `G` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
+Die Tasten `C`, `V` und `G` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
 
 Der Jumper ist träge: Er beschleunigt und dreht gemächlich und rollt aus. Ohne Eingabe bremst er ab und
 schwebt auf der Stelle – auch wenn man in der Luft aussteigt, bleibt er dort stehen. Die Düsen leuchten,
 sobald er in der Luft ist, und ziehen Ionenfahnen, die mit dem Tempo länger werden; gelandet sind sie aus.
 Beim Einsteigen schaltet die Kamera automatisch in die Außenansicht, beim Aussteigen zurück in die
 vorherige Ansicht.
-Getarnt ist der Jumper für andere Spieler nur noch als schwacher Schimmer zu sehen, bleibt aber fest
-(man kann nicht hindurchlaufen). Mobs verlieren den Piloten aus den Augen.
+Getarnt ist das Schiff für andere unsichtbar, nur eine sehr dezente Energieblase verrät es; es bleibt
+aber fest (man kann nicht hindurchlaufen). Der Pilot sieht sein Schiff als schwachen Leuchtumriss.
+Mobs verlieren den Piloten aus den Augen.
+Der Schutzschild legt eine sanft wabernde Energieblase mit verschwommenem Wasser-Effekt um den Jumper
+und macht ihn unzerstörbar; Treffer lassen die Blase kurz aufleuchten.
 Beim Abfeuern einer Drohne wird die Tarnung deaktiviert. Zerstört wird er wie ein Boot, nur deutlich
 robuster; dabei fallen Item und Ladung heraus.
 

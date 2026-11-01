@@ -45,6 +45,7 @@ public final class ClientModEvents {
     @SubscribeEvent
     public static void registerKeys(RegisterKeyMappingsEvent event) {
         event.register(KeyBindings.CLOAK);
+        event.register(KeyBindings.SHIELD);
         event.register(KeyBindings.PODS);
     }
 

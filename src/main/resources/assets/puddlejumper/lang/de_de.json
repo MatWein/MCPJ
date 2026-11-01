@@ -21,5 +21,9 @@
   "hud.puddlejumper.drones": "Drohnen: %s",
   "hud.puddlejumper.ready": "BEREIT",
   "hud.puddlejumper.loading": "lädt...",
-  "hud.puddlejumper.target": "Ziel: %s"
+  "hud.puddlejumper.target": "Ziel: %s",
+  "key.puddlejumper.shield": "Schutzschild umschalten",
+  "hud.puddlejumper.shield": "Schild: %s",
+  "hud.puddlejumper.on.shield": "AKTIV",
+  "hud.puddlejumper.off.shield": "aus"
 }

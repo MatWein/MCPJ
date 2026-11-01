@@ -2,11 +2,12 @@
 """Erzeugt das verbesserte Puddle-Jumper-Modell + Textur-Atlas aus assets/.
 
 Ausgabe (src/main/resources/assets/puddlejumper/):
-  models/entity/puddle_jumper.obj   Gruppen: hull, hull_glow, pod_left/right (+ _glow Düsen, _ports Drohnen-Ports)
+  models/entity/puddle_jumper.obj   Gruppen: hull, pod_left/right (+ _glow Düsen, _ports Drohnen-Ports)
   models/entity/drone.obj
   textures/entity/puddle_jumper.png (1024x1536 Atlas)
   textures/entity/drone.png
   textures/item/puddle_jumper.png   (Item-Icon, gerendert)
+  textures/entity/shield.png        (Wasser-/Kaustik-Muster für Schild/Tarnblase, kachelbar)
 
 Koordinaten bleiben in Modelleinheiten (Bug = +Z, Boden = y 0). Die Skalierung auf
 Blöcke passiert im Java-Renderer.
@@ -434,9 +435,6 @@ def build_jumper():
                              float(np.clip((14.5 - p[2]) / 29.0, 0, 1))) for p in pts]
         mesh.tri('hull', pts, uv2)
 
-    # Rumpf-Lichter (Positionslichter + Heckleiste)
-    for sx in (-1, 1):
-        add_box(mesh, 'hull_glow', (sx * 4.3 - 0.15, 1.0, 12.2), (sx * 4.3 + 0.15, 1.25, 12.6), REG_GLOW)
 
     add_pod(mesh, +1)
     add_pod(mesh, -1)
@@ -451,6 +449,40 @@ def render_icon(path):
     img.save(path)
 
 
+def shield_texture():
+    """Kachelbares, weich verschwommenes Wasser-/Kaustik-Muster für Schild und Tarnblase.
+
+    Summe periodischer Wellen (ganzzahlige Frequenzen -> nahtlos kachelbar); helle Linien entstehen dort,
+    wo das Wellenfeld durch null geht (wie Lichtreflexe am Boden eines Pools). Schwarz = unsichtbar (additiv).
+    """
+    N = 256
+    rng = np.random.default_rng(7)
+    yy, xx = np.mgrid[0:N, 0:N].astype(np.float32) / N
+    def wave_field():
+        f = np.zeros((N, N), np.float32)
+        for _ in range(16):
+            fx, fy = rng.integers(-5, 6, 2)
+            if fx == 0 and fy == 0:
+                continue
+            f += np.cos(2 * math.pi * (fx * xx + fy * yy) + rng.uniform(0, 2 * math.pi)) / math.hypot(fx, fy) ** 0.7
+        return f / np.abs(f).max()
+
+    f1, f2 = wave_field(), wave_field()
+    lines = np.exp(-(f1 / 0.08) ** 2) + np.exp(-(f2 / 0.08) ** 2) * 0.8   # Kaustik-Netz
+    glow = 0.3 + 0.2 * (f1 * f2)                                             # weicher Grundschleier
+    k = lines * 0.6 + glow * 0.35
+    # nahtlos weichzeichnen: 3x3 kacheln, blurren, Mitte ausschneiden
+    tile = Image.fromarray((np.clip(k, 0, 1) * 255).astype(np.uint8))
+    big = Image.new('L', (N * 3, N * 3))
+    for i in range(3):
+        for j in range(3):
+            big.paste(tile, (i * N, j * N))
+    big = big.filter(ImageFilter.GaussianBlur(3.5)).crop((N, N, 2 * N, 2 * N))
+    k = np.asarray(big, np.float32) / 255.0
+    img = np.stack([90 * k, 185 * k, 255 * k], axis=-1)
+    return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), 'RGB')
+
+
 def main():
     for d in ('models/entity', 'textures/entity', 'textures/item'):
         os.makedirs(os.path.join(OUT, d), exist_ok=True)
@@ -458,6 +490,7 @@ def main():
     build_jumper().write(os.path.join(OUT, 'models', 'entity', 'puddle_jumper.obj'))
     build_drone().write(os.path.join(OUT, 'models', 'entity', 'drone.obj'))
     drone_texture().save(os.path.join(OUT, 'textures', 'entity', 'drone.png'))
+    shield_texture().save(os.path.join(OUT, 'textures', 'entity', 'shield.png'))
     render_icon(os.path.join(OUT, 'textures', 'item', 'puddle_jumper.png'))
     print('ok')
 

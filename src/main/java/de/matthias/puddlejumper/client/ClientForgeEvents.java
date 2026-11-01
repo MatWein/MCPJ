@@ -50,10 +50,12 @@ public final class ClientForgeEvents {
             ClientState.target = null;
             // Tastendrücke außerhalb des Jumpers verwerfen
             while (KeyBindings.CLOAK.consumeClick()) {}
+            while (KeyBindings.SHIELD.consumeClick()) {}
             while (KeyBindings.PODS.consumeClick()) {}
             return;
         }
         while (KeyBindings.CLOAK.consumeClick()) send(JumperActionPacket.Action.CLOAK, -1);
+        while (KeyBindings.SHIELD.consumeClick()) send(JumperActionPacket.Action.SHIELD, -1);
         while (KeyBindings.PODS.consumeClick()) send(JumperActionPacket.Action.PODS, -1);
         ClientState.updateTarget(jumper);
     }
