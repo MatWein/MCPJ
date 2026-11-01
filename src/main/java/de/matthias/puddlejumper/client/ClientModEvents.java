@@ -32,6 +32,7 @@ public final class ClientModEvents {
         LocalPlayer p = mc.player;
         if (p == null || mc.screen != null) return FlightInput.NONE;
         float up = (mc.options.keyJump.isDown() ? 1f : 0f) - (mc.options.keySprint.isDown() ? 1f : 0f);
+        // A/D (leftImpulse) dreht das Schiff, die Maus steuert nur die Kamera
         return new FlightInput(p.input.forwardImpulse, p.input.leftImpulse, up);
     }
 
@@ -44,7 +45,6 @@ public final class ClientModEvents {
     @SubscribeEvent
     public static void registerKeys(RegisterKeyMappingsEvent event) {
         event.register(KeyBindings.CLOAK);
-        event.register(KeyBindings.HATCH);
         event.register(KeyBindings.PODS);
     }
 

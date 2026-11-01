@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Software-Rasterizer zur Vorschau des generierten OBJ (und zum Rendern des Item-Icons).
 
-  python3 tools/preview.py out.png [--open]   # 2x3 Ansichten; --open: Klappe auf, Gondeln aus
+  python3 tools/preview.py out.png [--open]   # 2x3 Ansichten; --open: Gondeln ausgefahren
 """
 import math
 import os
@@ -13,7 +13,6 @@ from PIL import Image, ImageDraw
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.join(ROOT, 'src', 'main', 'resources', 'assets', 'puddlejumper')
 
-HINGE_Y, HINGE_Z = 0.19, -10.5   # muss zum Java-Renderer passen
 
 
 def load_groups(path):
@@ -43,10 +42,6 @@ def rot_x(a):
 def group_transform(name, vs, open_state):
     if not open_state:
         return vs
-    if name.startswith('hatch'):
-        # Rampe um Scharnier (unten) nach hinten/unten drehen
-        p = vs - np.array([0, HINGE_Y, HINGE_Z])
-        return p @ rot_x(math.radians(-62)).T + np.array([0, HINGE_Y, HINGE_Z])
     if name.startswith('pod_left'):
         return vs + np.array([1.6, -0.2, 0])
     if name.startswith('pod_right'):

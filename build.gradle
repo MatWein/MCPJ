@@ -84,9 +84,15 @@ minecraft {
         client {
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', mod_id
+            // ./gradlew runClient -PjoinServer=localhost  -> verbindet direkt mit dem Server
+            if (project.hasProperty('joinServer')) {
+                args '--quickPlayMultiplayer', project.property('joinServer')
+            }
         }
 
         server {
+            // eigenes Verzeichnis, damit Client und Server parallel laufen können
+            workingDirectory project.file('run-server')
             property 'forge.enabledGameTestNamespaces', mod_id
             args '--nogui'
         }

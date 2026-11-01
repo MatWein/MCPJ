@@ -24,7 +24,7 @@ public final class JumperHud {
         Font font = mc.font;
 
         int x = 8;
-        int lines = 7;
+        int lines = 6;
         int y = height - 12 - lines * 11;
         g.fill(x - 4, y - 4, x + 150, y + lines * 11, 0x80102028);
         g.fill(x - 4, y - 4, x - 2, y + lines * 11, 0xFF7FE6F2);
@@ -35,7 +35,6 @@ public final class JumperHud {
         line(g, font, x, y += 11, Component.translatable("hud.puddlejumper.altitude", Mth.floor(j.getY())), TEAL);
         line(g, font, x, y += 11, state("cloak", j.isCloaked()), j.isCloaked() ? GOLD : GREY);
         line(g, font, x, y += 11, state("pods", j.podAnim > 0.5f), j.podAnim > 0.5f ? TEAL : GREY);
-        line(g, font, x, y += 11, state("hatch", j.isHatchOpen()), j.isHatchOpen() ? GOLD : GREY);
 
         long since = j.level().getGameTime() - ClientState.lastFireTick;
         boolean ready = since >= PuddleJumperEntity.DRONE_COOLDOWN;

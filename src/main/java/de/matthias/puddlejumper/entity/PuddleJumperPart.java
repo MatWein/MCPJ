@@ -57,6 +57,17 @@ public class PuddleJumperPart extends PartEntity<PuddleJumperEntity> {
     }
 
     @Override
+    public boolean canBeCollidedWith() {
+        return true;
+    }
+
+    @Override
+    public boolean canCollideWith(Entity other) {
+        return other != getParent() && !(other instanceof PuddleJumperPart p && p.getParent() == getParent())
+                && super.canCollideWith(other);
+    }
+
+    @Override
     public boolean shouldBeSaved() {
         return false;
     }

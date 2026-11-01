@@ -1,13 +1,15 @@
 # Puddle Jumper – Minecraft-Mod (Forge 1.20.1 / 47.4.16)
 
 Ein fliegbarer Puddle Jumper aus *Stargate Atlantis*, ca. 8 Blöcke lang, mit Tarnung,
-Heckklappe samt Laderaum und zielsuchenden Drohnen.
+Laderaum, ausfahrbaren Antriebsgondeln und zielsuchenden Drohnen.
 
 ## Bauen & Starten
 
 ```bash
 ./gradlew build            # Mod-JAR -> build/libs/puddlejumper-1.0.0.jar
 ./gradlew runClient        # Entwicklungs-Client
+./gradlew runServer        # Entwicklungs-Server (Verzeichnis run-server/)
+./gradlew runClient -PjoinServer=localhost   # Client verbindet direkt zum Server
 ./gradlew runGameTestServer  # automatische Tests (headless)
 ```
 
@@ -31,22 +33,26 @@ Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
 | Aktion | Taste |
 |---|---|
 | Einsteigen | Rechtsklick auf den Jumper |
-| Laderaum öffnen (von außen) | Schleichen + Rechtsklick (Heckklappe öffnet sich automatisch) |
+| Laderaum öffnen (von außen) | Schleichen + Rechtsklick |
 | Laderaum öffnen (als Pilot) | Inventar-Taste (`E`) |
-| Vor / zurück | `W` / `S` (fliegt in Blickrichtung, auch auf- und abwärts) |
-| Seitlich | `A` / `D` |
+| Vor / zurück | `W` / `S` (in Bugrichtung) |
+| Drehen | `A` / `D` |
 | Steigen / Sinken | `Leertaste` / `Strg` (Sprint-Taste) |
-| Drehen | Maus – der Bug folgt der Blickrichtung |
+| Umschauen | Maus (bewegt nur die Kamera; die Kamera dreht beim Kurven mit) |
 | Drohne abfeuern | Linksklick (zielt auf anvisiertes Wesen, sonst nächster Feind vor dem Schiff) |
 | Tarnung an/aus | `C` |
-| Heckklappe auf/zu | `H` |
-| Antriebsgondeln aus/ein | `G` (fahren bei hoher Geschwindigkeit und beim Feuern auch automatisch aus) |
+| Antriebsgondeln aus/ein | `G` (sonst automatisch: gelandet eingefahren, in der Luft ausgefahren; beim Feuern immer aus) |
 | Aussteigen | `Shift` |
 
-Die Tasten `C`, `H`, `G` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
+Die Tasten `C` und `G` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
 
-Ohne Eingabe bremst der Jumper ab und schwebt auf der Stelle. Ohne Pilot sinkt er langsam zu Boden.
-Getarnt ist der Jumper für andere Spieler unsichtbar, und Mobs verlieren den Piloten aus den Augen.
+Der Jumper ist träge: Er beschleunigt und dreht gemächlich und rollt aus. Ohne Eingabe bremst er ab und
+schwebt auf der Stelle – auch wenn man in der Luft aussteigt, bleibt er dort stehen. Die Düsen leuchten,
+sobald er in der Luft ist, und ziehen Ionenfahnen, die mit dem Tempo länger werden; gelandet sind sie aus.
+Beim Einsteigen schaltet die Kamera automatisch in die Außenansicht, beim Aussteigen zurück in die
+vorherige Ansicht.
+Getarnt ist der Jumper für andere Spieler nur noch als schwacher Schimmer zu sehen, bleibt aber fest
+(man kann nicht hindurchlaufen). Mobs verlieren den Piloten aus den Augen.
 Beim Abfeuern einer Drohne wird die Tarnung deaktiviert. Zerstört wird er wie ein Boot, nur deutlich
 robuster; dabei fallen Item und Ladung heraus.
 
@@ -62,7 +68,7 @@ src/main/java/de/matthias/puddlejumper/
   entity/PuddleJumperPart.java        Bug-/Heck-Hitbox
   entity/DroneEntity.java             zielsuchende Drohne
   client/ObjModel.java                eigener OBJ-Loader/-Renderer (Gruppen, *_glow leuchtet)
-  client/PuddleJumperRenderer.java    Animationen (Klappe, Gondeln, Neigung, Tarnung)
+  client/PuddleJumperRenderer.java    Animationen (Gondeln, Neigung, Tarnung, Ionenfahnen)
   client/…                            HUD, Tasten, Kamera, Triebwerkssound
   test/JumperGameTests.java           GameTests
 ```
@@ -71,10 +77,10 @@ src/main/java/de/matthias/puddlejumper/
 
 `tools/build_model.py` nimmt `assets/puddlejumper.obj` als Basis und ergänzt:
 
-- **Heckklappe** als eigenes Teil (Rampe, klappt um die Unterkante auf), mit Innenseite und Kanten
-- **Innenraum**: Innenhülle, Boden, Pilotensitze, Konsole mit Display, Schott mit Durchgang, Seitenbänke
-- **Antriebsgondeln** links/rechts mit leuchtenden Düsen, Streben und gelben Drohnen-Ports
-- **Textur** in doppelter Auflösung, mit Metallstruktur, kühlerem „Antiker“-Farbton und getöntem Cockpitglas
+- **Antriebsgondeln** links/rechts (halbe Schiffslänge, mit Lamellen), je zwei blaue Düsenfenster,
+  Ausleger und gelbe Drohnen-Ports
+- **Textur** in doppelter Auflösung im Oliv-Khaki der Serie (Vorlage: `assets/bilder/`), mit eingravierten
+  Paneellinien und kupferfarbenem Fensterrahmen – Rumpf, Unterseite und Gondeln einheitlich
 - **Drohne** (goldener, leuchtender Körper mit Schweifen) und ein gerendertes Item-Icon
 
 Nach Änderungen: `python3 tools/build_model.py`, im Spiel neu laden mit `F3+T`.

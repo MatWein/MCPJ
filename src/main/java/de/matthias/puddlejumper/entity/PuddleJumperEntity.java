@@ -4,6 +4,7 @@ import de.matthias.puddlejumper.ModRegistry;
 import de.matthias.puddlejumper.network.JumperActionPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -61,19 +62,25 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private static final double SEGMENT_OFFSET = 2.7;
 
     // Flugwerte (Blöcke/Tick)
-    private static final double ACCEL = 0.06;
-    private static final double MAX_SPEED = 1.3;
-    private static final float MAX_TURN = 6.0f;
+    private static final double ACCEL = 0.022;
+    private static final double MAX_SPEED = 1.0;
+    /** Drehung mit A/D: Winkelbeschleunigung (°/Tick²) und Dämpfung -> max. ~2.5°/Tick. */
+    private static final float TURN_ACCEL = 0.3f, TURN_DRAG = 0.88f;
+    /** Luftwiderstand mit Schub (Zeitkonstante ~2 s) bzw. beim Ausrollen (~1 s). */
+    private static final double DRAG_THRUST = 0.975, DRAG_IDLE = 0.95;
 
-    public static final int DRONE_COOLDOWN = 12;
+    public static final int DRONE_COOLDOWN = 15;
+    /** Gondel-Position im Modell (muss zu tools/build_model.py passen). */
+    public static final float POD_X = 4.95f, POD_Y = 4.3f, POD_REAR_Z = -12.2f;
     private static final float BREAK_DAMAGE = 600f;
 
     private static final EntityDataAccessor<Boolean> DATA_CLOAKED = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
-    private static final EntityDataAccessor<Boolean> DATA_HATCH_OPEN = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_PODS_OUT = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_HURT_TIME = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> DATA_HURT_DIR = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> DATA_DAMAGE = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.FLOAT);
+
+    private static final DustParticleOptions ION = new DustParticleOptions(new Vector3f(0.45f, 0.75f, 1.0f), 0.6f);
 
     /** Client-Hook (Triebwerkssound); wird vom Client-Setup gesetzt. */
     public static Consumer<PuddleJumperEntity> clientTicker = j -> {};
@@ -89,7 +96,9 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private double lerpX, lerpY, lerpZ, lerpYRot;
 
     // Server-Zustand
-    private boolean podsManual;
+    /** Vom Piloten per Taste erzwungener Gondel-Zustand; null = automatisch (gelandet = eingefahren). */
+    @Nullable private Boolean podsOverride;
+    private boolean lastLanded;
     private int podsTimer;
     private long lastDroneTick = -100;
     private boolean leftLauncher;
@@ -97,11 +106,13 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private Vec3 serverVelocity = Vec3.ZERO;
 
     // Client-Animation
-    public float hatchAnim, hatchAnimO;
     public float podAnim, podAnimO;
     public float visRoll, visRollO;
     public float visPitch, visPitchO;
     public double clientSpeed;
+    /** 0..1, wie stark die Düsen glühen (schwebend/fliegend an, gelandet aus). */
+    public float engineGlow, engineGlowO;
+    private float yawVelocity;
 
     public PuddleJumperEntity(EntityType<? extends PuddleJumperEntity> type, Level level) {
         super(type, level);
@@ -119,7 +130,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     @Override
     protected void defineSynchedData() {
         entityData.define(DATA_CLOAKED, false);
-        entityData.define(DATA_HATCH_OPEN, false);
         entityData.define(DATA_PODS_OUT, false);
         entityData.define(DATA_HURT_TIME, 0);
         entityData.define(DATA_HURT_DIR, 1);
@@ -128,8 +138,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     public boolean isCloaked() { return entityData.get(DATA_CLOAKED); }
     public void setCloaked(boolean v) { entityData.set(DATA_CLOAKED, v); }
-    public boolean isHatchOpen() { return entityData.get(DATA_HATCH_OPEN); }
-    public void setHatchOpen(boolean v) { entityData.set(DATA_HATCH_OPEN, v); }
     public boolean isPodsOut() { return entityData.get(DATA_PODS_OUT); }
     public int getHurtTime() { return entityData.get(DATA_HURT_TIME); }
     public void setHurtTime(int v) { entityData.set(DATA_HURT_TIME, v); }
@@ -226,6 +234,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         }
 
         updateParts();
+        setOnGround(probeGround());
 
         if (level().isClientSide) {
             clientTick();
@@ -234,36 +243,34 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         }
     }
 
+    /**
+     * Steuerung unabhängig von der Maus: W/S Schub entlang der Bugrichtung, A/D drehen das Schiff,
+     * Leertaste/Strg steigen/sinken. Die Kamera des Piloten dreht beim Kurven mit (wie im Boot).
+     */
     private void flyControlled(Player pilot) {
         FlightInput in = FlightInput.source.get();
 
-        // Bug folgt sanft der Blickrichtung des Piloten
-        float diff = Mth.wrapDegrees(pilot.getYRot() - getYRot());
-        setYRot(getYRot() + Mth.clamp(diff * 0.25f, -MAX_TURN, MAX_TURN));
-
-        float yaw = getYRot() * Mth.DEG_TO_RAD;
-        float pitch = pilot.getXRot() * Mth.DEG_TO_RAD;
-        Vec3 look = new Vec3(-Mth.sin(yaw) * Mth.cos(pitch), -Mth.sin(pitch), Mth.cos(yaw) * Mth.cos(pitch));
-        Vec3 left = left();
+        yawVelocity = yawVelocity * TURN_DRAG - in.turn() * TURN_ACCEL; // A (turn > 0) = links
+        if (in.turn() == 0 && Math.abs(yawVelocity) < 0.02f) yawVelocity = 0;
+        setYRot(getYRot() + yawVelocity);
+        pilot.setYRot(pilot.getYRot() + yawVelocity);
+        pilot.setYHeadRot(pilot.getYHeadRot() + yawVelocity);
 
         double fwdAccel = in.forward() > 0 ? ACCEL : ACCEL * 0.6;
-        Vec3 acc = look.scale(in.forward() * fwdAccel)
-                .add(left.scale(in.strafe() * ACCEL * 0.6))
-                .add(0, in.vertical() * ACCEL * 0.8, 0);
+        Vec3 acc = forward().scale(in.forward() * fwdAccel).add(0, in.vertical() * ACCEL * 0.8, 0);
 
-        double drag = in.idle() ? 0.90 : 0.95;
-        Vec3 v = getDeltaMovement().scale(drag).add(acc);
+        boolean idle = in.forward() == 0 && in.vertical() == 0;
+        Vec3 v = getDeltaMovement().scale(idle ? DRAG_IDLE : DRAG_THRUST).add(acc);
         if (v.lengthSqr() > MAX_SPEED * MAX_SPEED) v = v.normalize().scale(MAX_SPEED);
-        if (in.idle() && v.lengthSqr() < 1.0e-5) v = Vec3.ZERO;
+        if (idle && v.lengthSqr() < 1.0e-5) v = Vec3.ZERO;
         setDeltaMovement(v);
     }
 
+    /** Ohne Pilot: Schwebe-Modus. Der Jumper rollt aus und bleibt in der Luft stehen. */
     private void idlePhysics() {
-        Vec3 v = getDeltaMovement();
-        double h = onGround() ? 0.5 : 0.9;
-        double vy = (v.y - 0.04) * 0.98;
-        if (isInWater()) vy += 0.07;
-        setDeltaMovement(v.x * h, Math.max(vy, -1.5), v.z * h);
+        Vec3 v = getDeltaMovement().scale(onGround() ? 0.6 : DRAG_IDLE);
+        if (isInWater()) v = v.add(0, 0.03, 0);
+        setDeltaMovement(v.lengthSqr() < 1.0e-5 ? Vec3.ZERO : v);
     }
 
     /** Bewegung mit Kollision aller drei Segmente (Mitte über move(), Bug/Heck vorab geprüft). */
@@ -278,14 +285,18 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             d = new Vec3(absMin(d.x, c.x), absMin(d.y, c.y), absMin(d.z, c.z));
         }
         move(MoverType.SELF, d);
-        // Haben Bug/Heck die Abwärtsbewegung gestoppt, merkt move() das nicht selbst
-        if (delta.y < 0 && d.y > delta.y) {
-            verticalCollision = true;
-            verticalCollisionBelow = true;
-            setOnGround(true);
-        }
         Vec3 v = getDeltaMovement();
         setDeltaMovement(d.x != delta.x ? 0 : v.x, d.y != delta.y ? 0 : v.y, d.z != delta.z ? 0 : v.z);
+    }
+
+    /** Steht der Jumper auf etwas? (dünne Schicht unter Bug, Mitte und Heck) */
+    private boolean probeGround() {
+        for (double off : new double[]{SEGMENT_OFFSET, 0, -SEGMENT_OFFSET}) {
+            AABB b = segmentBox(off);
+            AABB slab = new AABB(b.minX + 0.05, b.minY - 0.08, b.minZ + 0.05, b.maxX - 0.05, b.minY + 0.01, b.maxZ - 0.05);
+            if (!level().noCollision(this, slab)) return true;
+        }
+        return false;
     }
 
     private static double absMin(double a, double b) {
@@ -293,35 +304,42 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     }
 
     private void clientTick() {
-        hatchAnimO = hatchAnim;
-        hatchAnim = approach(hatchAnim, isHatchOpen() ? 1f : 0f, 0.035f);
-
         double vx = getX() - xo, vy = getY() - yo, vz = getZ() - zo;
         clientSpeed = Math.sqrt(vx * vx + vy * vy + vz * vz);
 
         podAnimO = podAnim;
-        boolean wantPods = isPodsOut() || clientSpeed > 0.75;
-        podAnim = approach(podAnim, wantPods ? 1f : 0f, 0.04f);
+        podAnim = approach(podAnim, isPodsOut() ? 1f : 0f, 0.035f);
+
+        // Düsen: gelandet aus (mit Pilot nur Standglühen), schwebend an, mit Tempo heller
+        engineGlowO = engineGlow;
+        float glowTarget = onGround() ? (isVehicle() ? 0.25f : 0f) : 0.6f + Mth.clamp((float) clientSpeed * 0.5f, 0f, 0.4f);
+        engineGlow += (glowTarget - engineGlow) * 0.08f;
 
         Vec3 l = left();
         double leftSpeed = l.x * vx + l.z * vz;
         float yawDelta = Mth.wrapDegrees(getYRot() - yRotO);
-        float targetRoll = Mth.clamp(yawDelta * 3.5f - (float) leftSpeed * 28f, -32f, 32f);
+        float targetRoll = Mth.clamp(yawDelta * 5f - (float) leftSpeed * 28f, -30f, 30f);
         Vec3 f = forward();
         double fwdSpeed = f.x * vx + f.z * vz;
         float targetPitch = Mth.clamp((float) (-vy * 28 + fwdSpeed * 5), -28f, 28f);
         visRollO = visRoll;
         visPitchO = visPitch;
-        visRoll += (targetRoll - visRoll) * 0.15f;
+        visRoll += (targetRoll - visRoll) * 0.12f;
         visPitch += (targetPitch - visPitch) * 0.12f;
 
-        // Triebwerksglühen/-partikel
-        if (isVehicle() && !isCloaked() && random.nextFloat() < 0.3f + clientSpeed) {
-            float pod = 4.85f + 1.6f * podAnim;
+        // Ionen-Partikel an den Düsen
+        if (!isCloaked() && engineGlow > 0.2f) {
+            float pod = POD_X + 1.6f * podAnim;
+            Vec3 back = f.scale(-0.04 - clientSpeed * 0.15);
             for (int side = -1; side <= 1; side += 2) {
-                Vec3 p = modelToWorld(side * pod, 4.3 - 0.2 * podAnim, -12.2);
-                level().addParticle(new DustParticleOptions(new Vector3f(0.55f, 0.85f, 1.0f), 0.9f),
-                        p.x, p.y, p.z, -vx * 0.2, -vy * 0.2, -vz * 0.2);
+                for (float ox : new float[]{-0.38f, 0.38f}) {
+                    if (random.nextFloat() > engineGlow * 0.45f) continue;
+                    Vec3 p = modelToWorld(side * pod + ox, POD_Y - 0.2 * podAnim + (random.nextFloat() - 0.5f) * 1.4f, POD_REAR_Z - 0.4);
+                    level().addParticle(ION, p.x, p.y, p.z, back.x + vx * 0.3, back.y + vy * 0.3, back.z + vz * 0.3);
+                    if (random.nextFloat() < 0.06f * engineGlow) {
+                        level().addParticle(ParticleTypes.ELECTRIC_SPARK, p.x, p.y, p.z, back.x * 4, (random.nextFloat() - 0.5f) * 0.1f, back.z * 4);
+                    }
+                }
             }
         }
         clientTicker.accept(this);
@@ -329,7 +347,12 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     private void serverTick() {
         if (podsTimer > 0) podsTimer--;
-        boolean pods = podsManual || podsTimer > 0;
+        boolean landed = onGround();
+        if (landed != lastLanded) {           // Landung/Start: Handsteuerung zurücksetzen
+            podsOverride = null;
+            lastLanded = landed;
+        }
+        boolean pods = podsTimer > 0 || (podsOverride != null ? podsOverride : !landed);
         if (pods != isPodsOut()) entityData.set(DATA_PODS_OUT, pods);
 
         Vec3 pos = position();
@@ -461,14 +484,10 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         if (getControllingPassenger() != player) return;
         switch (action) {
             case CLOAK -> toggleCloak();
-            case HATCH -> {
-                setHatchOpen(!isHatchOpen());
-                cargo.autoOpened = false;
-                playSound(isHatchOpen() ? SoundEvents.PISTON_EXTEND : SoundEvents.PISTON_CONTRACT, 1.0f, 0.6f);
-            }
             case PODS -> {
-                podsManual = !podsManual;
-                playSound(SoundEvents.IRON_DOOR_OPEN, 0.8f, 0.7f);
+                podsOverride = !isPodsOut();
+                podsTimer = 0;
+                playSound(podsOverride ? SoundEvents.IRON_DOOR_OPEN : SoundEvents.IRON_DOOR_CLOSE, 0.8f, 0.7f);
             }
             case FIRE -> fireDrone(player, targetId);
         }
@@ -508,7 +527,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         float yaw = pilot.getYRot() * Mth.DEG_TO_RAD;
         float pitch = pilot.getXRot() * Mth.DEG_TO_RAD;
         Vec3 look = new Vec3(-Mth.sin(yaw) * Mth.cos(pitch), -Mth.sin(pitch), Mth.cos(yaw) * Mth.cos(pitch));
-        Vec3 vel = look.scale(0.9).add(left().scale(side * 0.25)).add(0, 0.15, 0).add(serverVelocity);
+        Vec3 vel = look.scale(0.45).add(left().scale(side * 0.12)).add(0, 0.08, 0).add(serverVelocity);
 
         DroneEntity drone = new DroneEntity(level(), pilot, this, target);
         drone.setPos(spawn.x, spawn.y, spawn.z);
@@ -573,6 +592,18 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         return false;
     }
 
+    /** Fest wie ein Boot - auch getarnt. Man kann nicht hindurchlaufen und darauf stehen. */
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
+    }
+
+    @Override
+    public boolean canCollideWith(Entity other) {
+        if (other instanceof PuddleJumperPart part && part.getParent() == this) return false;
+        return super.canCollideWith(other);
+    }
+
     @Override
     public ItemStack getPickResult() {
         return new ItemStack(ModRegistry.PUDDLE_JUMPER_ITEM.get());
@@ -588,8 +619,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         setCloaked(tag.getBoolean("Cloaked"));
-        setHatchOpen(tag.getBoolean("HatchOpen"));
-        podsManual = tag.getBoolean("PodsOut");
         cargo.clearContent();
         ListTag list = tag.getList("Cargo", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
@@ -602,8 +631,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     @Override
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putBoolean("Cloaked", isCloaked());
-        tag.putBoolean("HatchOpen", isHatchOpen() && !cargo.autoOpened);
-        tag.putBoolean("PodsOut", podsManual);
         ListTag list = new ListTag();
         for (int i = 0; i < cargo.getContainerSize(); i++) {
             ItemStack stack = cargo.getItem(i);
@@ -622,11 +649,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         if (!isSilent()) level().playSound(null, getX(), getY(), getZ(), sound, getSoundSource(), volume, pitch);
     }
 
-    /** Laderaum: öffnet automatisch die Heckklappe, solange jemand von außen hineinschaut. */
+    /** Laderaum (54 Plätze). */
     private class CargoContainer extends SimpleContainer {
-        private int viewers;
-        boolean autoOpened;
-
         CargoContainer() {
             super(54);
         }
@@ -634,26 +658,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         @Override
         public boolean stillValid(Player player) {
             return isAlive() && player.distanceToSqr(PuddleJumperEntity.this) < 12 * 12;
-        }
-
-        @Override
-        public void startOpen(Player player) {
-            viewers++;
-            if (!level().isClientSide && !hasPassenger(player) && !isHatchOpen()) {
-                setHatchOpen(true);
-                autoOpened = true;
-                PuddleJumperEntity.this.playSound(SoundEvents.PISTON_EXTEND, 1.0f, 0.6f);
-            }
-        }
-
-        @Override
-        public void stopOpen(Player player) {
-            viewers = Math.max(0, viewers - 1);
-            if (!level().isClientSide && viewers == 0 && autoOpened) {
-                setHatchOpen(false);
-                autoOpened = false;
-                PuddleJumperEntity.this.playSound(SoundEvents.PISTON_CONTRACT, 1.0f, 0.6f);
-            }
         }
     }
 }

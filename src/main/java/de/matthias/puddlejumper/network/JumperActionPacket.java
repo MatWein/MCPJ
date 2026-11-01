@@ -7,10 +7,10 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-/** Client -> Server: Pilot löst eine Aktion aus (Tarnung, Klappe, Gondeln, Drohne). */
+/** Client -> Server: Pilot löst eine Aktion aus (Tarnung, Gondeln, Drohne). */
 public record JumperActionPacket(Action action, int targetId) {
 
-    public enum Action { CLOAK, HATCH, PODS, FIRE }
+    public enum Action { CLOAK, PODS, FIRE }
 
     public static void encode(JumperActionPacket msg, FriendlyByteBuf buf) {
         buf.writeEnum(msg.action);

@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,8 +28,8 @@ import java.util.UUID;
 
 /** Antiker Drohnen-Flugkörper: zielsuchend, leuchtend, durchschlägt keine Blöcke. */
 public class DroneEntity extends Projectile {
-    private static final int MAX_LIFE = 200;
-    private static final double MAX_SPEED = 2.2;
+    private static final int MAX_LIFE = 320;
+    private static final double MAX_SPEED = 1.1;
     private static final float DAMAGE = 16f;
     private static final DustParticleOptions TRAIL = new DustParticleOptions(new Vector3f(1.0f, 0.78f, 0.25f), 1.1f);
 
@@ -63,12 +64,17 @@ public class DroneEntity extends Projectile {
                 return;
             }
             if ((target == null || !target.isAlive()) && life % 5 == 0) target = acquireTarget(v);
-            double speed = Math.min(MAX_SPEED, v.length() + 0.09);
+            double speed = Math.min(MAX_SPEED, v.length() + 0.035);
             Vec3 dir = v.lengthSqr() > 1.0e-6 ? v.normalize() : new Vec3(0, 0, 1);
             if (target != null && target.isAlive()) {
-                Vec3 to = target.getBoundingBox().getCenter().subtract(position()).normalize();
-                double turn = life < 5 ? 0.06 : 0.28;
+                Vec3 delta = target.getBoundingBox().getCenter().subtract(position());
+                Vec3 to = delta.normalize();
+                // träge Lenkung auf Distanz, im Nahbereich stärker (sonst kreist die Drohne ums Ziel)
+                double near = Mth.clamp(1.0 - delta.length() / 10.0, 0.0, 1.0);
+                double turn = life < 8 ? 0.04 : 0.12 + 0.35 * near;
                 dir = dir.lerp(to, turn).normalize();
+                // in engen Kurven abbremsen
+                speed *= 0.75 + 0.25 * Math.max(0, dir.dot(to));
             }
             v = dir.scale(speed);
             setDeltaMovement(v);

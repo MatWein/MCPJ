@@ -4,6 +4,7 @@ import de.matthias.puddlejumper.entity.PuddleJumperEntity;
 import de.matthias.puddlejumper.network.JumperActionPacket;
 import de.matthias.puddlejumper.network.ModNetwork;
 import net.minecraft.client.Camera;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
@@ -23,22 +24,36 @@ public final class ClientForgeEvents {
     /** Kameraabstand in der Third-Person-Ansicht (Vanilla: 4). */
     private static final double CAMERA_DISTANCE = 11.0;
 
+    /** Ansicht vor dem Einsteigen; null = nicht im Jumper. */
+    private static CameraType cameraBeforeBoarding;
+
     private ClientForgeEvents() {}
+
+    /** Beim Einsteigen in die Außenansicht wechseln, beim Aussteigen die alte Ansicht wiederherstellen. */
+    private static void updateCamera(boolean inJumper) {
+        Minecraft mc = Minecraft.getInstance();
+        if (inJumper && cameraBeforeBoarding == null) {
+            cameraBeforeBoarding = mc.options.getCameraType();
+            mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+        } else if (!inJumper && cameraBeforeBoarding != null) {
+            mc.options.setCameraType(cameraBeforeBoarding);
+            cameraBeforeBoarding = null;
+        }
+    }
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         PuddleJumperEntity jumper = ClientState.pilotedJumper();
+        if (Minecraft.getInstance().player != null) updateCamera(jumper != null);
         if (jumper == null) {
             ClientState.target = null;
             // Tastendrücke außerhalb des Jumpers verwerfen
             while (KeyBindings.CLOAK.consumeClick()) {}
-            while (KeyBindings.HATCH.consumeClick()) {}
             while (KeyBindings.PODS.consumeClick()) {}
             return;
         }
         while (KeyBindings.CLOAK.consumeClick()) send(JumperActionPacket.Action.CLOAK, -1);
-        while (KeyBindings.HATCH.consumeClick()) send(JumperActionPacket.Action.HATCH, -1);
         while (KeyBindings.PODS.consumeClick()) send(JumperActionPacket.Action.PODS, -1);
         ClientState.updateTarget(jumper);
     }

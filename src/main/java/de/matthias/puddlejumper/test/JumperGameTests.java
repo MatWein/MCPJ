@@ -14,6 +14,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -30,14 +31,33 @@ public class JumperGameTests {
         return j;
     }
 
-    /** Ohne Pilot sinkt der Jumper ab und landet auf dem Boden. */
-    @GameTest(template = "platform", timeoutTicks = 200)
-    public static void landsWithoutPilot(GameTestHelper h) {
-        PuddleJumperEntity j = spawnJumper(h, 12, 8, 12, 0);
-        double floor = h.absoluteVec(new Vec3(0, 2, 0)).y; // Struktur liegt 1 Block über dem Strukturblock, Boden bei y=1
-        h.succeedWhen(() -> {
-            h.assertTrue(j.onGround(), "Jumper ist noch nicht gelandet: y=" + j.getY() + " floor=" + floor + " v=" + j.getDeltaMovement() + " removed=" + j.isRemoved());
-            h.assertTrue(Math.abs(j.getY() - floor) < 0.01, "Falsche Landehöhe: " + j.getY() + " statt " + floor);
+    /** Ohne Pilot bleibt der Jumper in der Luft stehen (Schwebe-Modus). */
+    @GameTest(template = "platform", timeoutTicks = 100)
+    public static void hoversWithoutPilot(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 7, 12, 0);
+        double startY = j.getY();
+        h.runAfterDelay(60, () -> {
+            h.assertTrue(!j.onGround(), "Jumper ist gelandet statt zu schweben");
+            h.assertTrue(Math.abs(j.getY() - startY) < 0.01, "Jumper ist abgesunken: " + j.getY() + " statt " + startY);
+            h.assertTrue(j.isPodsOut(), "Gondeln sollten in der Luft ausgefahren sein");
+            h.succeed();
+        });
+    }
+
+    /** Der Jumper ist fest (auch getarnt) - Bug, Mitte und Heck blockieren Bewegung. */
+    @GameTest(template = "platform")
+    public static void solidEvenWhenCloaked(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 2, 12, 0);
+        j.setCloaked(true);
+        Zombie zombie = h.spawn(EntityType.ZOMBIE, new BlockPos(2, 2, 2));
+        zombie.setNoAi(true);
+        h.runAfterDelay(2, () -> {
+            for (double off : new double[]{-2.7, 0, 2.7}) {
+                AABB box = zombie.getBoundingBox().move(j.getX() - zombie.getX(), j.getY() - zombie.getY(), j.getZ() + off - zombie.getZ());
+                h.assertTrue(!h.getLevel().noCollision(zombie, box), "Kein Widerstand bei Offset " + off);
+            }
+            h.assertTrue(h.getLevel().noCollision(j, j.getBoundingBox()), "Jumper kollidiert mit sich selbst");
+            h.succeed();
         });
     }
 
@@ -53,6 +73,8 @@ public class JumperGameTests {
             double dxRear = parts[1].getX() - j.getX();
             h.assertTrue(Math.abs(dxFront + 2.7) < 0.01, "Bug-Segment falsch: dx=" + dxFront);
             h.assertTrue(Math.abs(dxRear - 2.7) < 0.01, "Heck-Segment falsch: dx=" + dxRear);
+            h.assertTrue(j.onGround(), "Jumper auf dem Boden sollte als gelandet gelten");
+            h.assertTrue(!j.isPodsOut(), "Gondeln sollten gelandet eingefahren sein");
             h.succeed();
         });
     }
@@ -76,7 +98,7 @@ public class JumperGameTests {
     }
 
     /** Eine Drohne verfolgt und trifft einen Zombie, ohne den eigenen Jumper zu beschädigen. */
-    @GameTest(template = "platform", timeoutTicks = 120)
+    @GameTest(template = "platform", timeoutTicks = 300)
     public static void droneHitsZombie(GameTestHelper h) {
         PuddleJumperEntity j = spawnJumper(h, 4, 2, 12, -90f); // Bug nach Osten (+X)
         Zombie zombie = h.spawn(EntityType.ZOMBIE, new BlockPos(20, 2, 6));
