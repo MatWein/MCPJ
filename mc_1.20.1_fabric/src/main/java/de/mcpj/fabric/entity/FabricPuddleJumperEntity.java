@@ -25,6 +25,7 @@ public class FabricPuddleJumperEntity extends PuddleJumperEntity {
         setId(ENTITY_COUNTER.getAndAdd(segments.size() + 1) + 1);
     }
 
+    @Override
     public List<FabricJumperSegment> segments() {
         return segments;
     }

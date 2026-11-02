@@ -11,6 +11,8 @@ import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.entity.PartEntity;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /** The jumper on Forge: bow and stern are Forge part entities; Forge's dimension change hook. */
 public class ForgePuddleJumperEntity extends PuddleJumperEntity {
     private final PuddleJumperPart bow;
@@ -23,6 +25,11 @@ public class ForgePuddleJumperEntity extends PuddleJumperEntity {
         stern = new PuddleJumperPart(this, JumperGeometry.WIDTH, JumperGeometry.HEIGHT);
         parts = new PuddleJumperPart[]{bow, stern};
         setId(ENTITY_COUNTER.getAndAdd(parts.length + 1) + 1);
+    }
+
+    @Override
+    public List<PuddleJumperPart> segments() {
+        return List.of(parts);
     }
 
     @Override

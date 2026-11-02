@@ -34,6 +34,14 @@ loom {
             runDir 'run-server'
             programArgs 'nogui'
         }
+        // automated game tests: ./gradlew :mc_1.20.1_fabric:runGametest
+        gametest {
+            server()
+            name 'Game Test'
+            vmArg '-Dfabric-api.gametest'
+            vmArg "-Dfabric-api.gametest.report-file=${project.buildDir}/gametest/report.xml"
+            runDir 'run-gametest'
+        }
     }
     mods {
         "${mod_id}" {
@@ -74,4 +82,9 @@ tasks.named('processResources', ProcessResources).configure {
     from(common.sourceSets.main.resources)
     // the core's assets (textures, models, sounds, translations): Fabric only finds the mod's own resources in dev runs
     from(project(':core').sourceSets.main.resources)
+}
+
+// game tests always run in a fresh world
+tasks.matching { it.name == 'runGametest' }.configureEach {
+    doFirst { delete file('run-gametest/world') }
 }

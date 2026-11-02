@@ -612,6 +612,9 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
         core.onAdded();
     }
 
+    /** The bow and stern hull segments (each loader has its own segment entities). */
+    public abstract List<? extends Entity> segments();
+
     /** Moves the bow and stern hull segments (each loader has its own segment entities). */
     protected abstract void moveSegments(Vec3 bowCenter, Vec3 sternCenter);
 

@@ -4,8 +4,10 @@ import de.mcpj.fabric.compat.TeamRebornEnergy;
 import de.mcpj.fabric.config.FabricConfigs;
 import de.mcpj.fabric.entity.FabricPuddleJumperEntity;
 import de.mcpj.fabric.entity.SegmentIndex;
+import de.mcpj.fabric.gametest.FabricGameTestHooks;
 import de.mcpj.fabric.network.FabricNetwork;
 import de.mcpj.fabric.registry.FabricObjects;
+import de.mcpj.mc.gametest.GameTestHooks;
 import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.mc.rules.JumperRules;
 import net.fabricmc.api.ModInitializer;
@@ -20,6 +22,7 @@ public final class McpjFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         McpjPlatform.set(new FabricPlatform());
+        GameTestHooks.set(new FabricGameTestHooks());
         FabricConfigs.define();
         FabricObjects.register();
         FabricNetwork.registerServer();

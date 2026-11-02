@@ -1,6 +1,8 @@
 package de.mcpj.forge;
 
+import de.mcpj.forge.gametest.ForgeGameTestHooks;
 import de.mcpj.mc.Mcpj;
+import de.mcpj.mc.gametest.GameTestHooks;
 import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.forge.compat.StargateCompat;
 import de.mcpj.forge.config.ForgeConfigs;
@@ -21,6 +23,7 @@ public final class McpjMod {
 
     public McpjMod(FMLJavaModLoadingContext context) {
         McpjPlatform.set(new ForgePlatform());
+        GameTestHooks.set(new ForgeGameTestHooks());
         IEventBus modBus = context.getModEventBus();
         ModRegistries.register(modBus);
         context.registerConfig(ModConfig.Type.SERVER, ForgeConfigs.SERVER);

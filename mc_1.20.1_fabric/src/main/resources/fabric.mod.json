@@ -11,7 +11,16 @@
   "accessWidener": "mcpj.accesswidener",
   "entrypoints": {
     "main": ["de.mcpj.fabric.McpjFabric"],
-    "client": ["de.mcpj.fabric.client.McpjFabricClient"]
+    "client": ["de.mcpj.fabric.client.McpjFabricClient"],
+    "fabric-gametest": [
+      "de.mcpj.fabric.gametest.JumperCargoTests",
+      "de.mcpj.fabric.gametest.JumperCombatTests",
+      "de.mcpj.fabric.gametest.JumperEnergyTests",
+      "de.mcpj.fabric.gametest.JumperFlightTests",
+      "de.mcpj.fabric.gametest.JumperHazardTests",
+      "de.mcpj.fabric.gametest.JumperLightTests",
+      "de.mcpj.fabric.gametest.JumperTravelTests"
+    ]
   },
   "mixins": ["mcpj.mixins.json"],
   "depends": {

@@ -125,26 +125,38 @@ warning threshold.
 The project is split into modules so the game logic does not have to be rewritten for every Minecraft version
 or mod loader:
 
-- `core/`: the game logic in plain Java, without any Minecraft or mod loader API (Java 17)
-- `mc_1.20.1_forge_47/`: Minecraft 1.20.1 with Forge 47; builds the mod jar and contains its development runs
-  (`run/`, `run-gametest/` and the test server `run-server/`)
+| Module | Contents |
+|---|---|
+| `core/` | the game logic in plain Java 17, without any Minecraft or mod loader API; version-independent assets |
+| `mc_1.20.1_common/` | vanilla Minecraft 1.20.1 code shared by both loaders (entities, blocks, rendering, HUD, input, network messages, game tests); compiled into each loader module, never shipped on its own |
+| `mc_1.20.1_forge_47/` | Forge 47: registration, network transport, config, events, part entities, Forge Energy, Just Stargate Mod |
+| `mc_1.20.1_fabric/` | Fabric: registration, network transport, TOML config with server sync, mixins, hull segments, Team Reborn Energy (optional) |
+
+Each loader module builds its own jar: `mcpj-<version>+mc<minecraft version>-<loader>.jar` in `<module>/build/libs/`.
+Requires Java 17 (Gradle downloads it if needed).
 
 ```bash
-./gradlew build                                              # all modules; mod jars in <module>/build/libs/
-./gradlew :core:test                                         # fast unit tests of the game logic (no Minecraft)
-./gradlew :mc_1.20.1_forge_47:runClient                         # development client
-./gradlew :mc_1.20.1_forge_47:runClient -PjoinServer=localhost  # client joins a server directly
-./gradlew :mc_1.20.1_forge_47:runGameTestServer                 # automated game tests (headless, fresh world each run)
-./gradlew :mc_1.20.1_forge_47:runGameTestServer -Pstandalone    # the same without any other mod (the mod must work on its own)
+./gradlew build                                                  # all modules and jars
+./gradlew :core:test                                             # fast unit tests of the game logic (no Minecraft)
+
+./gradlew :mc_1.20.1_forge_47:runClient                          # Forge development client
+./gradlew :mc_1.20.1_forge_47:runClient -PjoinServer=localhost   # ... joining a server directly
+./gradlew :mc_1.20.1_forge_47:runGameTestServer                  # Forge game tests (headless, fresh world each run)
+./gradlew :mc_1.20.1_forge_47:runGameTestServer -Pstandalone     # the same without any other mod
+
+./gradlew :mc_1.20.1_fabric:runClient                            # Fabric development client
+./gradlew :mc_1.20.1_fabric:runServer                            # Fabric development server
+./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 32 tests)
 ```
 
-Requires Java 17 (Gradle downloads it if needed). Jars are named `mcpj-<version>+mc<minecraft version>-<loader>.jar`.
+`mc_1.20.1_forge_47/run-server/` is a regular Forge server for multiplayer tests (start with `run.sh` there after
+copying the Forge jar into its `mods/`). The Forge build also loads every other jar in that `mods/` folder
+(deobfuscated) into its development runs. Its `runClient` additionally gets Embeddium and Oculus (shaders) from the
+Modrinth maven; they are client-only and therefore copied to `run/mods` instead of the shared classpath. Versions are
+set in `mc_1.20.1_forge_47/gradle.properties`. None of these mods is required: `-Pstandalone` leaves them all out.
 
-`mc_1.20.1_forge_47/run-server/` is a regular Forge server for multiplayer tests (start with `run.sh` there after copying the
-mod jar into its `mods/`). The build also loads every other jar in that `mods/` folder (deobfuscated) into the
-development runs. `runClient` additionally gets Embeddium and Oculus (shaders) from the Modrinth maven; they are
-client-only and therefore copied to `run/mods` instead of the shared classpath. Versions are set in
-`mc_1.20.1_forge_47/gradle.properties`. None of these mods is required: `-Pstandalone` leaves them all out, for any run task.
+On Fabric the settings live in `config/mcpj-server.toml` and `config/mcpj-client.toml` (same keys as on Forge); a
+server sends its settings to joining players. The only required dependency is the Fabric API.
 
 ## Project layout
 
@@ -158,11 +170,19 @@ core/src/main/java/de/mcpj/core/       game logic without Minecraft or a mod loa
   render/                              OBJ mesh, shield bubble, ion plumes, attitude (VertexSink: drawn by the platform)
   math/  util/                         vectors, boxes, units, save data
 core/src/test/                         unit tests of the game logic (no Minecraft)
+mc_1.20.1_common/src/main/java/de/mcpj/mc/
+  entity/  block/  item/               entities and blocks hosting the core logic (loader hooks are abstract)
+  client/                              rendering, HUD, input, camera, sounds
+  network/  rules/  platform/          messages, gameplay rules, McpjPlatform (what a loader provides)
+  gametest/                            the game test cases (registered by each loader)
+mc_1.20.1_fabric/src/main/java/de/mcpj/fabric/
+  registry/  entity/  block/  network/ config/  compat/  client/  gametest/
+  mixin/                               hooks Fabric has no events for (segments, cloak, camera, keys, ...)
 mc_1.20.1_forge_47/src/main/java/de/mcpj/forge/
-  entity/  block/  item/  registry/    Minecraft objects hosting the core logic
-  client/                              rendering, HUD drawing, input, camera, sounds
-  network/  event/  compat/  config/   packets, Forge events, Just Stargate Mod, Forge config adapter
-  gametest/                            game tests (headless server)
+  registry/  entity/  block/           registration, part entity segments, Forge Energy
+  network/  config/  client/           SimpleChannel, Forge config adapter, Forge client events
+  event/  compat/                      Forge events (rules, travel, id migration), Just Stargate Mod
+  gametest/                            game test registration (Forge annotations)
 tools/                                 texture, test structure and preview scripts
 ```
 

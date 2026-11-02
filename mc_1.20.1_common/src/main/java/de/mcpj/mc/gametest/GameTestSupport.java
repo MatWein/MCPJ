@@ -1,7 +1,7 @@
-package de.mcpj.forge.gametest;
+package de.mcpj.mc.gametest;
 
+import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
-import de.mcpj.forge.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
@@ -12,7 +12,7 @@ final class GameTestSupport {
     private GameTestSupport() {}
 
     static PuddleJumperEntity spawnJumper(GameTestHelper helper, double x, double y, double z, float yaw) {
-        PuddleJumperEntity jumper = helper.spawn(ModEntities.PUDDLE_JUMPER.get(), (float) x, (float) y, (float) z);
+        PuddleJumperEntity jumper = helper.spawn(McpjPlatform.get().jumperType(), (float) x, (float) y, (float) z);
         jumper.setYRot(yaw);
         jumper.yRotO = yaw;
         return jumper;
