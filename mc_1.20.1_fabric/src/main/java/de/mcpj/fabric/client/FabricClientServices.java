@@ -14,9 +14,10 @@ public final class FabricClientServices {
     private FabricClientServices() {}
 
     public static KeyMapping keyMapping(String name, int defaultKey, boolean onlyWhilePiloting) {
-        // keys that may share a key with vanilla (Tab, Q, E, I, L): Fabric has no conflict contexts, so they never
-        // take the key over (see KeyMappingMixin); vanilla keys keep working and ours are read as raw keys
-        return SharedKeyMapping.create("key.mcpj." + name, defaultKey, KeyBindings.CATEGORY, onlyWhilePiloting);
+        // vanilla gives each key to one binding only and Fabric has no conflict contexts: our keys never take a key
+        // over (see KeyMappingMixin), so vanilla keys (e.g. C = save hotbar, Tab, Q, E) keep working; MCPJ reads its
+        // keys as raw key presses
+        return SharedKeyMapping.create("key.mcpj." + name, defaultKey, KeyBindings.CATEGORY);
     }
 
     public static InputConstants.Key boundKey(KeyMapping key) {
