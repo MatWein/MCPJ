@@ -52,7 +52,7 @@ public class JumperGameTests {
         Zombie zombie = h.spawn(EntityType.ZOMBIE, new BlockPos(2, 2, 2));
         zombie.setNoAi(true);
         h.runAfterDelay(2, () -> {
-            for (double off : new double[]{-2.7, 0, 2.7}) {
+            for (double off : new double[]{-PuddleJumperEntity.SEGMENT_OFFSET, 0, PuddleJumperEntity.SEGMENT_OFFSET}) {
                 AABB box = zombie.getBoundingBox().move(j.getX() - zombie.getX(), j.getY() - zombie.getY(), j.getZ() + off - zombie.getZ());
                 h.assertTrue(!h.getLevel().noCollision(zombie, box), "Kein Widerstand bei Offset " + off);
             }
@@ -75,8 +75,8 @@ public class JumperGameTests {
             h.assertTrue(parts[0].getId() == j.getId() + 1 && parts[1].getId() == j.getId() + 2, "Segment-IDs falsch");
             double dxFront = parts[0].getX() - j.getX();
             double dxRear = parts[1].getX() - j.getX();
-            h.assertTrue(Math.abs(dxFront + 2.7) < 0.01, "Bug-Segment falsch: dx=" + dxFront);
-            h.assertTrue(Math.abs(dxRear - 2.7) < 0.01, "Heck-Segment falsch: dx=" + dxRear);
+            h.assertTrue(Math.abs(dxFront + PuddleJumperEntity.SEGMENT_OFFSET) < 0.01, "Bug-Segment falsch: dx=" + dxFront);
+            h.assertTrue(Math.abs(dxRear - PuddleJumperEntity.SEGMENT_OFFSET) < 0.01, "Heck-Segment falsch: dx=" + dxRear);
             h.assertTrue(j.onGround(), "Jumper auf dem Boden sollte als gelandet gelten");
             h.assertTrue(!j.isPodsOut(), "Gondeln sollten gelandet eingefahren sein");
             h.succeed();

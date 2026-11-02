@@ -27,10 +27,11 @@ public class PuddleJumperRenderer extends EntityRenderer<PuddleJumperEntity> {
     public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(MODID, "textures/entity/puddle_jumper.png");
     public static final ResourceLocation SHIELD_TEXTURE = ResourceLocation.fromNamespaceAndPath(MODID, "textures/entity/shield.png");
     /** Blase um den Jumper (Halbachsen in Blöcken, Mittelpunkt über dem Boden). */
-    private static final float BUBBLE_RX = 3.1f, BUBBLE_RY = 2.0f, BUBBLE_RZ = 5.5f, BUBBLE_CY = 1.0f;
+    private static final float BUBBLE_RX = 3.1f * PuddleJumperEntity.RENDER_SIZE, BUBBLE_RY = 2.0f * PuddleJumperEntity.RENDER_SIZE,
+            BUBBLE_RZ = 5.5f * PuddleJumperEntity.RENDER_SIZE, BUBBLE_CY = 1.0f * PuddleJumperEntity.RENDER_SIZE;
     private static final int BUBBLE_LON = 40, BUBBLE_LAT = 20;
     private static final float POD_OUT = 1.6f;
-    private static final float SHADOW = 2.2f;
+    private static final float SHADOW = 2.2f * PuddleJumperEntity.RENDER_SIZE;
 
     // Ionenfahne: Atlas-Region (u0, v0, u1, v1), siehe tools/build_model.py REG_PLUME
     private static final float PU0 = 0.751f, PV0 = 0.751f, PU1 = 0.999f, PV1 = 0.999f;
@@ -74,10 +75,10 @@ public class PuddleJumperRenderer extends EntityRenderer<PuddleJumperEntity> {
         if (hurt > 0) roll += Mth.sin(hurt) * hurt * dmg / 400f * e.getHurtDir();
         float bob = e.onGround() ? 0f : Mth.sin((e.tickCount + pt) * 0.08f) * 0.04f;
 
-        ps.translate(0, 1.0 + bob, 0);
+        ps.translate(0, PuddleJumperEntity.RENDER_SIZE + bob, 0);
         ps.mulPose(Axis.XP.rotationDegrees(pitch));
         ps.mulPose(Axis.ZP.rotationDegrees(roll));
-        ps.translate(0, -1.0, 0);
+        ps.translate(0, -PuddleJumperEntity.RENDER_SIZE, 0);
 
         float s = PuddleJumperEntity.MODEL_SCALE;
 

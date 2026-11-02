@@ -1,6 +1,6 @@
 # Puddle Jumper – Minecraft-Mod (Forge 1.20.1 / 47.4.16)
 
-Ein fliegbarer Puddle Jumper aus *Stargate Atlantis*, ca. 8 Blöcke lang, mit Tarnung,
+Ein fliegbarer Puddle Jumper aus *Stargate Atlantis*, ca. 10,4 Blöcke lang, mit Tarnung,
 Schutzschild, Laderaum, ausfahrbaren Antriebsgondeln und zielsuchenden Drohnen.
 
 ## Bauen & Starten

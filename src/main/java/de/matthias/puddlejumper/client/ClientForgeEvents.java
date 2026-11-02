@@ -27,7 +27,7 @@ import static de.matthias.puddlejumper.PuddleJumperMod.MODID;
 @Mod.EventBusSubscriber(modid = MODID, value = Dist.CLIENT)
 public final class ClientForgeEvents {
     /** Kameraabstand in der Third-Person-Ansicht (Vanilla: 4). */
-    private static final double CAMERA_DISTANCE = 11.0;
+    private static final double CAMERA_DISTANCE = 11.0 * PuddleJumperEntity.RENDER_SIZE;
 
     /** Ansicht vor dem Einsteigen; null = nicht im Jumper. */
     private static CameraType cameraBeforeBoarding;
@@ -140,7 +140,7 @@ public final class ClientForgeEvents {
         if (e == null || !(e.getVehicle() instanceof PuddleJumperEntity)) return;
         float pt = (float) event.getPartialTick();
         Vec3 eye = e.getEyePosition(pt);
-        cam.setPosition(eye.x, eye.y + 1.2, eye.z);
+        cam.setPosition(eye.x, eye.y + 1.2 * PuddleJumperEntity.RENDER_SIZE, eye.z);
         cam.move(-cam.getMaxZoom(CAMERA_DISTANCE), 0, 0);
     }
 }

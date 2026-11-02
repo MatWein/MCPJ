@@ -54,12 +54,19 @@ import java.util.function.Consumer;
  * Ohne Pilot simuliert der Server (Schwerkraft, sanftes Absinken).</p>
  */
 public class PuddleJumperEntity extends Entity implements HasCustomInventoryScreen {
-    public static final float WIDTH = 2.6f;
-    public static final float HEIGHT = 2.0f;
-    /** Modell-Einheiten (OBJ) -> Blöcke. Das Modell ist 28.9 Einheiten lang -> 8 Blöcke. */
-    public static final float MODEL_SCALE = 8.0f / 28.9f;
+    /**
+     * Sichtbare Größe des Schiffs (1 = ursprüngliche 8 Blöcke Länge): Modell, Schild-/Tarnblase, Schatten,
+     * Kamera, Pilotensitz, Drohnen-Startpunkte und Aussteigepunkte skalieren damit.
+     */
+    public static final float RENDER_SIZE = 1.3f;
+    /** Größe der Hitbox (Kollision, Treffer) - bewusst kleiner als das Modell. */
+    public static final float HITBOX_SIZE = 1.1f;
+    public static final float WIDTH = 2.6f * HITBOX_SIZE;
+    public static final float HEIGHT = 2.0f * HITBOX_SIZE;
+    /** Modell-Einheiten (OBJ) -> Blöcke. Das Modell ist 28.9 Einheiten lang -> 8 Blöcke * RENDER_SIZE. */
+    public static final float MODEL_SCALE = 8.0f * RENDER_SIZE / 28.9f;
     /** Abstand der Bug-/Heck-Hitbox vom Mittelpunkt (Blöcke). */
-    private static final double SEGMENT_OFFSET = 2.7;
+    public static final double SEGMENT_OFFSET = 2.7 * HITBOX_SIZE;
 
     // Flugwerte (Blöcke/Tick)
     private static final double ACCEL = 0.022;
@@ -424,7 +431,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             applyHullDamage(WATER_DAMAGE, null, false);
             if (level() instanceof net.minecraft.server.level.ServerLevel sl) {
                 Vec3 p = position().add(0, HEIGHT * 0.7, 0);
-                sl.sendParticles(ParticleTypes.BUBBLE, p.x, p.y, p.z, 12, 1.2, 0.4, 1.2, 0.05);
+                sl.sendParticles(ParticleTypes.BUBBLE, p.x, p.y, p.z, 12, 1.2 * RENDER_SIZE, 0.4 * RENDER_SIZE, 1.2 * RENDER_SIZE, 0.05);
             }
         }
     }
@@ -497,7 +504,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     public Vec3 getDismountLocationForPassenger(LivingEntity passenger) {
         Vec3 f = forward(), l = left();
         Vec3 pos = position();
-        Vec3[] candidates = {pos.add(f.scale(-5.0)), pos.add(l.scale(2.4)), pos.add(l.scale(-2.4)), pos.add(f.scale(5.0))};
+        Vec3[] candidates = {pos.add(f.scale(-5.0 * RENDER_SIZE)), pos.add(l.scale(2.4 * RENDER_SIZE)), pos.add(l.scale(-2.4 * RENDER_SIZE)), pos.add(f.scale(5.0 * RENDER_SIZE))};
         for (Vec3 cand : candidates) {
             BlockPos base = BlockPos.containing(cand);
             for (BlockPos bp : new BlockPos[]{base, base.above(), base.below()}) {
@@ -513,7 +520,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             }
         }
         // In der Luft: seitlich aussteigen
-        Vec3 side = pos.add(l.scale(2.4));
+        Vec3 side = pos.add(l.scale(2.4 * RENDER_SIZE));
         if (level().noCollision(passenger, passenger.getBoundingBox().move(side.subtract(passenger.position())))) {
             return side;
         }
