@@ -13,7 +13,7 @@ public final class JumperGeometry {
     private static final float BASE_LENGTH_BLOCKS = 8.0f;
     public static final float MODEL_SCALE = BASE_LENGTH_BLOCKS * RENDER_SCALE / MODEL_LENGTH_UNITS;
 
-    // Model units; must match POD_* in tools/build_model.py
+    // Model units; must match the drive pods in models/entity/puddle_jumper.obj
     public static final float POD_X = 4.95f;
     public static final float POD_Y = 4.3f;
     public static final float POD_REAR_Z = -12.2f;

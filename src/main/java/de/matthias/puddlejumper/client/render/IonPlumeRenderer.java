@@ -10,7 +10,7 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 final class IonPlumeRenderer {
-    // Atlas region of the plume, see REG_PLUME in tools/build_model.py
+    // Atlas region of the plume in textures/entity/puddle_jumper.png (pixels 768..1024 x 1536..2048)
     private static final float U0 = 0.751f;
     private static final float V0 = 0.751f;
     private static final float U1 = 0.999f;

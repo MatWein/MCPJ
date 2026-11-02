@@ -13,7 +13,7 @@ public class JumperEngineSound extends AbstractTickableSoundInstance {
     private static final double MAX_AUDIBLE_SPEED = 1.3;
     private static final float BASE_VOLUME_PILOTED = 0.35f;
     private static final float BASE_VOLUME = 0.25f;
-    private static final float VOLUME_PER_SPEED = 0.45f;
+    private static final float VOLUME_PER_SPEED = 0.5f;
     private static final float CLOAKED_VOLUME_FACTOR = 0.5f;
     private static final float VOLUME_RESPONSE = 0.1f;
     private static final float BASE_PITCH = 0.75f;
