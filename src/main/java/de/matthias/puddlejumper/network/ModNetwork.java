@@ -1,33 +1,46 @@
 package de.matthias.puddlejumper.network;
 
-import net.minecraft.resources.ResourceLocation;
+import de.matthias.puddlejumper.PuddleJumperMod;
+import de.matthias.puddlejumper.entity.jumper.PuddleJumperEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
-import static de.matthias.puddlejumper.PuddleJumperMod.MODID;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public final class ModNetwork {
-    private static final String VERSION = "2";
-    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            ResourceLocation.fromNamespaceAndPath(MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
+    private static final String PROTOCOL_VERSION = "3";
+    private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+            PuddleJumperMod.id("main"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
 
     private ModNetwork() {}
 
     public static void register() {
-        CHANNEL.messageBuilder(JumperActionPacket.class, 0, NetworkDirection.PLAY_TO_SERVER)
+        int id = 0;
+        CHANNEL.messageBuilder(JumperActionPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(JumperActionPacket::encode)
                 .decoder(JumperActionPacket::decode)
                 .consumerMainThread(JumperActionPacket::handle)
                 .add();
-        CHANNEL.messageBuilder(JumperImpactPacket.class, 1, NetworkDirection.PLAY_TO_SERVER)
+        CHANNEL.messageBuilder(JumperImpactPacket.class, id, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(JumperImpactPacket::encode)
                 .decoder(JumperImpactPacket::decode)
                 .consumerMainThread(JumperImpactPacket::handle)
                 .add();
     }
 
-    public static void sendToServer(Object msg) {
-        CHANNEL.sendToServer(msg);
+    public static void sendToServer(Object packet) {
+        CHANNEL.sendToServer(packet);
+    }
+
+    static void handleFromPilot(Supplier<NetworkEvent.Context> context, BiConsumer<PuddleJumperEntity, ServerPlayer> handler) {
+        ServerPlayer player = context.get().getSender();
+        if (player != null && player.getVehicle() instanceof PuddleJumperEntity jumper && jumper.getControllingPassenger() == player) {
+            handler.accept(jumper, player);
+        }
+        context.get().setPacketHandled(true);
     }
 }

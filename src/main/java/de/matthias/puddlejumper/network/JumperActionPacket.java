@@ -1,31 +1,24 @@
 package de.matthias.puddlejumper.network;
 
-import de.matthias.puddlejumper.entity.PuddleJumperEntity;
+import de.matthias.puddlejumper.entity.jumper.JumperAction;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-/** Client -> Server: Pilot löst eine Aktion aus (Tarnung, Schild, Gondeln, Drohne, Licht). */
-public record JumperActionPacket(Action action, int targetId) {
+public record JumperActionPacket(JumperAction action, int targetId) {
+    public static final int NO_TARGET = -1;
 
-    public enum Action { CLOAK, SHIELD, PODS, FIRE, LIGHTS }
-
-    public static void encode(JumperActionPacket msg, FriendlyByteBuf buf) {
-        buf.writeEnum(msg.action);
-        buf.writeVarInt(msg.targetId);
+    public static void encode(JumperActionPacket packet, FriendlyByteBuf buffer) {
+        buffer.writeEnum(packet.action);
+        buffer.writeVarInt(packet.targetId);
     }
 
-    public static JumperActionPacket decode(FriendlyByteBuf buf) {
-        return new JumperActionPacket(buf.readEnum(Action.class), buf.readVarInt());
+    public static JumperActionPacket decode(FriendlyByteBuf buffer) {
+        return new JumperActionPacket(buffer.readEnum(JumperAction.class), buffer.readVarInt());
     }
 
-    public static void handle(JumperActionPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ServerPlayer player = ctx.get().getSender();
-        if (player != null && player.getVehicle() instanceof PuddleJumperEntity jumper) {
-            jumper.handleAction(player, msg.action, msg.targetId);
-        }
-        ctx.get().setPacketHandled(true);
+    public static void handle(JumperActionPacket packet, Supplier<NetworkEvent.Context> context) {
+        ModNetwork.handleFromPilot(context, (jumper, pilot) -> jumper.systems().perform(pilot, packet.action, packet.targetId));
     }
 }

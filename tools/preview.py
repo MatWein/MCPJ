@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Software-Rasterizer zur Vorschau des generierten OBJ (und zum Rendern des Item-Icons).
+"""Software rasterizer to preview the generated OBJ (and to render the item icon).
 
-  python3 tools/preview.py out.png [--open]   # 2x3 Ansichten; --open: Gondeln ausgefahren
+  python3 tools/preview.py out.png [--open]   # 2x3 views; --open: pods extended
 """
 import math
 import os
@@ -130,9 +130,9 @@ def main():
     open_state = '--open' in sys.argv
     obj = os.path.join(ASSETS, 'models', 'entity', 'puddle_jumper.obj')
     tex = Image.open(os.path.join(ASSETS, 'textures', 'entity', 'puddle_jumper.png'))
-    views = [(0, 0, 'Bug'), (math.pi, 0, 'Heck'), (math.pi / 2, 0, 'Seite'),
-             (math.radians(35), math.radians(25), 'vorn schräg'), (math.radians(215), math.radians(25), 'hinten schräg'),
-             (0, math.radians(89), 'oben')]
+    views = [(0, 0, 'bow'), (math.pi, 0, 'stern'), (math.pi / 2, 0, 'side'),
+             (math.radians(35), math.radians(25), 'front quarter'), (math.radians(215), math.radians(25), 'rear quarter'),
+             (0, math.radians(89), 'top')]
     S = 420
     W = Image.new('RGB', (S * 3, S * 2))
     for i, (y, p, label) in enumerate(views):

@@ -74,7 +74,7 @@ minecraft {
             // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
             property 'forge.logging.console.level', 'debug'
 
-            // Mixin-Refmaps fremder Mods (JSG, Mekanism, ...) auf Dev-Namen umschreiben
+            // remap mixin refmaps of other mods to dev names
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
 
@@ -88,14 +88,14 @@ minecraft {
         client {
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', mod_id
-            // ./gradlew runClient -PjoinServer=localhost  -> verbindet direkt mit dem Server
+            // ./gradlew runClient -PjoinServer=localhost connects straight to a server
             if (project.hasProperty('joinServer')) {
                 args '--quickPlayMultiplayer', project.property('joinServer')
             }
         }
 
         server {
-            // eigenes Verzeichnis, damit Client und Server parallel laufen können
+            // separate directory so client and server can run side by side
             workingDirectory project.file('run-server')
             property 'forge.enabledGameTestNamespaces', mod_id
             args '--nogui'
@@ -105,7 +105,7 @@ minecraft {
         // By default, the server will crash when no gametests are provided.
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
-            // eigenes Verzeichnis: run/mods enthält reine Client-Mods (siehe copyClientMods)
+            // separate directory: run/mods holds client-only mods (see copyClientMods)
             workingDirectory project.file('run-gametest')
             property 'forge.enabledGameTestNamespaces', mod_id
         }
@@ -133,11 +133,11 @@ repositories {
     //     dir 'libs'
     // }
 
-    // Mods des Testservers "Kaffee Hart" (JSG, Mekanism, CC:Tweaked, ...) – werden für den Dev-Client deobfuskiert
+    // mods of the local test server (JSG, Mekanism, CC:Tweaked, ...), deobfuscated for the dev client
     flatDir {
         dir 'mc_server_kaffee_hart/mods'
     }
-    // zusätzliche Client-Mods (z. B. Embeddium + Oculus für Shader) – nicht in run/mods legen, dort laden sie im Dev-Umfeld nicht
+    // additional client-only mods (e.g. Embeddium + Oculus for shaders); obfuscated jars do not load from run/mods in dev
     flatDir {
         dir 'client-mods'
     }
@@ -166,7 +166,7 @@ dependencies {
     // The group id is ignored when searching -- in this case, it is "blank"
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
 
-    // Alle Mod-JARs aus mc_server_kaffee_hart/mods auch im Dev-Client laden (gleiche Mods wie der Server)
+    // load every mod jar of the test server in the dev environment as well
     fileTree(dir: 'mc_server_kaffee_hart/mods', include: '*.jar')
             .filter { !it.name.startsWith(mod_id) }
             .each {
@@ -174,7 +174,7 @@ dependencies {
                 if (m.matches()) runtimeOnly fg.deobf("blank:${m.group(1)}:${m.group(2)}")
             }
 
-    // Reine Client-Mods aus client-mods/ (Embeddium, Oculus, ...): deobfuskiert, aber nur für runClient
+    // client-only mods from client-mods/: deobfuscated, used by runClient only
     fileTree(dir: 'client-mods', include: '*.jar').each {
         def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
         if (m.matches()) clientMods fg.deobf("blank:${m.group(1)}:${m.group(2)}")
@@ -245,7 +245,7 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
-// Hilfstask: lädt die dekompilierten Minecraft-Quellen (nur zur Entwicklung/Nachschlagen)
+// helper task: resolves the decompiled Minecraft sources for reference
 tasks.register('fetchMcSources') {
     doLast {
         def cfg = configurations.detachedConfiguration(dependencies.create("net.minecraftforge:forge:${minecraft_version}-${forge_version}_mapped_${mapping_channel}_${mapping_version}:sources"))
@@ -254,13 +254,13 @@ tasks.register('fetchMcSources') {
     }
 }
 
-// Client-Mods (deobfuskiert) nach run/mods kopieren - nur der Client lädt sie
+// copy the deobfuscated client-only mods to run/mods; only the client loads them
 def clientModsDir = file('run/mods')
 tasks.register('copyClientMods') {
     inputs.files(configurations.clientMods)
     doLast {
         clientModsDir.mkdirs()
-        // alte Kopien (Präfix "dev-") entfernen, damit entfernte/aktualisierte Mods nicht liegen bleiben
+        // remove previous copies (prefix "dev-") so removed or updated mods do not linger
         clientModsDir.listFiles().findAll { it.name.startsWith('dev-') }.each { it.delete() }
         configurations.clientMods.files.each { f ->
             java.nio.file.Files.copy(f.toPath(), new File(clientModsDir, 'dev-' + f.name).toPath())
@@ -269,7 +269,7 @@ tasks.register('copyClientMods') {
 }
 tasks.matching { it.name == 'runClient' }.configureEach { dependsOn 'copyClientMods' }
 
-// Gametests immer in frischer Welt: sonst bleiben schwebende Jumper früherer Läufe stehen und stören
+// game tests always run in a fresh world, otherwise hovering jumpers of earlier runs get in the way
 tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     doFirst { delete file('run-gametest/world') }
 }

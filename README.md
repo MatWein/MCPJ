@@ -1,148 +1,154 @@
-# Puddle Jumper – Minecraft-Mod (Forge 1.20.1 / 47.4.16)
+# Puddle Jumper
 
-Ein fliegbarer Puddle Jumper aus *Stargate Atlantis*, ca. 10,4 Blöcke lang, mit Tarnung,
-Schutzschild, Laderaum, ausfahrbaren Antriebsgondeln und zielsuchenden Drohnen.
+A flyable Puddle Jumper from *Stargate Atlantis* for Minecraft Forge 1.20.1 (Forge 47.4.16).
+About 10 blocks long, with cloak, shield, cargo hold, retractable drive pods, homing drones,
+headlights and an energy system that works with any Forge Energy mod.
 
-## Bauen & Starten
+## Getting started
+
+- Creative inventory, tab **Tools & Utilities**: *Puddle Jumper* and *Jumper Charging Pad*
+- There are no crafting recipes yet.
+
+Use the item on the ground and the jumper appears facing your view direction.
+New jumpers start with 20 % energy.
+
+## Controls
+
+| Action | Key |
+|---|---|
+| Board | Right-click the jumper |
+| Open cargo hold (outside) | Sneak + right-click |
+| Open cargo hold (as pilot) | `I` |
+| Forward / reverse | `W` / `S` (along the bow) |
+| Turn | `A` / `D` (the camera keeps its direction) |
+| Strafe | `Q` / `E` (replaces drop/inventory while piloting) |
+| Climb / descend | `Space` / `Ctrl` (sprint key) |
+| Look around | Mouse (moves the camera only) |
+| Cycle target | `Tab` (nearest first, then the nearest not yet selected; after the last one: no target; after a 3 s pause it starts over) |
+| Launch drone | Left click (flies to the selected target regardless of view; without target to the nearest hostile ahead) |
+| Toggle cloak | `C` |
+| Toggle shield | `V` |
+| Toggle headlights | `L` (replaces advancements while piloting) |
+| Extend / retract drive pods | `G` (otherwise automatic: retracted when landed, extended in the air, always extended when firing) |
+| Leave | `Shift` |
+
+All jumper keys can be rebound under *Options → Controls → Puddle Jumper*.
+
+## Features
+
+**Flight.** The jumper is inert: it accelerates and turns gently and coasts. Without input it brakes and hovers in
+place, even after the pilot leaves it mid-air. Boarding switches to third person, leaving restores the previous view.
+The engine glows and trails ion plumes while airborne and is silent when landed.
+
+**Cloak.** Invisible to others apart from a very faint energy bubble, but still solid. The pilot sees the ship as a
+faint glowing outline. Mobs lose track of the pilot. Launching a drone decloaks.
+
+**Shield.** A gently wobbling energy bubble with a water look that absorbs all damage as long as there is energy;
+hits make it flash.
+
+**Targeting and drones.** Living entities and uncloaked jumpers within 64 blocks are marked (hostiles red,
+jumpers cyan, others white; the selected target bold with name and distance). Drones home in on their target and
+explode on impact (slightly weaker than a creeper, breaking blocks only with `mobGriefing`); the own jumper and its
+passengers are never harmed.
+
+**Hull.** 240 hull points (a diamond sword needs about 35 hits). A hostile drone destroys 60 % of the hull, so the
+second one is fatal. There is no self-repair, and the hull takes damage in creative mode too. A jumper that is at
+least half submerged loses 1 hull point per second without shield. A destroyed jumper drops its item and cargo
+(only the cargo in creative mode). The jumper ignores knockback from explosions, hits, mobs and water currents.
+
+**Collisions.** Brushing walls, light bumps and normal landings (even at full sink rate) are harmless. From about
+8 m/s against an obstacle or 15 m/s downwards damage increases, up to at most **30 % of the hull** per impact
+(full speed into a wall or a crash from great height). The shield absorbs impacts as well.
+
+**Headlights.** Minecraft has no moving light sources, so the server places invisible vanilla light blocks
+(`minecraft:light`, level 15) in the hull and ahead of the bow and removes them behind the ship. A light moves only
+once the jumper is 2 blocks away and at most every 4 ticks; above 10 m/s only the bow light is used. Cloaked
+jumpers stay dark.
+
+**Cargo.** 54 slots. Dropped items close to the hull are collected automatically, like a player does.
+
+**Underwater.** Everything is slower: thrust and turning are halved and drones fly at half speed.
+
+## Energy
+
+The jumper stores Forge Energy (FE); everything costs energy, in creative mode too.
+
+| Consumer | Default |
+|---|---|
+| Capacity | 60 M FE (≈ 150 MJ in Mekanism) |
+| Drive, landed | 0 |
+| Drive, airborne | 250 FE/t hovering up to 1,500 FE/t at top speed (≈ 3 h 20 min hovering, ≈ 33 min full speed ≈ 40 km) |
+| Drive underwater | × 1.5 |
+| Shield | 500 FE/t, × 2 underwater, plus 200 FE per absorbed hull point |
+| Cloak | 400 FE/t, × 1.5 underwater |
+| Under fire (2 s after a hit) | shield and cloak × 2 |
+| Drone | 150,000 FE per launch |
+| Headlights | 20 FE/t |
+
+If the energy for an absorbed hit is missing, the shield collapses and the hit goes through. With an empty storage
+every system fails (shield, cloak, lights, drive and controls) and the jumper **crashes**. The HUD shows charge,
+consumption or charging power and the remaining time; below 10 % it blinks and an alarm sounds.
+
+### Jumper Charging Pad
+
+A block that accepts Forge Energy from every side (Mekanism, Thermal, Immersive Engineering, …; Mekanism joules
+are converted automatically). A **landed** jumper charges from all pads directly below its hull with
+10,000 FE/t per pad, so a larger landing field charges faster.
+
+- off (dark) → powered (glowing runway lights) → charging (bright, light level 15)
+- the landing arrow points in the direction the player faced when placing it
+- a comparator reads the charge of the jumper currently charging
+
+## Configuration
+
+Gameplay values live in the server config `world/serverconfig/puddlejumper-server.toml` (synced to clients):
+flight model, hull and impact damage, energy consumption, drones, targeting ranges, headlights, cargo pickup and
+the charging pad. The client config `config/puddlejumper-client.toml` holds the camera distance and the low energy
+warning threshold.
+
+## Building
 
 ```bash
-./gradlew build            # Mod-JAR -> build/libs/puddlejumper-1.0.0.jar
-./gradlew runClient        # Entwicklungs-Client
-./gradlew runServer        # Entwicklungs-Server (Verzeichnis run-server/)
-./gradlew runClient -PjoinServer=localhost   # Client verbindet direkt zum Server
-./gradlew runGameTestServer  # automatische Tests (headless)
+./gradlew build                             # mod jar in build/libs/
+./gradlew runClient                         # development client
+./gradlew runServer                         # development server (directory run-server/)
+./gradlew runClient -PjoinServer=localhost  # client joins a server directly
+./gradlew runGameTestServer                 # automated game tests (headless, fresh world each run)
 ```
 
-Benötigt Java 17 (wird von Gradle bei Bedarf automatisch geladen).
+Requires Java 17 (Gradle downloads it if needed).
 
-## Bekommen
+For local testing with other mods, the build also loads every jar in `mc_server_kaffee_hart/mods` (deobfuscated)
+into the development runs, and client-only mods such as Embeddium/Oculus from `client-mods/` into `runClient`.
 
-- Kreativ: Reiter **Werkzeuge & Hilfsmittel** (Jumper und **Jumper-Ladestation**)
-- Rezepte gibt es noch keine.
-
-Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
-
-## Bedienung
-
-| Aktion | Taste |
-|---|---|
-| Einsteigen | Rechtsklick auf den Jumper |
-| Laderaum öffnen (von außen) | Schleichen + Rechtsklick |
-| Laderaum öffnen (als Pilot) | `I` |
-| Vor / zurück | `W` / `S` (in Bugrichtung) |
-| Drehen | `A` / `D` |
-| Seitlich fliegen (ohne Drehung) | `Q` / `E` (im Jumper statt Wegwerfen/Inventar) |
-| Steigen / Sinken | `Leertaste` / `Strg` (Sprint-Taste) |
-| Umschauen | Maus (bewegt nur die Kamera; beim Drehen mit `A`/`D` bleibt die Kamera stehen) |
-| Ziel wechseln | `Tab` (nächstgelegenes zuerst, dann immer das nächstgelegene noch nicht gewählte; nach dem letzten: kein Ziel; nach 3 s Pause beginnt es wieder beim nächsten) |
-| Drohne abfeuern | Linksklick (fliegt zum gewählten Ziel, egal wohin man schaut; ohne Ziel zum nächsten Feind vor dem Schiff) |
-| Tarnung an/aus | `C` |
-| Schutzschild an/aus | `V` |
-| Licht an/aus | `L` (im Jumper statt Fortschritte) |
-| Antriebsgondeln aus/ein | `G` (sonst automatisch: gelandet eingefahren, in der Luft ausgefahren; beim Feuern immer aus) |
-| Aussteigen | `Shift` |
-
-Die Tasten `C`, `V`, `G`, `L`, `Tab`, `Q`/`E` und `I` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
-
-Der Jumper ist träge: Er beschleunigt und dreht gemächlich und rollt aus. Ohne Eingabe bremst er ab und
-schwebt auf der Stelle – auch wenn man in der Luft aussteigt, bleibt er dort stehen. Die Düsen leuchten,
-sobald er in der Luft ist, und ziehen Ionenfahnen, die mit dem Tempo länger werden; gelandet sind sie aus.
-Beim Einsteigen schaltet die Kamera automatisch in die Außenansicht, beim Aussteigen zurück in die
-vorherige Ansicht.
-Getarnt ist das Schiff für andere unsichtbar, nur eine sehr dezente Energieblase verrät es; es bleibt
-aber fest (man kann nicht hindurchlaufen). Der Pilot sieht sein Schiff als schwachen Leuchtumriss.
-Mobs verlieren den Piloten aus den Augen.
-Im Jumper werden alle Lebewesen und andere (ungetarnte) Puddle Jumper in 64 Blöcken Umkreis dezent
-markiert – Feinde rot, Jumper cyan, sonst weiß; das gewählte Ziel kräftig mit Name und Entfernung. Drohnen explodieren beim Einschlag (etwas kleiner als ein Creeper,
-Blockschaden nur bei aktivem `mobGriefing`); der eigene Jumper und Pilot bleiben verschont.
-Das Triebwerk ist zu hören, solange der Jumper in der Luft ist; gelandet ist es still (auch mit Pilot).
-Herumliegende Items dicht am Rumpf sammelt der Jumper wie ein Spieler automatisch in seinen Laderaum ein.
-Der Jumper bekommt keinen Rückstoß: Explosionen, Treffer, Spieler, Mobs oder Wasserströmung verschieben ihn nicht
-(Schaden nimmt er trotzdem, außer mit aktivem Schild).
-Der Schutzschild legt eine sanft wabernde Energieblase mit verschwommenem Wasser-Effekt um den Jumper
-und macht ihn unzerstörbar; Treffer lassen die Blase kurz aufleuchten.
-Beim Abfeuern einer Drohne wird die Tarnung deaktiviert.
-Mit `L` leuchtet der Jumper wie eine Fackel (Lichtstufe 15, in Rumpfmitte und vor dem Bug): Der Server setzt dafür
-unsichtbare Vanilla-Lichtblöcke (`minecraft:light`) in Luft oder Wasser und entfernt sie beim Weiterfliegen wieder.
-Um Licht-Updates zu sparen, wandert ein Licht erst ab 2 Blöcken Abstand und höchstens alle 4 Ticks mit; im schnellen
-Flug (> 10 m/s) leuchtet nur das Bug-Licht. Getarnt bleibt das Licht aus.
-Die Hülle hält 240 Punkte aus (Diamantschwert: ~35 Schläge, ~23 kritische) – auch im Kreativmodus. Ein
-fremder Drohnentreffer kostet 60 %: die erste Drohne übersteht der Jumper knapp, die zweite zerstört ihn.
-Eine Selbstreparatur gibt es nicht.
-Unter Wasser ist alles träger: Der Jumper beschleunigt und dreht langsamer (max. ~5 m/s), Drohnen fliegen
-halb so schnell. Ist er mindestens zur Hälfte untergetaucht, verliert er ohne Schild 1 Hüllenpunkt pro
-Sekunde (HUD-Warnung). Beim Zerstören fallen Item und
-Ladung heraus (im Kreativmodus nur die Ladung).
-
-## Energie
-
-Der Jumper hat einen großen Energiespeicher (Forge Energy, FE). Neue Jumper – und Jumper aus älteren Spielständen –
-starten mit 20 % Ladung. Alles kostet Energie, auch im Kreativmodus:
-
-| Verbraucher | Standard |
-|---|---|
-| Speicher | 60 Mio. FE (≈ 150 MJ in Mekanism) |
-| Antrieb gelandet | 0 |
-| Antrieb in der Luft | 250 FE/t schwebend bis 1 500 FE/t bei Höchsttempo (≈ 3 h 20 min Schweben, ≈ 33 min Vollgas ≈ 40 km) |
-| Antrieb unter Wasser | × 1,5 |
-| Schutzschild | 500 FE/t, unter Wasser × 2, pro abgefangenem Schadenspunkt zusätzlich 200 FE |
-| Tarnung | 400 FE/t, unter Wasser × 1,5 |
-| unter Beschuss (2 s nach einem Treffer) | Schild und Tarnung × 2 |
-| Drohne | 150 000 FE pro Schuss |
-| Licht | 20 FE/t |
-
-Reicht die Energie für einen abgefangenen Treffer nicht, bricht der Schild zusammen und der Treffer geht durch.
-Ist der Speicher leer, fällt alles aus (Schild, Tarnung, Licht, Antrieb, Steuerung) und der Jumper **stürzt ab**.
-Das HUD zeigt Ladestand, Verbrauch bzw. Ladeleistung und die geschätzte Restzeit; unter 10 % blinkt die Anzeige
-und ein Warnton ertönt.
-
-Alle Werte stehen in der Server-Config `world/serverconfig/puddlejumper-server.toml`.
-
-### Jumper-Ladestation
-
-Ein Block, der Forge Energy von allen Seiten aufnimmt (Mekanism, Thermal, Immersive Engineering, … – Mekanism-Joule
-werden automatisch umgerechnet). Ein **gelandeter** Jumper lädt aus allen Stationen direkt unter seinem Rumpf
-(je Station 10 000 FE/t; mehrere Stationen nebeneinander, z. B. ein 3×9-Landefeld, laden entsprechend schneller).
-
-- aus (dunkel) → versorgt (leuchtet, Landebahn-Befeuerung) → lädt gerade (hell, Lichtstufe 15)
-- der Landepfeil zeigt in Blickrichtung beim Platzieren
-- ein Comparator an der Station gibt den Ladestand des gerade ladenden Jumpers aus
-
-## Kollisionen
-
-Aufpralle beschädigen die Hülle: Leichtes Anecken, Streifen an Wänden und normales Landen (auch mit voller
-Sinkrate) bleiben folgenlos. Ab ~8 m/s Aufprall gegen ein Hindernis bzw. ~15 m/s nach unten wächst der Schaden,
-bei Vollgas gegen eine Wand oder einem Absturz aus großer Höhe sind es höchstens **30 % der Hülle** pro Aufprall.
-Der Schild fängt auch Aufpralle ab (kostet Energie wie ein Treffer).
-
-## Projektaufbau
+## Project layout
 
 ```
-assets/                               Original-Vorlage (OBJ + Textur), Basis für tools/build_model.py
-tools/build_model.py                  erzeugt das verbesserte Modell + Texturatlas + Drohne + Item-Icon
-tools/preview.py                      Software-Renderer für Vorschaubilder (python3 tools/preview.py out.png [--open])
-tools/make_test_structure.py          GameTest-Plattform
-tools/make_pad_textures.py            Texturen der Ladestation
+assets/                                original model and texture, input of tools/build_model.py
+tools/build_model.py                   builds the improved model, texture atlas, drone and item icon
+tools/preview.py                       software renderer for preview images (python3 tools/preview.py out.png [--open])
+tools/make_pad_textures.py             charging pad textures
+tools/make_test_structure.py           game test platform
 src/main/java/de/matthias/puddlejumper/
-  entity/PuddleJumperEntity.java      Flugphysik, Multipart-Hitbox, Laderaum, Tarnung, Drohnenstart
-  entity/PuddleJumperPart.java        Bug-/Heck-Hitbox
-  entity/DroneEntity.java             zielsuchende Drohne
-  block/ChargingPad*.java             Ladestation (Forge-Energy-Puffer, Zustände, Comparator)
-  Config.java                         Server-Config (Energiewerte)
-  client/ObjModel.java                eigener OBJ-Loader/-Renderer (Gruppen, *_glow leuchtet)
-  client/PuddleJumperRenderer.java    Animationen (Gondeln, Neigung, Tarnung, Ionenfahnen)
-  client/…                            HUD, Tasten, Kamera, Triebwerkssound
-  test/JumperGameTests.java           GameTests
+  config/                              server and client config
+  registry/                            blocks, items, entities, sounds, creative tab
+  entity/jumper/                       the jumper: flight, energy, hull, systems, weapons, lights, cargo, animation
+  entity/drone/                        homing drone
+  block/                               charging pad (Forge Energy buffer, states, comparator)
+  network/                             pilot actions and impact reports
+  event/                               cloak and drone explosion handling
+  client/                              rendering, HUD, input, camera, targeting, sounds
+  gametest/                            game tests
 ```
 
-### Modell
+### Model
 
-`tools/build_model.py` nimmt `assets/puddlejumper.obj` als Basis und ergänzt:
+`tools/build_model.py` takes `assets/puddlejumper.obj` and adds:
 
-- **Antriebsgondeln** links/rechts (halbe Schiffslänge, mit Lamellen), je zwei blaue Düsenfenster,
-  Ausleger und gelbe Drohnen-Ports
-- **Textur** in doppelter Auflösung im Oliv-Khaki der Serie, mit eingravierten
-  Paneellinien und kupferfarbenem Fensterrahmen – Rumpf, Unterseite und Gondeln einheitlich
-- **Drohne** (goldener, leuchtender Körper mit Schweifen) und ein gerendertes Item-Icon
+- **Drive pods** left and right (half the ship length, with louvres), two blue nozzle windows each, booms and
+  yellow drone ports
+- A **texture** at double resolution in the olive khaki of the series with engraved panel lines and a copper
+  window frame, consistent across hull, underside and pods
+- The **drone** (golden glowing body with tails) and a rendered item icon
 
-Nach Änderungen: `python3 tools/build_model.py`, im Spiel neu laden mit `F3+T`.
+After changes run `python3 tools/build_model.py` and reload in game with `F3+T`.

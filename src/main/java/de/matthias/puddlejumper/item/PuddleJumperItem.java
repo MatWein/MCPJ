@@ -1,7 +1,7 @@
 package de.matthias.puddlejumper.item;
 
-import de.matthias.puddlejumper.ModRegistry;
-import de.matthias.puddlejumper.entity.PuddleJumperEntity;
+import de.matthias.puddlejumper.entity.jumper.PuddleJumperEntity;
+import de.matthias.puddlejumper.registry.ModEntities;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -19,20 +19,20 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class PuddleJumperItem extends Item {
-    public PuddleJumperItem(Properties props) {
-        super(props);
+    public PuddleJumperItem(Properties properties) {
+        super(properties);
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext ctx) {
-        Level level = ctx.getLevel();
-        BlockPos pos = ctx.getClickedPos().relative(ctx.getClickedFace());
-        Player player = ctx.getPlayer();
-        PuddleJumperEntity jumper = ModRegistry.PUDDLE_JUMPER.get().create(level);
+    public InteractionResult useOn(UseOnContext context) {
+        Level level = context.getLevel();
+        Player player = context.getPlayer();
+        BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
+        PuddleJumperEntity jumper = ModEntities.PUDDLE_JUMPER.get().create(level);
         if (jumper == null) return InteractionResult.FAIL;
+
         Vec3 spawn = Vec3.atBottomCenterOf(pos);
-        float yaw = player != null ? player.getYRot() : 0f;
-        jumper.moveTo(spawn.x, spawn.y, spawn.z, yaw, 0f);
+        jumper.moveTo(spawn.x, spawn.y, spawn.z, player != null ? player.getYRot() : 0f, 0f);
         if (!level.noCollision(jumper, jumper.getBoundingBox())) {
             if (player != null && level.isClientSide) {
                 player.displayClientMessage(Component.translatable("message.puddlejumper.no_space"), true);
@@ -42,9 +42,7 @@ public class PuddleJumperItem extends Item {
         if (!level.isClientSide) {
             level.addFreshEntity(jumper);
             level.gameEvent(player, GameEvent.ENTITY_PLACE, pos);
-            if (player == null || !player.getAbilities().instabuild) {
-                ctx.getItemInHand().shrink(1);
-            }
+            if (player == null || !player.getAbilities().instabuild) context.getItemInHand().shrink(1);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Erzeugt die Block-Texturen der Jumper-Ladestation (32x32, kachelbar).
+"""Builds the charging pad block textures (32x32, tileable).
 
-Ausgabe: src/main/resources/assets/puddlejumper/textures/block/
-  charging_pad_top_{off,powered,charging}.png   Landefeld: Randbefeuerung, Mittellinie, Pfeil (zeigt nach Norden = oben)
-  charging_pad_side_{off,powered,charging}.png  Stahlpaneel mit Energieleiste
+Output: src/main/resources/assets/puddlejumper/textures/block/
+  charging_pad_top_{off,powered,charging}.png   landing field: edge lights, center line, arrow (points north = up)
+  charging_pad_side_{off,powered,charging}.png  steel panel with energy bar
   charging_pad_bottom.png
 """
 import os
@@ -16,7 +16,7 @@ OUT = os.path.join(ROOT, 'src', 'main', 'resources', 'assets', 'puddlejumper', '
 N = 32
 
 MODES = {
-    # Markierung, Randlicht, Energieleiste
+    # marking, edge light, energy bar
     'off': ((70, 74, 78), (55, 60, 64), (40, 46, 50)),
     'powered': ((90, 200, 230), (255, 196, 80), (60, 170, 210)),
     'charging': ((190, 250, 255), (255, 235, 150), (150, 240, 255)),
@@ -44,7 +44,7 @@ def frame(img, light=(78, 82, 86), dark=(34, 37, 40)):
 
 
 def glow(px, x, y, col, r=1):
-    """Lichtpunkt mit weichem Hof."""
+    """Light dot with a soft halo."""
     for dy in range(-r - 1, r + 2):
         for dx in range(-r - 1, r + 2):
             xx, yy = x + dx, y + dy
@@ -63,26 +63,26 @@ def top(mode):
     mark, edge, _ = MODES[mode]
     img = steel(1, base=(44, 48, 52), var=4)
     px = img.load()
-    # Plattenfugen (2x2 Platten)
+    # plate seams (2x2 plates)
     for i in range(N):
         px[i, 15] = (30, 33, 36)
         px[15, i] = (30, 33, 36)
         px[i, 16] = (60, 64, 68)
         px[16, i] = (60, 64, 68)
     frame(img, light=(66, 70, 74), dark=(28, 30, 33))
-    # Mittellinie (gestrichelt, über die Fugen hinweg)
+    # dashed center line across the seams
     for y in range(2, N - 2):
         if (y // 4) % 2 == 0:
             for x in (15, 16):
                 px[x, y] = mark
-    # Pfeil (Chevron) Richtung Norden
+    # chevron pointing north
     for k in range(7):
         for t in range(2):
             y = 10 + k + t
             for x in (15 - k - 2, 16 + k + 2):
                 if 0 <= x < N and y < N:
                     px[x, y] = mark
-    # Randbefeuerung: Lichter an den Seiten (bilden über mehrere Blöcke eine Landebahn)
+    # edge lights; several pads in a row form a runway
     for y in (4, 12, 20, 28):
         glow(px, 3, y, edge)
         glow(px, 28, y, edge)
@@ -94,15 +94,15 @@ def side(mode):
     img = steel(2)
     px = img.load()
     frame(img)
-    # oberer Abschluss (Landefläche)
+    # top edge (landing surface)
     for x in range(N):
         px[x, 1] = (80, 84, 88)
         px[x, 2] = (36, 39, 42)
-    # Energieleiste
+    # energy bar
     for y in (13, 14, 15, 16, 17, 18):
         for x in range(4, N - 4):
             px[x, y] = bar if 14 <= y <= 17 else tuple(int(c * 0.55) for c in bar)
-    # Nieten
+    # rivets
     for x, y in ((3, 5), (N - 4, 5), (3, N - 5), (N - 4, N - 5)):
         px[x, y] = (96, 100, 104)
         px[x + 1, y + 1] = (30, 32, 35)
@@ -121,7 +121,7 @@ def main():
         top(mode).save(os.path.join(OUT, f'charging_pad_top_{mode}.png'))
         side(mode).save(os.path.join(OUT, f'charging_pad_side_{mode}.png'))
     bottom().save(os.path.join(OUT, 'charging_pad_bottom.png'))
-    print('Texturen geschrieben nach', OUT)
+    print('Textures written to', OUT)
 
 
 if __name__ == '__main__':

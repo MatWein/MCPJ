@@ -1,11 +1,12 @@
 package de.matthias.puddlejumper.block;
 
-import de.matthias.puddlejumper.ModRegistry;
+import de.matthias.puddlejumper.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -14,38 +15,38 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Ladestation für den Puddle Jumper: nimmt Forge Energy von allen Seiten auf (Mekanism, Thermal, IE, ...).
- * Ein darauf gelandeter Jumper zieht Strom aus allen Stationen unter seinem Rumpf.
- * Zustände: aus (dunkel), versorgt (leuchtet, Landebahn-Markierung), lädt (hell).
- */
 public class ChargingPadBlock extends BaseEntityBlock {
     public enum Mode implements StringRepresentable {
         OFF("off", 0), POWERED("powered", 10), CHARGING("charging", 15);
 
-        private final String name;
-        public final int light;
+        private final String serializedName;
+        private final int lightLevel;
 
-        Mode(String name, int light) {
-            this.name = name;
-            this.light = light;
+        Mode(String serializedName, int lightLevel) {
+            this.serializedName = serializedName;
+            this.lightLevel = lightLevel;
         }
 
         @Override
         public String getSerializedName() {
-            return name;
+            return serializedName;
         }
     }
 
     public static final EnumProperty<Mode> MODE = EnumProperty.create("mode", Mode.class);
-    public static final net.minecraft.world.level.block.state.properties.DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+    public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
-    public ChargingPadBlock(Properties props) {
-        super(props);
-        registerDefaultState(stateDefinition.any().setValue(MODE, Mode.OFF).setValue(FACING, net.minecraft.core.Direction.NORTH));
+    public ChargingPadBlock(Properties properties) {
+        super(properties);
+        registerDefaultState(stateDefinition.any().setValue(MODE, Mode.OFF).setValue(FACING, Direction.NORTH));
+    }
+
+    public static int lightLevel(BlockState state) {
+        return state.getValue(MODE).lightLevel;
     }
 
     @Override
@@ -53,15 +54,14 @@ public class ChargingPadBlock extends BaseEntityBlock {
         builder.add(MODE, FACING);
     }
 
-    /** Der Landepfeil zeigt in Blickrichtung des Platzierenden. */
     @Override
-    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
-        return defaultBlockState().setValue(FACING, ctx.getHorizontalDirection());
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return defaultBlockState().setValue(FACING, context.getHorizontalDirection());
     }
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL; // BaseEntityBlock wäre sonst unsichtbar
+        return RenderShape.MODEL;
     }
 
     @Nullable
@@ -73,7 +73,7 @@ public class ChargingPadBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide ? null : createTickerHelper(type, ModRegistry.CHARGING_PAD_BE.get(), ChargingPadBlockEntity::serverTick);
+        return level.isClientSide ? null : createTickerHelper(type, ModBlockEntities.CHARGING_PAD.get(), ChargingPadBlockEntity::serverTick);
     }
 
     @Override
@@ -81,7 +81,6 @@ public class ChargingPadBlock extends BaseEntityBlock {
         return true;
     }
 
-    /** Comparator: Ladestand des Jumpers, der gerade hier lädt (0 ohne Jumper). */
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
         return level.getBlockEntity(pos) instanceof ChargingPadBlockEntity pad ? pad.getComparatorLevel() : 0;

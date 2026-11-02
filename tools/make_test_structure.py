@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Erzeugt die GameTest-Struktur 'platform' (24x10x24, Steinboden) als gzip-NBT."""
+"""Builds the GameTest structure 'platform' (24x10x24, stone floor) as gzipped NBT."""
 import gzip, os, struct
 
 def tag_header(t, name):
