@@ -2,6 +2,7 @@ package de.matthias.puddlejumper.entity.jumper;
 
 import de.matthias.puddlejumper.entity.drone.DroneEntity;
 import de.matthias.puddlejumper.registry.ModItems;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializer;
@@ -23,6 +24,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.entity.PartEntity;
@@ -69,6 +71,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     private Vec3 lastServerPosition = Vec3.ZERO;
     private Vec3 serverVelocity = Vec3.ZERO;
+    private int lavaCheckTick = -1;
+    private boolean touchesLava;
 
     public PuddleJumperEntity(EntityType<? extends PuddleJumperEntity> type, Level level) {
         super(type, level);
@@ -188,6 +192,36 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         return getFluidHeight(FluidTags.WATER) > JumperGeometry.CENTER_HEIGHT;
     }
 
+    /** True if any lava (source or flowing, e.g. poured from a bucket) reaches into the hull. */
+    public boolean touchesLava() {
+        if (lavaCheckTick != tickCount) {
+            lavaCheckTick = tickCount;
+            touchesLava = findLava();
+        }
+        return touchesLava;
+    }
+
+    public JumperMedium medium() {
+        if (touchesLava()) return JumperMedium.LAVA;
+        return isSubmerged() ? JumperMedium.WATER : JumperMedium.AIR;
+    }
+
+    private boolean findLava() {
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        for (double offset : segmentOffsets()) {
+            AABB box = segmentBox(offset);
+            for (int x = Mth.floor(box.minX); x <= Mth.floor(box.maxX); x++) {
+                for (int y = Mth.floor(box.minY); y <= Mth.floor(box.maxY); y++) {
+                    for (int z = Mth.floor(box.minZ); z <= Mth.floor(box.maxZ); z++) {
+                        FluidState fluid = level().getFluidState(pos.set(x, y, z));
+                        if (fluid.is(FluidTags.LAVA) && y + fluid.getHeight(level(), pos) > box.minY) return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public Vec3 forward() {
         float yaw = getYRot() * Mth.DEG_TO_RAD;
         return new Vec3(-Mth.sin(yaw), 0, Mth.cos(yaw));
@@ -274,7 +308,11 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private void serverTick() {
         trackServerVelocity();
         pods.tick();
-        getPassengers().forEach(Entity::resetFallDistance);
+        // passengers are protected by the hull (see PassengerEvents); lava would keep setting them on fire
+        getPassengers().forEach(passenger -> {
+            passenger.resetFallDistance();
+            passenger.clearFire();
+        });
         hull.tick();
         energy.tick();
         lights.tick();

@@ -96,16 +96,16 @@ public final class JumperEnergy {
         EnergyConfig config = ServerConfig.ENERGY;
         double speedShare = Mth.clamp(jumper.serverVelocity().length() / ServerConfig.FLIGHT.maxSpeedPerTick(), 0, 1);
         double power = Mth.lerp(speedShare, config.hoverDrain(), config.thrustDrain());
-        return jumper.isSubmerged() ? power * config.waterDriveFactor() : power;
+        return power * config.driveFactor(jumper.medium());
     }
 
     private double systemsPower() {
         EnergyConfig config = ServerConfig.ENERGY;
-        boolean submerged = jumper.isSubmerged();
+        JumperMedium medium = jumper.medium();
         double underFire = jumper.hull().isUnderFire() ? config.underFireFactor() : 1.0;
         double power = 0;
-        if (jumper.isShielded()) power += config.shieldDrain() * (submerged ? config.shieldWaterFactor() : 1) * underFire;
-        if (jumper.isCloaked()) power += config.cloakDrain() * (submerged ? config.cloakWaterFactor() : 1) * underFire;
+        if (jumper.isShielded()) power += config.shieldDrain() * config.shieldFactor(medium) * underFire;
+        if (jumper.isCloaked()) power += config.cloakDrain() * config.cloakFactor(medium) * underFire;
         if (jumper.isLightsOn() && !jumper.isCloaked()) power += config.lightDrain();
         return power;
     }

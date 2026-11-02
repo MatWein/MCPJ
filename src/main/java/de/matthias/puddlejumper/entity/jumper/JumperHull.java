@@ -14,6 +14,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +40,9 @@ public final class JumperHull {
     private static final double WATER_BUBBLE_SPREAD = 1.2 * JumperGeometry.RENDER_SCALE;
     private static final double WATER_BUBBLE_SPREAD_Y = 0.4 * JumperGeometry.RENDER_SCALE;
     private static final double WATER_BUBBLE_SPEED = 0.05;
+    private static final int LAVA_SMOKE_COUNT = 10;
+    private static final double LAVA_SMOKE_SPEED = 0.02;
+    private static final double EXPLOSION_HEIGHT = 0.5;
     private static final String INTEGRITY_TAG = "Hull";
     private static final String LEGACY_HEALTH_TAG = "Health";
     private static final float LEGACY_MAX_HEALTH = 240f;
@@ -83,10 +87,22 @@ public final class JumperHull {
     void tick() {
         if (underFireTimer > 0) underFireTimer--;
         if (impactCooldown > 0) impactCooldown--;
-        if (jumper.tickCount % Units.TICKS_PER_SECOND == 0 && jumper.isSubmerged() && !jumper.isShielded()) {
+        if (jumper.tickCount % Units.TICKS_PER_SECOND != 0) return;
+        if (jumper.touchesLava()) {
+            burnInLava();
+        } else if (jumper.isSubmerged() && !jumper.isShielded()) {
             damage(ServerConfig.HULL.waterDamagePerSecond(), null, false);
             spawnLeakBubbles();
         }
+    }
+
+    /** Lava (also flowing) burns the hull; an active shield absorbs it like a hit while energy lasts. */
+    private void burnInLava() {
+        float hullPoints = ServerConfig.HULL.lavaDamagePerSecond();
+        if (hullPoints <= 0 || absorbWithShield(hullPoints)) return;
+        JumperSounds.lavaBurn(jumper);
+        spawnLavaSmoke();
+        damage(hullPoints, null, false);
     }
 
     boolean hurt(DamageSource source, float amount) {
@@ -149,13 +165,30 @@ public final class JumperHull {
         if (integrity() <= 0f) destroy(attacker);
     }
 
+    /**
+     * Passengers are thrown out first (they are no longer protected by the hull), then the jumper explodes.
+     * Item and cargo drop after the explosion so it does not destroy them.
+     */
     private void destroy(@Nullable Entity attacker) {
+        jumper.ejectPassengers();
+        jumper.discard();
+        float power = ServerConfig.HULL.destructionExplosionPower();
+        if (power > 0) {
+            Vec3 at = jumper.position().add(0, JumperGeometry.HEIGHT * EXPLOSION_HEIGHT, 0);
+            jumper.level().explode(jumper, at.x, at.y, at.z, power, Level.ExplosionInteraction.MOB);
+        }
         boolean creative = attacker instanceof Player player && player.getAbilities().instabuild;
         if (!creative && jumper.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
             jumper.spawnAtLocation(ModItems.PUDDLE_JUMPER.get());
         }
         jumper.cargo().dropAll();
-        jumper.discard();
+    }
+
+    private void spawnLavaSmoke() {
+        if (!(jumper.level() instanceof ServerLevel level)) return;
+        Vec3 at = jumper.position().add(0, JumperGeometry.HEIGHT * WATER_BUBBLE_HEIGHT, 0);
+        level.sendParticles(ParticleTypes.LARGE_SMOKE, at.x, at.y, at.z, LAVA_SMOKE_COUNT,
+                WATER_BUBBLE_SPREAD, WATER_BUBBLE_SPREAD_Y, WATER_BUBBLE_SPREAD, LAVA_SMOKE_SPEED);
     }
 
     private void spawnLeakBubbles() {

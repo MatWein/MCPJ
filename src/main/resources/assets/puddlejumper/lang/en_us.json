@@ -33,6 +33,7 @@
   "key.puddlejumper.strafe_right": "Strafe right",
   "key.puddlejumper.cargo": "Open cargo hold",
   "hud.puddlejumper.water_warning": "  WATER!",
+  "hud.puddlejumper.lava_warning": "  LAVA!",
   "key.puddlejumper.lights": "Toggle lights",
   "hud.puddlejumper.lights": "Lights: %s",
   "hud.puddlejumper.on.lights": "on",

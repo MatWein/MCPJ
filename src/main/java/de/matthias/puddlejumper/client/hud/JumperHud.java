@@ -71,7 +71,10 @@ public final class JumperHud {
         float hull = jumper.hull().integrity();
         int color = hull > HULL_GOOD ? HudColors.TEAL : hull > HULL_WARNING ? HudColors.GOLD : HudColors.RED;
         MutableComponent text = Component.translatable(KEY + "hull", Math.round(hull * PERCENT));
-        if (jumper.isSubmerged() && !jumper.isShielded()) {
+        if (jumper.touchesLava()) {
+            text.append(Component.translatable(KEY + "lava_warning"));
+            color = HudColors.blink(jumper.tickCount, HudColors.RED, color);
+        } else if (jumper.isSubmerged() && !jumper.isShielded()) {
             text.append(Component.translatable(KEY + "water_warning"));
             color = HudColors.blink(jumper.tickCount, HudColors.RED, color);
         }

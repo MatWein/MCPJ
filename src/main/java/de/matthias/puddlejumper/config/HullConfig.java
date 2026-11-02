@@ -7,6 +7,8 @@ public final class HullConfig {
     private final ForgeConfigSpec.DoubleValue maxHull;
     private final ForgeConfigSpec.DoubleValue droneHitFraction;
     private final ForgeConfigSpec.DoubleValue waterDamagePerSecond;
+    private final ForgeConfigSpec.DoubleValue lavaDamagePerSecond;
+    private final ForgeConfigSpec.DoubleValue destructionExplosionPower;
     private final ForgeConfigSpec.DoubleValue impactSafeSpeed;
     private final ForgeConfigSpec.DoubleValue impactFullSpeed;
     private final ForgeConfigSpec.DoubleValue impactSafeFallSpeed;
@@ -21,6 +23,12 @@ public final class HullConfig {
                 .defineInRange("droneHitFraction", 0.6, 0.0, 1.0);
         waterDamagePerSecond = builder.comment("Hull points lost per second while submerged without shield")
                 .defineInRange("waterDamagePerSecond", 1.0, 0.0, 1000.0);
+        lavaDamagePerSecond = builder.comment("Hull points lost per second while touching lava (also flowing lava);",
+                        "an active shield absorbs it as long as there is energy")
+                .defineInRange("lavaDamagePerSecond", 8.0, 0.0, 1000.0);
+        destructionExplosionPower = builder.comment("Explosion power when the jumper is destroyed (creeper: 3, TNT: 4);",
+                        "breaks blocks only with mobGriefing, 0 = no explosion")
+                .defineInRange("destructionExplosionPower", 4.0, 0.0, 10.0);
         impactSafeSpeed = builder.comment("Collisions below this speed (blocks per second) cause no damage")
                 .defineInRange("impactSafeSpeed", 8.0, 0.0, 100.0);
         impactFullSpeed = builder.comment("Collisions at this speed (blocks per second) cause maximum damage")
@@ -44,6 +52,14 @@ public final class HullConfig {
 
     public float waterDamagePerSecond() {
         return waterDamagePerSecond.get().floatValue();
+    }
+
+    public float lavaDamagePerSecond() {
+        return lavaDamagePerSecond.get().floatValue();
+    }
+
+    public float destructionExplosionPower() {
+        return destructionExplosionPower.get().floatValue();
     }
 
     public double impactSafeSpeedPerTick() {

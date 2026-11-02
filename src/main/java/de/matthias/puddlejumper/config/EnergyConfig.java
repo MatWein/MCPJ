@@ -1,5 +1,6 @@
 package de.matthias.puddlejumper.config;
 
+import de.matthias.puddlejumper.entity.jumper.JumperMedium;
 import de.matthias.puddlejumper.util.Units;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -11,11 +12,14 @@ public final class EnergyConfig {
     private final ForgeConfigSpec.IntValue hoverDrain;
     private final ForgeConfigSpec.IntValue thrustDrain;
     private final ForgeConfigSpec.DoubleValue waterDriveFactor;
+    private final ForgeConfigSpec.DoubleValue lavaDriveFactor;
     private final ForgeConfigSpec.IntValue shieldDrain;
     private final ForgeConfigSpec.DoubleValue shieldWaterFactor;
+    private final ForgeConfigSpec.DoubleValue shieldLavaFactor;
     private final ForgeConfigSpec.IntValue shieldHitCost;
     private final ForgeConfigSpec.IntValue cloakDrain;
     private final ForgeConfigSpec.DoubleValue cloakWaterFactor;
+    private final ForgeConfigSpec.DoubleValue cloakLavaFactor;
     private final ForgeConfigSpec.DoubleValue underFireFactor;
     private final ForgeConfigSpec.DoubleValue underFireSeconds;
     private final ForgeConfigSpec.IntValue lightDrain;
@@ -33,16 +37,22 @@ public final class EnergyConfig {
                 .defineInRange("thrustDrain", 1_500, 0, MAX_DRAIN);
         waterDriveFactor = builder.comment("Drive drain multiplier when submerged")
                 .defineInRange("waterDriveFactor", 1.5, 1.0, 100.0);
+        lavaDriveFactor = builder.comment("Drive drain multiplier when touching lava")
+                .defineInRange("lavaDriveFactor", 2.0, 1.0, 100.0);
         shieldDrain = builder.comment("Shield drain (FE/tick)")
                 .defineInRange("shieldDrain", 500, 0, MAX_DRAIN);
         shieldWaterFactor = builder.comment("Shield drain multiplier when submerged")
                 .defineInRange("shieldWaterFactor", 2.0, 1.0, 100.0);
+        shieldLavaFactor = builder.comment("Shield drain multiplier when touching lava")
+                .defineInRange("shieldLavaFactor", 3.0, 1.0, 100.0);
         shieldHitCost = builder.comment("Extra energy per hull point absorbed by the shield (FE)")
                 .defineInRange("shieldHitCost", 200, 0, MAX_DRAIN);
         cloakDrain = builder.comment("Cloak drain (FE/tick)")
                 .defineInRange("cloakDrain", 400, 0, MAX_DRAIN);
         cloakWaterFactor = builder.comment("Cloak drain multiplier when submerged")
                 .defineInRange("cloakWaterFactor", 1.5, 1.0, 100.0);
+        cloakLavaFactor = builder.comment("Cloak drain multiplier when touching lava")
+                .defineInRange("cloakLavaFactor", 2.0, 1.0, 100.0);
         underFireFactor = builder.comment("Shield and cloak drain multiplier while under fire")
                 .defineInRange("underFireFactor", 2.0, 1.0, 100.0);
         underFireSeconds = builder.comment("How long the jumper counts as under fire after a hit (seconds)")
@@ -68,16 +78,24 @@ public final class EnergyConfig {
         return thrustDrain.get();
     }
 
-    public double waterDriveFactor() {
-        return waterDriveFactor.get();
+    public double driveFactor(JumperMedium medium) {
+        return switch (medium) {
+            case AIR -> 1.0;
+            case WATER -> waterDriveFactor.get();
+            case LAVA -> lavaDriveFactor.get();
+        };
     }
 
     public int shieldDrain() {
         return shieldDrain.get();
     }
 
-    public double shieldWaterFactor() {
-        return shieldWaterFactor.get();
+    public double shieldFactor(JumperMedium medium) {
+        return switch (medium) {
+            case AIR -> 1.0;
+            case WATER -> shieldWaterFactor.get();
+            case LAVA -> shieldLavaFactor.get();
+        };
     }
 
     public int shieldHitCost() {
@@ -88,8 +106,12 @@ public final class EnergyConfig {
         return cloakDrain.get();
     }
 
-    public double cloakWaterFactor() {
-        return cloakWaterFactor.get();
+    public double cloakFactor(JumperMedium medium) {
+        return switch (medium) {
+            case AIR -> 1.0;
+            case WATER -> cloakWaterFactor.get();
+            case LAVA -> cloakLavaFactor.get();
+        };
     }
 
     public double underFireFactor() {

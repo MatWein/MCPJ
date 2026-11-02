@@ -14,6 +14,10 @@ final class JumperSounds {
         jumper.playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f, 1.6f);
     }
 
+    static void lavaBurn(PuddleJumperEntity jumper) {
+        jumper.playSound(SoundEvents.LAVA_EXTINGUISH, 0.6f, 0.8f);
+    }
+
     static void hullHit(PuddleJumperEntity jumper) {
         jumper.playSound(SoundEvents.ANVIL_LAND, 0.25f, 1.6f);
     }

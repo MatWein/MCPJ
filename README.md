@@ -53,8 +53,14 @@ passengers are never harmed.
 
 **Hull.** 240 hull points (a diamond sword needs about 35 hits). A hostile drone destroys 60 % of the hull, so the
 second one is fatal. There is no self-repair, and the hull takes damage in creative mode too. A jumper that is at
-least half submerged loses 1 hull point per second without shield. A destroyed jumper drops its item and cargo
-(only the cargo in creative mode). The jumper ignores knockback from explosions, hits, mobs and water currents.
+least half submerged loses 1 hull point per second without shield. Lava burns 8 hull points per second as soon as
+any of it touches the hull, flowing lava included (e.g. a bucket poured over the ship); an active shield absorbs
+this as long as there is energy. The jumper ignores knockback from explosions, hits, mobs and water currents.
+
+**Passengers** cannot be hurt while seated; the hull takes the hits instead (only `/kill` and the void still apply).
+When the hull is destroyed, the passengers are thrown out first and the jumper explodes (about as strong as TNT,
+breaking blocks only with `mobGriefing`), which can still hit them. Its item and cargo drop afterwards (only the cargo
+in creative mode).
 
 **Collisions.** Brushing walls, light bumps and normal landings (even at full sink rate) are harmless. From about
 8 m/s against an obstacle or 15 m/s downwards damage increases, up to at most **30 % of the hull** per impact
@@ -69,6 +75,8 @@ jumpers stay dark.
 
 **Underwater.** Everything is slower: thrust and turning are halved and drones fly at half speed.
 
+**Lava.** Thrust and turning drop to 30 %, the ship brakes harder and sinks slowly when the power fails.
+
 ## Energy
 
 The jumper stores Forge Energy (FE); everything costs energy, in creative mode too.
@@ -78,9 +86,9 @@ The jumper stores Forge Energy (FE); everything costs energy, in creative mode t
 | Capacity | 60 M FE (≈ 150 MJ in Mekanism) |
 | Drive, landed | 0 |
 | Drive, airborne | 250 FE/t hovering up to 1,500 FE/t at top speed (≈ 3 h 20 min hovering, ≈ 33 min full speed ≈ 40 km) |
-| Drive underwater | × 1.5 |
-| Shield | 500 FE/t, × 2 underwater, plus 200 FE per absorbed hull point |
-| Cloak | 400 FE/t, × 1.5 underwater |
+| Drive underwater / in lava | × 1.5 / × 2 |
+| Shield | 500 FE/t, × 2 underwater, × 3 in lava, plus 200 FE per absorbed hull point |
+| Cloak | 400 FE/t, × 1.5 underwater, × 2 in lava |
 | Under fire (2 s after a hit) | shield and cloak × 2 |
 | Drone | 150,000 FE per launch |
 | Headlights | 20 FE/t |
@@ -136,7 +144,7 @@ src/main/java/de/matthias/puddlejumper/
   entity/drone/                        homing drone
   block/                               charging pad (Forge Energy buffer, states, comparator)
   network/                             pilot actions and impact reports
-  event/                               cloak and drone explosion handling
+  event/                               cloak, passenger protection and drone explosion handling
   client/                              rendering, HUD, input, camera, targeting, sounds
   gametest/                            game tests
 ```

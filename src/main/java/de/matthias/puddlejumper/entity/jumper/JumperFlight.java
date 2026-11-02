@@ -18,6 +18,8 @@ public final class JumperFlight {
     private static final double FALL_DRAG = 0.98;
     private static final double WATER_GRAVITY = 0.02;
     private static final double WATER_FALL_DRAG = 0.9;
+    private static final double LAVA_GRAVITY = 0.015;
+    private static final double LAVA_FALL_DRAG = 0.8;
     private static final double GROUND_FRICTION = 0.6;
     private static final double REST_SPEED_SQR = 1.0e-5;
     private static final float TURN_REST_SPEED = 0.02f;
@@ -55,10 +57,10 @@ public final class JumperFlight {
             return;
         }
         FlightConfig config = ServerConfig.FLIGHT;
-        boolean submerged = jumper.isSubmerged();
-        double acceleration = config.accelerationPerTick() * config.accelerationFactor(submerged);
+        JumperMedium medium = jumper.medium();
+        double acceleration = config.accelerationPerTick() * config.accelerationFactor(medium);
 
-        yawVelocity = yawVelocity * config.turnDrag() - input.turn() * config.turnAccelerationPerTick() * config.turnFactor(submerged);
+        yawVelocity = yawVelocity * config.turnDrag() - input.turn() * config.turnAccelerationPerTick() * config.turnFactor(medium);
         if (input.turn() == 0 && Math.abs(yawVelocity) < TURN_REST_SPEED) yawVelocity = 0;
         jumper.setYRot(jumper.getYRot() + yawVelocity);
 
@@ -67,7 +69,7 @@ public final class JumperFlight {
                 .add(jumper.left().scale(input.strafe() * acceleration * config.strafeFactor()))
                 .add(0, input.vertical() * acceleration * config.verticalFactor(), 0);
 
-        double drag = input.hasThrust() ? config.thrustDrag(submerged) : config.idleDrag(submerged);
+        double drag = input.hasThrust() ? config.thrustDrag(medium) : config.idleDrag(medium);
         Vec3 velocity = jumper.getDeltaMovement().scale(drag).add(thrust);
         double maxSpeed = config.maxSpeedPerTick();
         if (velocity.lengthSqr() > maxSpeed * maxSpeed) velocity = velocity.normalize().scale(maxSpeed);
@@ -80,14 +82,17 @@ public final class JumperFlight {
             fall();
             return;
         }
-        double drag = jumper.onGround() ? GROUND_FRICTION : ServerConfig.FLIGHT.idleDrag(jumper.isSubmerged());
+        double drag = jumper.onGround() ? GROUND_FRICTION : ServerConfig.FLIGHT.idleDrag(jumper.medium());
         Vec3 velocity = jumper.getDeltaMovement().scale(drag);
         jumper.setDeltaMovement(velocity.lengthSqr() < REST_SPEED_SQR ? Vec3.ZERO : velocity);
     }
 
     private void fall() {
         Vec3 velocity = jumper.getDeltaMovement();
-        if (jumper.isSubmerged()) {
+        JumperMedium medium = jumper.medium();
+        if (medium == JumperMedium.LAVA) {
+            velocity = velocity.scale(LAVA_FALL_DRAG).add(0, -LAVA_GRAVITY, 0);
+        } else if (medium == JumperMedium.WATER) {
             velocity = velocity.scale(WATER_FALL_DRAG).add(0, -WATER_GRAVITY, 0);
         } else {
             double horizontalDrag = jumper.onGround() ? GROUND_FRICTION : FALL_DRAG;

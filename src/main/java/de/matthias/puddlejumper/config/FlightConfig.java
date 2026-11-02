@@ -1,5 +1,6 @@
 package de.matthias.puddlejumper.config;
 
+import de.matthias.puddlejumper.entity.jumper.JumperMedium;
 import de.matthias.puddlejumper.util.Units;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -17,6 +18,10 @@ public final class FlightConfig {
     private final ForgeConfigSpec.DoubleValue waterTurnFactor;
     private final ForgeConfigSpec.DoubleValue waterThrustDrag;
     private final ForgeConfigSpec.DoubleValue waterIdleDrag;
+    private final ForgeConfigSpec.DoubleValue lavaAccelerationFactor;
+    private final ForgeConfigSpec.DoubleValue lavaTurnFactor;
+    private final ForgeConfigSpec.DoubleValue lavaThrustDrag;
+    private final ForgeConfigSpec.DoubleValue lavaIdleDrag;
 
     FlightConfig(ForgeConfigSpec.Builder builder) {
         builder.comment("Flight model of the Puddle Jumper").push("flight");
@@ -46,6 +51,14 @@ public final class FlightConfig {
                 .defineInRange("waterThrustDrag", 0.955, 0.5, 1.0);
         waterIdleDrag = builder.comment("Velocity kept per tick without input underwater")
                 .defineInRange("waterIdleDrag", 0.92, 0.5, 1.0);
+        lavaAccelerationFactor = builder.comment("Thrust multiplier when touching lava")
+                .defineInRange("lavaAccelerationFactor", 0.3, 0.0, 1.0);
+        lavaTurnFactor = builder.comment("Turn multiplier when touching lava")
+                .defineInRange("lavaTurnFactor", 0.3, 0.0, 1.0);
+        lavaThrustDrag = builder.comment("Velocity kept per tick while thrusting in lava")
+                .defineInRange("lavaThrustDrag", 0.92, 0.5, 1.0);
+        lavaIdleDrag = builder.comment("Velocity kept per tick without input in lava")
+                .defineInRange("lavaIdleDrag", 0.85, 0.5, 1.0);
         builder.pop();
     }
 
@@ -73,23 +86,39 @@ public final class FlightConfig {
         return (float) Units.perTickSquared(turnAcceleration.get());
     }
 
-    public double thrustDrag(boolean submerged) {
-        return submerged ? waterThrustDrag.get() : thrustDrag.get();
+    public double thrustDrag(JumperMedium medium) {
+        return switch (medium) {
+            case AIR -> thrustDrag.get();
+            case WATER -> waterThrustDrag.get();
+            case LAVA -> lavaThrustDrag.get();
+        };
     }
 
-    public double idleDrag(boolean submerged) {
-        return submerged ? waterIdleDrag.get() : idleDrag.get();
+    public double idleDrag(JumperMedium medium) {
+        return switch (medium) {
+            case AIR -> idleDrag.get();
+            case WATER -> waterIdleDrag.get();
+            case LAVA -> lavaIdleDrag.get();
+        };
     }
 
     public float turnDrag() {
         return turnDrag.get().floatValue();
     }
 
-    public double accelerationFactor(boolean submerged) {
-        return submerged ? waterAccelerationFactor.get() : 1.0;
+    public double accelerationFactor(JumperMedium medium) {
+        return switch (medium) {
+            case AIR -> 1.0;
+            case WATER -> waterAccelerationFactor.get();
+            case LAVA -> lavaAccelerationFactor.get();
+        };
     }
 
-    public float turnFactor(boolean submerged) {
-        return submerged ? waterTurnFactor.get().floatValue() : 1f;
+    public float turnFactor(JumperMedium medium) {
+        return switch (medium) {
+            case AIR -> 1f;
+            case WATER -> waterTurnFactor.get().floatValue();
+            case LAVA -> lavaTurnFactor.get().floatValue();
+        };
     }
 }
