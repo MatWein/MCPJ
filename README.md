@@ -77,6 +77,11 @@ jumpers stay dark.
 
 **Lava.** Thrust and turning drop to 30 %, the ship brakes harder and sinks slowly when the power fails.
 
+**Portals and stargates.** The jumper travels as one unit: passengers stay seated, cargo, energy and hull are kept,
+and the ship keeps its speed along its new heading. Seated passengers and the hull segments never travel on their
+own. With *Just Stargate Mod* this also works for gates in the same dimension (JSG is optional; the integration
+uses reflection). Flying into the receiving side of a gate or into a kawoosh destroys the ship, as with any entity.
+
 ## Energy
 
 The jumper stores Forge Energy (FE); everything costs energy, in creative mode too.
@@ -121,6 +126,7 @@ warning threshold.
 ./gradlew runClient                         # development client
 ./gradlew runClient -PjoinServer=localhost  # client joins a server directly
 ./gradlew runGameTestServer                 # automated game tests (headless, fresh world each run)
+./gradlew runGameTestServer -Pstandalone    # the same without any other mod (the mod must work on its own)
 ```
 
 Requires Java 17 (Gradle downloads it if needed).
@@ -129,7 +135,8 @@ Requires Java 17 (Gradle downloads it if needed).
 `build/libs/puddlejumper-<version>.jar` into `run-server/mods/`). The build also loads every other jar in
 `run-server/mods` (deobfuscated) into the development runs. `runClient` additionally gets Embeddium and Oculus
 (shaders) from the Modrinth maven; they are client-only and therefore copied to `run/mods` instead of the shared
-classpath. Their versions are set in `gradle.properties`.
+classpath. Their versions are set in `gradle.properties`. None of these mods is required: `-Pstandalone` leaves them
+all out, for any run task.
 
 ## Project layout
 
@@ -144,7 +151,8 @@ src/main/java/de/matthias/puddlejumper/
   entity/drone/                        homing drone
   block/                               charging pad (Forge Energy buffer, states, comparator)
   network/                             pilot actions and impact reports
-  event/                               cloak, passenger protection and drone explosion handling
+  event/                               cloak, passenger protection, dimension travel and drone explosion handling
+  compat/                              optional integrations (Just Stargate Mod)
   client/                              rendering, HUD, input, camera, targeting, sounds
   gametest/                            game tests
 ```

@@ -1,5 +1,6 @@
 package de.matthias.puddlejumper;
 
+import de.matthias.puddlejumper.compat.StargateCompat;
 import de.matthias.puddlejumper.config.ClientConfig;
 import de.matthias.puddlejumper.config.ServerConfig;
 import de.matthias.puddlejumper.network.ModNetwork;
@@ -23,6 +24,7 @@ public final class PuddleJumperMod {
         context.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modBus.addListener(PuddleJumperMod::onCommonSetup);
         modBus.addListener(ModCreativeTabs::onBuildContents);
+        StargateCompat.register();
     }
 
     public static ResourceLocation id(String path) {

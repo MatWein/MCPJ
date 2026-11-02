@@ -9,6 +9,7 @@ import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -28,16 +29,26 @@ public final class JumperFlight {
     private static final double GROUND_PROBE_INSET = 0.05;
     private static final double GROUND_PROBE_DEPTH = 0.08;
     private static final double GROUND_PROBE_OVERLAP = 0.01;
+    private static final int ARRIVAL_WINDOW_TICKS = 20;
 
     private final PuddleJumperEntity jumper;
     private float yawVelocity;
     private Vec3 ownVelocity = Vec3.ZERO;
+    @Nullable private Vec3 arrivalVelocity;
+    private int arrivalTicks;
 
     JumperFlight(PuddleJumperEntity jumper) {
         this.jumper = jumper;
     }
 
+    /** After a portal: whoever controls the ship (pilot client or server) continues with this velocity. */
+    void arrive(Vec3 velocity) {
+        arrivalVelocity = velocity;
+        arrivalTicks = ARRIVAL_WINDOW_TICKS;
+    }
+
     void tick() {
+        takeOverArrivalVelocity();
         // External impulses (explosions, hits, players) are discarded: only our own velocity counts.
         jumper.setDeltaMovement(ownVelocity);
         if (!jumper.isControlledByLocalInstance()) {
@@ -49,6 +60,16 @@ public final class JumperFlight {
         else drift();
         moveWithSegments(jumper.getDeltaMovement());
         ownVelocity = jumper.getDeltaMovement();
+    }
+
+    private void takeOverArrivalVelocity() {
+        if (arrivalVelocity == null) return;
+        if (jumper.isControlledByLocalInstance()) {
+            ownVelocity = arrivalVelocity;
+            arrivalVelocity = null;
+        } else if (--arrivalTicks <= 0) {
+            arrivalVelocity = null;
+        }
     }
 
     private void steer(FlightInput input) {

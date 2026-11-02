@@ -4,6 +4,7 @@ import de.matthias.puddlejumper.entity.drone.DroneEntity;
 import de.matthias.puddlejumper.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializer;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -27,8 +28,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.entity.PartEntity;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
 import java.util.function.Consumer;
 
@@ -44,6 +47,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     static final EntityDataAccessor<Integer> ENERGY = define(EntityDataSerializers.INT);
     static final EntityDataAccessor<Integer> CAPACITY = define(EntityDataSerializers.INT);
     static final EntityDataAccessor<Integer> ENERGY_FLOW = define(EntityDataSerializers.INT);
+    static final EntityDataAccessor<Vector3f> ARRIVAL_VELOCITY = define(EntityDataSerializers.VECTOR3);
+    static final EntityDataAccessor<Integer> ARRIVALS = define(EntityDataSerializers.INT);
 
     static final byte SHIELD_HIT_EVENT = 60;
     private static final float EYE_HEIGHT_FACTOR = 0.6f;
@@ -68,6 +73,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private final JumperLights lights = new JumperLights(this);
     private final JumperCargo cargo = new JumperCargo(this);
     private final JumperAnimation animation = new JumperAnimation(this);
+    private final JumperTravel travel = new JumperTravel(this);
 
     private Vec3 lastServerPosition = Vec3.ZERO;
     private Vec3 serverVelocity = Vec3.ZERO;
@@ -102,6 +108,14 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         entityData.define(ENERGY, 0);
         entityData.define(CAPACITY, 1);
         entityData.define(ENERGY_FLOW, 0);
+        entityData.define(ARRIVAL_VELOCITY, new Vector3f());
+        entityData.define(ARRIVALS, 0);
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (key.equals(ARRIVALS) && level().isClientSide && entityData.get(ARRIVALS) > 0) travel.onArrivalSynced();
     }
 
     public boolean isCloaked() {
@@ -174,6 +188,10 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     JumperPods pods() {
         return pods;
+    }
+
+    JumperFlight flight() {
+        return flight;
     }
 
     Vec3 serverVelocity() {
@@ -307,6 +325,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     private void serverTick() {
         trackServerVelocity();
+        travel.tick();
         pods.tick();
         // passengers are protected by the hull (see PassengerEvents); lava would keep setting them on fire
         getPassengers().forEach(passenger -> {
@@ -454,6 +473,24 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     @Override
     protected float getEyeHeight(Pose pose, EntityDimensions dimensions) {
         return dimensions.height * EYE_HEIGHT_FACTOR;
+    }
+
+    /** Portals and stargates: the passengers stay on board and the ship keeps flying (see JumperTravel). */
+    @Override
+    @Nullable
+    public Entity changeDimension(ServerLevel destination, ITeleporter teleporter) {
+        JumperTravel.Departure departure = travel.depart();
+        Entity arrived = super.changeDimension(destination, teleporter);
+        if (arrived instanceof PuddleJumperEntity jumper) jumper.travel.arriveFromOtherDimension(departure);
+        else travel.travelFailed(departure);
+        return arrived;
+    }
+
+    @Override
+    public void teleportTo(double x, double y, double z) {
+        JumperTravel.Departure departure = travel.depart();
+        super.teleportTo(x, y, z);
+        if (!level().isClientSide) travel.teleportedWithinDimension(departure);
     }
 
     @Override

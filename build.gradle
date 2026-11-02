@@ -161,17 +161,20 @@ dependencies {
     // The group id is ignored when searching -- in this case, it is "blank"
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
 
-    // load every mod jar of the test server in the dev environment as well
-    fileTree(dir: 'run-server/mods', include: '*.jar')
-            .filter { !it.name.startsWith(mod_id) }
-            .each {
-                def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
-                if (m.matches()) runtimeOnly fg.deobf("blank:${m.group(1)}:${m.group(2)}")
-            }
+    // The mod must work on its own: -Pstandalone runs without any other mod (e.g. ./gradlew runGameTestServer -Pstandalone)
+    if (!project.hasProperty('standalone')) {
+        // load every mod jar of the test server in the dev environment as well
+        fileTree(dir: 'run-server/mods', include: '*.jar')
+                .filter { !it.name.startsWith(mod_id) }
+                .each {
+                    def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
+                    if (m.matches()) runtimeOnly fg.deobf("blank:${m.group(1)}:${m.group(2)}")
+                }
 
-    // client-only mods from Modrinth (shaders), deobfuscated like the server mods, loaded by runClient only
-    clientMods fg.deobf("maven.modrinth:embeddium:${embeddium_version}")
-    clientMods fg.deobf("maven.modrinth:oculus:${oculus_version}")
+        // client-only mods from Modrinth (shaders), deobfuscated like the server mods, loaded by runClient only
+        clientMods fg.deobf("maven.modrinth:embeddium:${embeddium_version}")
+        clientMods fg.deobf("maven.modrinth:oculus:${oculus_version}")
+    }
 
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
