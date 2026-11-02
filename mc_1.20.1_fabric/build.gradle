@@ -61,6 +61,8 @@ tasks.withType(JavaCompile).configureEach {
 
 jar {
     from(project(':core').sourceSets.main.output)
+    // core resources come in twice (core output and processResources)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 // vanilla Minecraft 1.20.1 code shared between the loader modules, compiled here against this loader's Minecraft
@@ -70,4 +72,6 @@ tasks.named('compileJava', JavaCompile).configure {
 }
 tasks.named('processResources', ProcessResources).configure {
     from(common.sourceSets.main.resources)
+    // the core's assets (textures, models, sounds, translations): Fabric only finds the mod's own resources in dev runs
+    from(project(':core').sourceSets.main.resources)
 }
