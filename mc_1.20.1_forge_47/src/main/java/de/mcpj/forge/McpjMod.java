@@ -1,5 +1,7 @@
 package de.mcpj.forge;
 
+import de.mcpj.mc.Mcpj;
+import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.forge.compat.StargateCompat;
 import de.mcpj.forge.config.ForgeConfigs;
 import de.mcpj.forge.network.ModNetwork;
@@ -13,10 +15,12 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(McpjMod.MOD_ID)
+/** MCPJ for Minecraft 1.20.1 on Forge 47. */
 public final class McpjMod {
-    public static final String MOD_ID = "mcpj";
+    public static final String MOD_ID = Mcpj.MOD_ID;
 
     public McpjMod(FMLJavaModLoadingContext context) {
+        McpjPlatform.set(new ForgePlatform());
         IEventBus modBus = context.getModEventBus();
         ModRegistries.register(modBus);
         context.registerConfig(ModConfig.Type.SERVER, ForgeConfigs.SERVER);
@@ -27,7 +31,7 @@ public final class McpjMod {
     }
 
     public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        return Mcpj.id(path);
     }
 
     private static void onCommonSetup(FMLCommonSetupEvent event) {

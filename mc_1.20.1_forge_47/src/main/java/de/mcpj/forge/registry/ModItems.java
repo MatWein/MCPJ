@@ -1,7 +1,7 @@
 package de.mcpj.forge.registry;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.item.PuddleJumperItem;
+import de.mcpj.mc.item.PuddleJumperItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;

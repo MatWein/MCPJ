@@ -1,7 +1,7 @@
 package de.mcpj.forge.event;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;

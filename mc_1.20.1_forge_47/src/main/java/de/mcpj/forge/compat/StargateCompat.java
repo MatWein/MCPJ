@@ -1,7 +1,7 @@
 package de.mcpj.forge.compat;
 
 import com.mojang.logging.LogUtils;
-import de.mcpj.forge.entity.jumper.JumperTravel;
+import de.mcpj.mc.entity.jumper.JumperTravel;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.Event;

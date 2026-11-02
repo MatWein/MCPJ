@@ -8,6 +8,7 @@
   "license": "All-Rights-Reserved",
   "icon": "assets/mcpj/textures/item/puddle_jumper.png",
   "environment": "*",
+  "accessWidener": "mcpj.accesswidener",
   "entrypoints": {
     "main": ["de.mcpj.fabric.McpjFabric"]
   },

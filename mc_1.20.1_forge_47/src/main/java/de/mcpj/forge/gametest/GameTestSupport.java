@@ -1,6 +1,6 @@
 package de.mcpj.forge.gametest;
 
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import de.mcpj.forge.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;

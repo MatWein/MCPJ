@@ -1,7 +1,7 @@
 package de.mcpj.forge.event;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;

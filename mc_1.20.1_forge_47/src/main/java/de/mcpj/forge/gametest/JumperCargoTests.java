@@ -1,8 +1,8 @@
 package de.mcpj.forge.gametest;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.entity.jumper.JumperCargo;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.entity.jumper.JumperCargo;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import de.mcpj.forge.registry.ModEntities;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

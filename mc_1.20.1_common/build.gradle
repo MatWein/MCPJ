@@ -1,0 +1,25 @@
+plugins {
+    // only to compile against vanilla Minecraft 1.20.1 with Mojang's names (no mod loader)
+    id 'fabric-loom'
+}
+
+// Vanilla Minecraft 1.20.1 code shared by the Forge and Fabric modules: entities, blocks, rendering, HUD,
+// input and network messages. The loader modules compile these sources themselves (against their own
+// Minecraft), so this module never ships as a jar of its own.
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+loom {
+    accessWidenerPath = file('src/main/resources/mcpj.accesswidener')
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    implementation project(':core')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}

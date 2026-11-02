@@ -1,7 +1,9 @@
 package de.mcpj.forge.network;
 
-import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.Mcpj;
+import de.mcpj.mc.network.JumperActionPacket;
+import de.mcpj.mc.network.JumperImpactPacket;
+import de.mcpj.mc.network.PilotSoundPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
@@ -15,7 +17,7 @@ import java.util.function.Supplier;
 public final class ModNetwork {
     private static final String PROTOCOL_VERSION = "4";
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            McpjMod.id("main"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
+            Mcpj.id("main"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
 
     private ModNetwork() {}
 
@@ -24,17 +26,20 @@ public final class ModNetwork {
         CHANNEL.messageBuilder(JumperActionPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(JumperActionPacket::encode)
                 .decoder(JumperActionPacket::decode)
-                .consumerMainThread(JumperActionPacket::handle)
+                .consumerMainThread(fromPlayer(JumperActionPacket::handle))
                 .add();
         CHANNEL.messageBuilder(JumperImpactPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(JumperImpactPacket::encode)
                 .decoder(JumperImpactPacket::decode)
-                .consumerMainThread(JumperImpactPacket::handle)
+                .consumerMainThread(fromPlayer(JumperImpactPacket::handle))
                 .add();
         CHANNEL.messageBuilder(PilotSoundPacket.class, id, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(PilotSoundPacket::encode)
                 .decoder(PilotSoundPacket::decode)
-                .consumerNetworkThread(PilotSoundPacket::handle)
+                .consumerNetworkThread((packet, context) -> {
+                    context.get().enqueueWork(packet::handle);
+                    context.get().setPacketHandled(true);
+                })
                 .add();
     }
 
@@ -46,11 +51,12 @@ public final class ModNetwork {
         CHANNEL.sendToServer(packet);
     }
 
-    static void handleFromPilot(Supplier<NetworkEvent.Context> context, BiConsumer<PuddleJumperEntity, ServerPlayer> handler) {
-        ServerPlayer player = context.get().getSender();
-        if (player != null && player.getVehicle() instanceof PuddleJumperEntity jumper && jumper.getControllingPassenger() == player) {
-            handler.accept(jumper, player);
-        }
-        context.get().setPacketHandled(true);
+    /** Server-bound message: handled on the main thread with its sender. */
+    private static <T> BiConsumer<T, Supplier<NetworkEvent.Context>> fromPlayer(BiConsumer<T, ServerPlayer> handler) {
+        return (packet, context) -> {
+            ServerPlayer sender = context.get().getSender();
+            if (sender != null) handler.accept(packet, sender);
+            context.get().setPacketHandled(true);
+        };
     }
 }

@@ -1,7 +1,7 @@
 package de.mcpj.forge.registry;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.block.ChargingPadBlock;
+import de.mcpj.mc.block.ChargingPadBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;

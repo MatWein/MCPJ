@@ -276,3 +276,12 @@ tasks.matching { it.name == 'runClient' }.configureEach { dependsOn 'copyClientM
 tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     doFirst { delete file('run-gametest/world') }
 }
+
+// vanilla Minecraft 1.20.1 code shared between the loader modules, compiled here against this loader's Minecraft
+def common = project(':mc_1.20.1_common')
+tasks.named('compileJava', JavaCompile).configure {
+    source(common.sourceSets.main.allSource)
+}
+tasks.named('processResources', ProcessResources).configure {
+    from(common.sourceSets.main.resources)
+}

@@ -1,10 +1,10 @@
 package de.mcpj.forge.gametest;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.block.ChargingPadBlock;
+import de.mcpj.mc.block.ChargingPadBlock;
 import de.mcpj.core.config.EnergyConfig;
 import de.mcpj.core.config.ServerConfig;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import de.mcpj.forge.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;

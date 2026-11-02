@@ -4,7 +4,7 @@ import de.mcpj.forge.McpjMod;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.core.jumper.JumperHull;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

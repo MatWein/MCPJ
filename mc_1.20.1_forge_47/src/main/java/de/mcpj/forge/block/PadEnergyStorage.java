@@ -4,7 +4,7 @@ import de.mcpj.core.pad.ChargingPad;
 import net.minecraftforge.energy.IEnergyStorage;
 
 /** Forge Energy view of the core's charging pad: other mods can only insert energy. */
-record PadEnergyStorage(ChargingPad pad) implements IEnergyStorage {
+public record PadEnergyStorage(ChargingPad pad) implements IEnergyStorage {
     @Override
     public int receiveEnergy(int amount, boolean simulate) {
         return pad.receive(amount, simulate);

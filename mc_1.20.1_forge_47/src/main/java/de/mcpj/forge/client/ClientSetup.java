@@ -1,18 +1,19 @@
 package de.mcpj.forge.client;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.client.hud.JumperHud;
-import de.mcpj.forge.client.input.FlightInputReader;
-import de.mcpj.forge.client.input.KeyBindings;
-import de.mcpj.forge.client.render.DroneRenderer;
-import de.mcpj.forge.client.render.ModelCache;
-import de.mcpj.forge.client.render.PuddleJumperRenderer;
-import de.mcpj.forge.client.sound.EngineSounds;
-import de.mcpj.forge.client.sound.PilotSounds;
-import de.mcpj.forge.client.targeting.TargetMarkers;
+import de.mcpj.mc.client.hud.JumperHud;
+import de.mcpj.mc.client.input.FlightInputReader;
+import de.mcpj.mc.client.input.KeyBindings;
+import de.mcpj.mc.client.render.DroneRenderer;
+import de.mcpj.mc.client.render.ModelCache;
+import de.mcpj.mc.client.render.PuddleJumperRenderer;
+import de.mcpj.mc.client.sound.EngineSounds;
+import de.mcpj.mc.client.sound.PilotSounds;
+import de.mcpj.mc.client.targeting.TargetMarkers;
 import de.mcpj.core.jumper.FlightInput;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
-import de.mcpj.forge.network.PilotSoundPacket;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
+import de.mcpj.forge.entity.jumper.ForgePuddleJumperEntity;
+import de.mcpj.mc.network.PilotSoundPacket;
 import de.mcpj.forge.registry.ModEntities;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -37,7 +38,7 @@ public final class ClientSetup {
 
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(ModEntities.PUDDLE_JUMPER.get(), PuddleJumperRenderer::new);
+        event.registerEntityRenderer(ModEntities.PUDDLE_JUMPER.get(), PuddleJumperRenderer<ForgePuddleJumperEntity>::new);
         event.registerEntityRenderer(ModEntities.DRONE.get(), DroneRenderer::new);
     }
 
@@ -53,7 +54,7 @@ public final class ClientSetup {
 
     @SubscribeEvent
     public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "jumper_hud", JumperHud::render);
-        event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "jumper_targets", TargetMarkers::render);
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "jumper_hud", (gui, graphics, partialTick, width, height) -> JumperHud.render(graphics, width, height));
+        event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "jumper_targets", (gui, graphics, partialTick, width, height) -> TargetMarkers.render(graphics));
     }
 }

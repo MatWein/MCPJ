@@ -1,9 +1,9 @@
 package de.mcpj.forge.registry;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.entity.drone.DroneEntity;
+import de.mcpj.mc.entity.drone.DroneEntity;
 import de.mcpj.core.jumper.JumperGeometry;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.forge.entity.jumper.ForgePuddleJumperEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.registries.DeferredRegister;
@@ -18,8 +18,8 @@ public final class ModEntities {
     private static final int DRONE_TRACKING_RANGE = 8;
     private static final int DRONE_UPDATE_INTERVAL = 1;
 
-    public static final RegistryObject<EntityType<PuddleJumperEntity>> PUDDLE_JUMPER = ENTITIES.register("puddle_jumper",
-            () -> EntityType.Builder.<PuddleJumperEntity>of(PuddleJumperEntity::new, MobCategory.MISC)
+    public static final RegistryObject<EntityType<ForgePuddleJumperEntity>> PUDDLE_JUMPER = ENTITIES.register("puddle_jumper",
+            () -> EntityType.Builder.<ForgePuddleJumperEntity>of(ForgePuddleJumperEntity::new, MobCategory.MISC)
                     .sized(JumperGeometry.WIDTH, JumperGeometry.HEIGHT)
                     .fireImmune()
                     .clientTrackingRange(JUMPER_TRACKING_RANGE)

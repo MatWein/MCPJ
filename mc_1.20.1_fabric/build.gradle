@@ -23,6 +23,7 @@ dependencies {
 }
 
 loom {
+    accessWidenerPath = project(':mc_1.20.1_common').file('src/main/resources/mcpj.accesswidener')
     runs {
         client {
             runDir 'run'
@@ -58,4 +59,13 @@ tasks.withType(JavaCompile).configureEach {
 
 jar {
     from(project(':core').sourceSets.main.output)
+}
+
+// vanilla Minecraft 1.20.1 code shared between the loader modules, compiled here against this loader's Minecraft
+def common = project(':mc_1.20.1_common')
+tasks.named('compileJava', JavaCompile).configure {
+    source(common.sourceSets.main.allSource)
+}
+tasks.named('processResources', ProcessResources).configure {
+    from(common.sourceSets.main.resources)
 }

@@ -2,8 +2,8 @@ package de.mcpj.forge.gametest;
 
 import de.mcpj.forge.McpjMod;
 import de.mcpj.core.config.ServerConfig;
-import de.mcpj.forge.entity.drone.DroneEntity;
-import de.mcpj.forge.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.entity.drone.DroneEntity;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import de.mcpj.forge.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;

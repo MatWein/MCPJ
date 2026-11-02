@@ -1,5 +1,7 @@
 package de.mcpj.forge.entity.jumper;
 
+import de.mcpj.mc.entity.jumper.JumperSegment;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -14,13 +16,19 @@ import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.entity.PartEntity;
 import org.jetbrains.annotations.Nullable;
 
-public class PuddleJumperPart extends PartEntity<PuddleJumperEntity> {
+/** A hull segment (bow or stern) as a Forge part entity. */
+public class PuddleJumperPart extends PartEntity<PuddleJumperEntity> implements JumperSegment {
     private final EntityDimensions size;
 
     public PuddleJumperPart(PuddleJumperEntity parent, float width, float height) {
         super(parent);
         this.size = EntityDimensions.scalable(width, height);
         refreshDimensions();
+    }
+
+    @Override
+    public PuddleJumperEntity jumper() {
+        return getParent();
     }
 
     @Override
@@ -65,7 +73,7 @@ public class PuddleJumperPart extends PartEntity<PuddleJumperEntity> {
 
     @Override
     public boolean canCollideWith(Entity other) {
-        return other != getParent() && !(other instanceof PuddleJumperPart part && part.getParent() == getParent())
+        return other != getParent() && !(other instanceof JumperSegment segment && segment.jumper() == getParent())
                 && super.canCollideWith(other);
     }
 

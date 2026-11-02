@@ -1,7 +1,7 @@
 package de.mcpj.forge.event;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.forge.entity.jumper.JumperTravel;
+import de.mcpj.mc.entity.jumper.JumperTravel;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
