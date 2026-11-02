@@ -1,26 +1,15 @@
-package de.mcpj.client.render;
-
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
+package de.mcpj.core.render;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Minimal OBJ loader (v/vt/vn/f, groups via "o"/"g"). Triangles are emitted as degenerate quads
- * because entity render types use quad mode.
- */
-public final class ObjModel {
+/** Triangulated Wavefront OBJ model with named groups ("o"/"g"); faces become triangles, emitted as quads. */
+public final class ObjMesh {
     private static final int FLOATS_PER_VERTEX = 8;
     private static final int VERTICES_PER_TRIANGLE = 3;
     private static final int VERTICES_PER_QUAD = 4;
@@ -31,17 +20,17 @@ public final class ObjModel {
 
     private final Map<String, float[]> groups;
 
-    private ObjModel(Map<String, float[]> groups) {
+    private ObjMesh(Map<String, float[]> groups) {
         this.groups = groups;
     }
 
-    public static ObjModel load(ResourceManager resources, ResourceLocation location) throws IOException {
+    public static ObjMesh parse(Reader source) throws IOException {
         List<float[]> positions = new ArrayList<>();
         List<float[]> uvs = new ArrayList<>();
         List<float[]> normals = new ArrayList<>();
         Map<String, List<Float>> data = new LinkedHashMap<>();
         List<Float> current = data.computeIfAbsent(DEFAULT_GROUP, key -> new ArrayList<>());
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resources.open(location), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(source)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
@@ -64,7 +53,26 @@ public final class ObjModel {
             for (int i = 0; i < array.length; i++) array[i] = values.get(i);
             groups.put(name, array);
         });
-        return new ObjModel(groups);
+        return new ObjMesh(groups);
+    }
+
+    public boolean hasGroup(String group) {
+        return groups.containsKey(group);
+    }
+
+    /** Emits a group's triangles as quads (last corner repeated) with a uniform color. */
+    public void emit(String group, VertexSink sink, float red, float green, float blue, float alpha) {
+        float[] data = groups.get(group);
+        if (data == null) return;
+        int triangles = data.length / (FLOATS_PER_VERTEX * VERTICES_PER_TRIANGLE);
+        for (int triangle = 0; triangle < triangles; triangle++) {
+            int base = triangle * FLOATS_PER_VERTEX * VERTICES_PER_TRIANGLE;
+            for (int corner = 0; corner < VERTICES_PER_QUAD; corner++) {
+                int o = base + Math.min(corner, VERTICES_PER_TRIANGLE - 1) * FLOATS_PER_VERTEX;
+                sink.vertex(data[o], data[o + 1], data[o + 2], red, green, blue, alpha, data[o + 3], data[o + 4],
+                        data[o + 5], data[o + 6], data[o + 7]);
+            }
+        }
     }
 
     private static float[] floats(String[] tokens, int count) {
@@ -110,27 +118,5 @@ public final class ObjModel {
         float nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
         float length = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
         return length < MIN_NORMAL_LENGTH ? UP : new float[]{nx / length, ny / length, nz / length};
-    }
-
-    public void render(String group, PoseStack.Pose pose, VertexConsumer consumer, int light, int overlay,
-                       float red, float green, float blue, float alpha) {
-        float[] data = groups.get(group);
-        if (data == null) return;
-        Matrix4f matrix = pose.pose();
-        Matrix3f normalMatrix = pose.normal();
-        int triangles = data.length / (FLOATS_PER_VERTEX * VERTICES_PER_TRIANGLE);
-        for (int triangle = 0; triangle < triangles; triangle++) {
-            int base = triangle * FLOATS_PER_VERTEX * VERTICES_PER_TRIANGLE;
-            for (int corner = 0; corner < VERTICES_PER_QUAD; corner++) {
-                int o = base + Math.min(corner, VERTICES_PER_TRIANGLE - 1) * FLOATS_PER_VERTEX;
-                consumer.vertex(matrix, data[o], data[o + 1], data[o + 2])
-                        .color(red, green, blue, alpha)
-                        .uv(data[o + 3], data[o + 4])
-                        .overlayCoords(overlay)
-                        .uv2(light)
-                        .normal(normalMatrix, data[o + 5], data[o + 6], data[o + 7])
-                        .endVertex();
-            }
-        }
     }
 }

@@ -2,8 +2,13 @@ package de.mcpj.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.mcpj.McpjMod;
+import de.mcpj.core.render.EnergyBubble;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -24,6 +29,7 @@ import java.util.List;
 final class DeferredBubbles {
     private record Bubble(Matrix4f pose, Matrix3f normal, float intensity, float wobble, float time) {}
 
+    private static final ResourceLocation TEXTURE = McpjMod.id("textures/entity/shield.png");
     private static final List<Bubble> PENDING = new ArrayList<>();
 
     private DeferredBubbles() {}
@@ -32,6 +38,15 @@ final class DeferredBubbles {
     static void add(PoseStack poseStack, float intensity, float wobble, float time) {
         PoseStack.Pose pose = poseStack.last();
         PENDING.add(new Bubble(new Matrix4f(pose.pose()), new Matrix3f(pose.normal()), intensity, wobble, time));
+    }
+
+    private static void render(PoseStack.Pose pose, MultiBufferSource buffers, Bubble bubble) {
+        EnergyBubble.Grid grid = EnergyBubble.compute(RenderSinks.view(pose), bubble.wobble(), bubble.time());
+        for (EnergyBubble.Layer layer : EnergyBubble.LAYERS) {
+            RenderType type = ModRenderTypes.energyBubble(TEXTURE, bubble.time() * layer.uDrift(), bubble.time() * layer.vDrift());
+            EnergyBubble.emitLayer(grid, layer, RenderSinks.sink(pose, buffers.getBuffer(type), LightTexture.FULL_BRIGHT,
+                    OverlayTexture.NO_OVERLAY), bubble.intensity());
+        }
     }
 
     @SubscribeEvent
@@ -50,7 +65,7 @@ final class DeferredBubbles {
                 poseStack.pushPose();
                 poseStack.last().pose().set(undoCamera).mul(bubble.pose());
                 poseStack.last().normal().set(undoCameraNormal).mul(bubble.normal());
-                EnergyBubbleRenderer.render(poseStack, buffers, bubble.intensity(), bubble.wobble(), bubble.time());
+                render(poseStack.last(), buffers, bubble);
                 poseStack.popPose();
             }
             buffers.endBatch();

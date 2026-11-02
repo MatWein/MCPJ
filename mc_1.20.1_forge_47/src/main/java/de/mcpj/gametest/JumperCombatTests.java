@@ -53,6 +53,11 @@ public class JumperCombatTests {
         });
     }
 
+    private static String submergedDiagnosis(GameTestHelper helper, PuddleJumperEntity jumper) {
+        return "pos " + helper.relativeVec(jumper.position()) + ", water height " + jumper.waterHeight()
+                + ", block " + helper.getLevel().getBlockState(jumper.blockPosition()) + ", removed " + jumper.isRemoved();
+    }
+
     private static void launch(GameTestHelper helper, PuddleJumperEntity jumper, net.minecraft.world.entity.Entity target, Vec3 from, Vec3 velocity) {
         DroneEntity drone = new DroneEntity(helper.getLevel(), helper.makeMockPlayer(), jumper, target);
         drone.setPos(from);
@@ -130,7 +135,7 @@ public class JumperCombatTests {
         fillWater(helper);
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 3, 12, 0);
         helper.runAfterDelay(50, () -> {
-            helper.assertTrue(jumper.isSubmerged(), "Jumper should be submerged");
+            helper.assertTrue(jumper.isSubmerged(), "Jumper should be submerged: " + submergedDiagnosis(helper, jumper));
             helper.assertTrue(jumper.hull().integrity() < 1f, "No water damage");
             helper.assertTrue(Math.abs(jumper.getY() - helper.absoluteVec(new Vec3(0, 3, 0)).y) < 0.01, "Jumper floated up to " + jumper.getY());
             helper.succeed();
@@ -143,7 +148,7 @@ public class JumperCombatTests {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 3, 12, 0);
         jumper.setShielded(true);
         helper.runAfterDelay(50, () -> {
-            helper.assertTrue(jumper.isSubmerged(), "Jumper should be submerged");
+            helper.assertTrue(jumper.isSubmerged(), "Jumper should be submerged: " + submergedDiagnosis(helper, jumper));
             helper.assertTrue(jumper.hull().integrity() == 1f, "Damage despite shield");
             helper.succeed();
         });
