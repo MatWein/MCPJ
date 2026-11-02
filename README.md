@@ -122,30 +122,35 @@ warning threshold.
 
 ## Building
 
+The project is split into modules so the game logic does not have to be rewritten for every Minecraft version
+or mod loader:
+
+- `core/`: the game logic in plain Java, without any Minecraft or mod loader API (Java 17)
+- `mc_1.20.1_forge_47/`: Minecraft 1.20.1 with Forge 47; builds the mod jar and contains its development runs
+  (`run/`, `run-gametest/` and the test server `run-server/`)
+
 ```bash
-./gradlew build                             # mod jar in build/libs/
-./gradlew runClient                         # development client
-./gradlew runClient -PjoinServer=localhost  # client joins a server directly
-./gradlew runGameTestServer                 # automated game tests (headless, fresh world each run)
-./gradlew runGameTestServer -Pstandalone    # the same without any other mod (the mod must work on its own)
+./gradlew build                                              # all modules; mod jars in <module>/build/libs/
+./gradlew :core:test                                         # fast unit tests of the game logic (no Minecraft)
+./gradlew :mc_1.20.1_forge_47:runClient                         # development client
+./gradlew :mc_1.20.1_forge_47:runClient -PjoinServer=localhost  # client joins a server directly
+./gradlew :mc_1.20.1_forge_47:runGameTestServer                 # automated game tests (headless, fresh world each run)
+./gradlew :mc_1.20.1_forge_47:runGameTestServer -Pstandalone    # the same without any other mod (the mod must work on its own)
 ```
 
-Requires Java 17 (Gradle downloads it if needed).
+Requires Java 17 (Gradle downloads it if needed). Jars are named `mcpj-<version>+mc<minecraft version>-<loader>.jar`.
 
-`run-server/` is a regular Forge server for multiplayer tests (start with `run-server/run.sh` after copying
-`build/libs/mcpj-<version>.jar` into `run-server/mods/`). The build also loads every other jar in
-`run-server/mods` (deobfuscated) into the development runs. `runClient` additionally gets Embeddium and Oculus
-(shaders) from the Modrinth maven; they are client-only and therefore copied to `run/mods` instead of the shared
-classpath. Their versions are set in `gradle.properties`. None of these mods is required: `-Pstandalone` leaves them
-all out, for any run task.
+`mc_1.20.1_forge_47/run-server/` is a regular Forge server for multiplayer tests (start with `run.sh` there after copying the
+mod jar into its `mods/`). The build also loads every other jar in that `mods/` folder (deobfuscated) into the
+development runs. `runClient` additionally gets Embeddium and Oculus (shaders) from the Modrinth maven; they are
+client-only and therefore copied to `run/mods` instead of the shared classpath. Versions are set in
+`mc_1.20.1_forge_47/gradle.properties`. None of these mods is required: `-Pstandalone` leaves them all out, for any run task.
 
 ## Project layout
 
 ```
-tools/preview.py                       software renderer for preview images (python3 tools/preview.py out.png [--open])
-tools/make_pad_textures.py             charging pad textures
-tools/make_test_structure.py           game test platform
-src/main/java/de/mcpj/
+core/src/main/java/de/mcpj/core/       game logic without Minecraft (moving here step by step)
+mc_1.20.1_forge_47/src/main/java/de/mcpj/
   config/                              server and client config
   registry/                            blocks, items, entities, sounds, creative tab
   entity/jumper/                       the jumper: flight, energy, hull, systems, weapons, lights, cargo, animation
@@ -156,6 +161,9 @@ src/main/java/de/mcpj/
   compat/                              optional integrations (Just Stargate Mod)
   client/                              rendering, HUD, input, camera, targeting, sounds
   gametest/                            game tests
+tools/preview.py                       software renderer for preview images (python3 tools/preview.py out.png [--open])
+tools/make_pad_textures.py             charging pad textures
+tools/make_test_structure.py           game test platform
 ```
 
 ### Model

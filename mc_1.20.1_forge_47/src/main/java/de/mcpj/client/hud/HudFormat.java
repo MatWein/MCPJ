@@ -1,6 +1,6 @@
 package de.mcpj.client.hud;
 
-import de.mcpj.util.Units;
+import de.mcpj.core.util.Units;
 
 final class HudFormat {
     private static final int THOUSAND = 1_000;

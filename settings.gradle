@@ -11,3 +11,9 @@ pluginManagement {
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
 }
+rootProject.name = 'mcpj'
+
+// core: the game logic without any Minecraft or mod loader API (plain Java)
+include 'core'
+// one module per Minecraft version and mod loader, each builds its own mod jar
+include 'mc_1.20.1_forge_47'

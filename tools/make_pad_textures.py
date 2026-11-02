@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Builds the charging pad block textures (32x32, tileable).
 
-Output: src/main/resources/assets/mcpj/textures/block/
+Output: mc_1.20.1_forge_47/src/main/resources/assets/mcpj/textures/block/
   charging_pad_top_{off,powered,charging}.png   landing field: edge lights, center line, arrow (points north = up)
   charging_pad_side_{off,powered,charging}.png  steel panel with energy bar
   charging_pad_bottom.png
@@ -12,7 +12,7 @@ import random
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, 'src', 'main', 'resources', 'assets', 'mcpj', 'textures', 'block')
+OUT = os.path.join(ROOT, 'mc_1.20.1_forge_47', 'src', 'main', 'resources', 'assets', 'mcpj', 'textures', 'block')
 N = 32
 
 MODES = {

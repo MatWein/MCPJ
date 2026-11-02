@@ -1,6 +1,6 @@
 package de.mcpj.config;
 
-import de.mcpj.util.Units;
+import de.mcpj.core.util.Units;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class HullConfig {

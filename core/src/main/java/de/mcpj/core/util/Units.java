@@ -1,5 +1,6 @@
-package de.mcpj.util;
+package de.mcpj.core.util;
 
+/** Minecraft runs at a fixed 20 ticks per second; converts between per-second and per-tick values. */
 public final class Units {
     public static final int TICKS_PER_SECOND = 20;
 

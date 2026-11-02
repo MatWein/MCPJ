@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ASSETS = os.path.join(ROOT, 'src', 'main', 'resources', 'assets', 'mcpj')
+ASSETS = os.path.join(ROOT, 'mc_1.20.1_forge_47', 'src', 'main', 'resources', 'assets', 'mcpj')
 
 
 

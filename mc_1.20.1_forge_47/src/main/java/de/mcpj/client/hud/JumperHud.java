@@ -6,7 +6,7 @@ import de.mcpj.client.targeting.TargetSelector;
 import de.mcpj.config.ClientConfig;
 import de.mcpj.entity.jumper.JumperEnergy;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
-import de.mcpj.util.Units;
+import de.mcpj.core.util.Units;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
