@@ -1,6 +1,6 @@
 plugins {
     // only to compile against vanilla Minecraft 1.20.1 with Mojang's names (no mod loader)
-    id 'fabric-loom'
+    id 'net.fabricmc.fabric-loom-remap'
 }
 
 // Vanilla Minecraft 1.20.1 code shared by the Forge and Fabric modules: entities, blocks, rendering, HUD,

@@ -133,7 +133,7 @@ or mod loader:
 | `mc_1.20.1_fabric/` | Fabric: registration, network transport, TOML config with server sync, mixins, hull segments, Team Reborn Energy (optional) |
 
 Each loader module builds its own jar: `mcpj-<version>+mc<minecraft version>-<loader>.jar` in `<module>/build/libs/`.
-Requires Java 17 (Gradle downloads it if needed).
+Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for the 1.20.1 modules). Build plugins: ModDevGradle (Forge 1.20.1 via `legacyforge`, NeoForge) and Fabric Loom.
 
 ```bash
 ./gradlew build                                                  # all modules and jars

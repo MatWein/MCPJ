@@ -2,8 +2,8 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         maven {
-            name = 'MinecraftForge'
-            url = 'https://maven.minecraftforge.net/'
+            name = 'NeoForged'
+            url = 'https://maven.neoforged.net/releases'
         }
         maven {
             name = 'Fabric'
@@ -12,16 +12,9 @@ pluginManagement {
     }
 }
 
-// The foojay plugin (Java downloads) brings Gson 2.9, which would also be used by Fabric Loom and cannot handle
-// records; settings plugins are loaded first, so raise Gson here.
-buildscript {
-    dependencies {
-        classpath 'com.google.code.gson:gson:2.10.1'
-    }
-}
-
 plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+    // downloads missing Java toolchains (1.20.1 modules compile for Java 17, 26.x for Java 25)
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 rootProject.name = 'mcpj'
 

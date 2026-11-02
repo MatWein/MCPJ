@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom'
+    id 'net.fabricmc.fabric-loom-remap'
 }
 
 version = "${mod_version}+mc${minecraft_version}-fabric"
@@ -39,7 +39,7 @@ loom {
             server()
             name 'Game Test'
             vmArg '-Dfabric-api.gametest'
-            vmArg "-Dfabric-api.gametest.report-file=${project.buildDir}/gametest/report.xml"
+            vmArg "-Dfabric-api.gametest.report-file=${layout.buildDirectory.get().asFile}/gametest/report.xml"
             runDir 'run-gametest'
         }
     }
