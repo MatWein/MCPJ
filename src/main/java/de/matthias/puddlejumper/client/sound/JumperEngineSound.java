@@ -11,13 +11,13 @@ public class JumperEngineSound extends AbstractTickableSoundInstance {
     private static final float FADE_OUT_STEP = 0.05f;
     private static final double SOURCE_HEIGHT = 1.0;
     private static final double MAX_AUDIBLE_SPEED = 1.3;
-    private static final float BASE_VOLUME_PILOTED = 0.35f;
-    private static final float BASE_VOLUME = 0.25f;
-    private static final float VOLUME_PER_SPEED = 0.5f;
+    private static final float BASE_VOLUME_PILOTED = 0.3f;
+    private static final float BASE_VOLUME = 0.2f;
+    private static final float VOLUME_PER_SPEED = 0.35f;
     private static final float CLOAKED_VOLUME_FACTOR = 0.5f;
     private static final float VOLUME_RESPONSE = 0.1f;
     private static final float BASE_PITCH = 0.75f;
-    private static final float PITCH_PER_SPEED = 0.4f;
+    private static final float PITCH_PER_SPEED = 0.3f;
 
     private final PuddleJumperEntity jumper;
 

@@ -94,18 +94,11 @@ minecraft {
             }
         }
 
-        server {
-            // separate directory so client and server can run side by side
-            workingDirectory project.file('run-server')
-            property 'forge.enabledGameTestNamespaces', mod_id
-            args '--nogui'
-        }
-
         // This run config launches GameTestServer and runs all registered gametests, then exits.
         // By default, the server will crash when no gametests are provided.
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
-            // separate directory: run/mods holds client-only mods (see copyClientMods)
+            // separate directory so game tests always start from a fresh world (see below)
             workingDirectory project.file('run-gametest')
             property 'forge.enabledGameTestNamespaces', mod_id
         }
@@ -135,15 +128,17 @@ repositories {
 
     // mods of the local test server (JSG, Mekanism, CC:Tweaked, ...), deobfuscated for the dev client
     flatDir {
-        dir 'mc_server_kaffee_hart/mods'
+        dir 'run-server/mods'
     }
-    // additional client-only mods (e.g. Embeddium + Oculus for shaders); obfuscated jars do not load from run/mods in dev
-    flatDir {
-        dir 'client-mods'
+    // Embeddium + Oculus (shaders) for the dev client
+    maven {
+        url 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
     }
 }
 
 configurations {
+    // client-only mods: they crash a dedicated or game test server, so they are not on the shared runtime classpath
     clientMods { transitive = false }
 }
 
@@ -167,18 +162,16 @@ dependencies {
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
 
     // load every mod jar of the test server in the dev environment as well
-    fileTree(dir: 'mc_server_kaffee_hart/mods', include: '*.jar')
+    fileTree(dir: 'run-server/mods', include: '*.jar')
             .filter { !it.name.startsWith(mod_id) }
             .each {
                 def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
                 if (m.matches()) runtimeOnly fg.deobf("blank:${m.group(1)}:${m.group(2)}")
             }
 
-    // client-only mods from client-mods/: deobfuscated, used by runClient only
-    fileTree(dir: 'client-mods', include: '*.jar').each {
-        def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
-        if (m.matches()) clientMods fg.deobf("blank:${m.group(1)}:${m.group(2)}")
-    }
+    // client-only mods from Modrinth (shaders), deobfuscated like the server mods, loaded by runClient only
+    clientMods fg.deobf("maven.modrinth:embeddium:${embeddium_version}")
+    clientMods fg.deobf("maven.modrinth:oculus:${oculus_version}")
 
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html

@@ -111,15 +111,17 @@ warning threshold.
 ```bash
 ./gradlew build                             # mod jar in build/libs/
 ./gradlew runClient                         # development client
-./gradlew runServer                         # development server (directory run-server/)
 ./gradlew runClient -PjoinServer=localhost  # client joins a server directly
 ./gradlew runGameTestServer                 # automated game tests (headless, fresh world each run)
 ```
 
 Requires Java 17 (Gradle downloads it if needed).
 
-For local testing with other mods, the build also loads every jar in `mc_server_kaffee_hart/mods` (deobfuscated)
-into the development runs, and client-only mods such as Embeddium/Oculus from `client-mods/` into `runClient`.
+`run-server/` is a regular Forge server for multiplayer tests (start with `run-server/run.sh` after copying
+`build/libs/puddlejumper-<version>.jar` into `run-server/mods/`). The build also loads every other jar in
+`run-server/mods` (deobfuscated) into the development runs. `runClient` additionally gets Embeddium and Oculus
+(shaders) from the Modrinth maven; they are client-only and therefore copied to `run/mods` instead of the shared
+classpath. Their versions are set in `gradle.properties`.
 
 ## Project layout
 
@@ -129,6 +131,7 @@ tools/build_model.py                   builds the improved model, texture atlas,
 tools/preview.py                       software renderer for preview images (python3 tools/preview.py out.png [--open])
 tools/make_pad_textures.py             charging pad textures
 tools/make_test_structure.py           game test platform
+tools/make_engine_sound.py             synthesizes the engine loop
 src/main/java/de/matthias/puddlejumper/
   config/                              server and client config
   registry/                            blocks, items, entities, sounds, creative tab
