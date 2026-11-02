@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the Puddle Jumper model and texture atlas from assets/.
+"""Builds the Puddle Jumper model and texture atlas procedurally (no external templates).
 
 Output (src/main/resources/assets/puddlejumper/):
   models/entity/puddle_jumper.obj   groups: hull, pod_left/right (+ _glow nozzles, _ports drone ports)
@@ -10,6 +10,8 @@ Output (src/main/resources/assets/puddlejumper/):
   textures/entity/shield.png        (tileable caustics pattern for shield and cloak bubble)
 
 Coordinates stay in model units (bow = +Z, floor = y 0); scaling to blocks happens in Java.
+The hull is a lofted cross-section (octagon with a roof spine), cut by the sloped windscreen at the bow and the
+sloped cargo hatch at the stern.
 """
 import math
 import os
@@ -19,14 +21,15 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC_OBJ = os.path.join(ROOT, 'assets', 'puddlejumper.obj')
-SRC_TEX = os.path.join(ROOT, 'assets', 'puddlejumper.png')
 OUT = os.path.join(ROOT, 'src', 'main', 'resources', 'assets', 'puddlejumper')
 
 TW, TH = 1024, 2048          # atlas size
-ORIG_H = 1024                # original texture (upscaled 2x) occupies y 0..1023
 
-# atlas regions for new parts (pixels: x0, y0, x1, y1)
+# atlas regions (pixels: x0, y0, x1, y1)
+REG_SIDE = (0, 0, 1024, 272)          # hull sides: u = length (stern -> bow), v = height (top -> bottom)
+REG_TOP = (0, 272, 1024, 640)         # roof and upper chamfers: u = length, v = across (right -> left)
+REG_FRONT = (0, 640, 512, 1024)       # windscreen: u = across, v = down the slope
+REG_REAR = (512, 640, 1024, 1024)     # cargo hatch: u = across, v = up the slope
 REG_POD = (512, 1024, 1024, 1280)
 REG_GLOW = (512, 1280, 768, 1536)
 REG_PORT = (768, 1280, 1024, 1536)
@@ -88,29 +91,6 @@ def region_uv(reg, s, t):
     return px_to_uv(x0 + (x1 - x0) * s, y0 + (y1 - y0) * t)
 
 
-# ---------------------------------------------------------------- load original
-def load_original():
-    vs, vts, vns, faces = [], [], [], []
-    for line in open(SRC_OBJ):
-        p = line.split()
-        if not p:
-            continue
-        if p[0] == 'v':
-            vs.append([float(x) for x in p[1:4]])
-        elif p[0] == 'vt':
-            vts.append([float(x) for x in p[1:3]])
-        elif p[0] == 'vn':
-            vns.append([float(x) for x in p[1:4]])
-        elif p[0] == 'f':
-            faces.append([tuple(int(x) - 1 for x in t.split('/')) for t in p[1:]])
-    return np.array(vs), np.array(vts), np.array(vns), faces
-
-
-def remap_orig_uv(uv):
-    # the original occupies the upper 1024 block: v' such that pixel y = (1 - v) * 1024
-    return (uv[0], 1.0 - (1.0 - uv[1]) * ORIG_H / TH)
-
-
 def add_box(mesh, group, lo, hi, reg, tile=4.0):
     """Axis-aligned box with outward faces, planar UVs inside a region."""
     x0, y0, z0 = lo
@@ -142,6 +122,112 @@ def add_box(mesh, group, lo, hi, reg, tile=4.0):
         sc = 1.0 / max(rs, rt, 1.0 / tile * 4)
         uvs2 = [region_uv(reg, min(1, (u - ms) * sc * 0.98 + 0.01), min(1, (v - mt) * sc * 0.98 + 0.01)) for u, v in uvs]
         mesh.quad(group, q, uvs2)
+
+
+# ---------------------------------------------------------------- hull
+HULL_REAR_Z, HULL_FRONT_Z = -14.45, 14.45
+HULL_HALF_WIDTH, ROOF_Y = 4.77, 7.3
+# cross-section, right half from the keel to the roof spine (x, y); mirrored for the left half
+HULL_PROFILE = [(0.0, 0.0), (3.3, 0.0), (4.6, 1.2), (4.77, 1.6), (4.77, 4.4), (3.9, 5.7),
+                (2.2, 6.7), (1.3, 6.8), (1.2, 7.3), (0.0, 7.3)]
+# top line along the length (z, y): flat roof, then the windscreen sloping down to the nose with a small ledge
+TOP_LINE = [(HULL_REAR_Z, 7.3), (3.6, 7.3), (5.6, 5.2), (9.6, 2.5), (10.6, 2.45), (HULL_FRONT_Z, 0.0)]
+# bottom line (z, y): flat keel, then the cargo hatch rising to the stern
+BOTTOM_LINE = [(HULL_REAR_Z, 6.95), (-13.4, 6.2), (-12.4, 4.9), (-11.4, 2.3), (-10.4, 0.0), (HULL_FRONT_Z, 0.0)]
+# width factor along the length: the nose narrows
+WIDTH_LINE = [(HULL_REAR_Z, 1.0), (11.6, 1.0), (12.6, 0.89), (13.6, 0.79), (HULL_FRONT_Z, 0.72)]
+WINDSCREEN_TOP_Z = 3.6
+HATCH_FRONT_Z = -10.4
+
+
+def piecewise(line, z):
+    zs, vs = zip(*line)
+    return float(np.interp(z, zs, vs))
+
+
+def half_width_at(y):
+    """Half width of the cross-section at height y (right side of the profile)."""
+    ys = [p[1] for p in HULL_PROFILE[1:-1]]
+    xs = [p[0] for p in HULL_PROFILE[1:-1]]
+    return float(np.interp(y, ys, xs))
+
+
+def hull_section():
+    """Closed cross-section, counter-clockwise seen from the bow (outward normals with stations along +z)."""
+    right = HULL_PROFILE
+    left = [(-x, y) for x, y in reversed(HULL_PROFILE[1:-1])]
+    return right + left
+
+
+def section_at(z):
+    """Section at station z: clamped between bottom and top line; clamped points slide along the profile,
+    so the cut faces lie flat in the windscreen or hatch plane."""
+    y_lo, y_hi = piecewise(BOTTOM_LINE, z), piecewise(TOP_LINE, z)
+    k = piecewise(WIDTH_LINE, z)
+    pts = []
+    for x, y in hull_section():
+        cut = 0
+        if y > y_hi:
+            y_new, cut = y_hi, 1
+        elif y < y_lo:
+            y_new, cut = y_lo, -1
+        else:
+            y_new = y
+        if cut:
+            w_old = half_width_at(y)
+            x = x * half_width_at(y_new) / w_old if w_old > 1e-6 else 0.0
+        pts.append((np.array([x * k, y_new, z]), cut))
+    return pts
+
+
+def hull_stations():
+    zs = set(np.round(np.arange(HULL_REAR_Z, HULL_FRONT_Z, 0.8), 4))
+    for line in (TOP_LINE, BOTTOM_LINE, WIDTH_LINE):
+        zs.update(z for z, _ in line)
+    return sorted(zs)
+
+
+def hull_uv(p, n, cut):
+    """Atlas UV of a hull vertex; cut = 1 windscreen, -1 cargo hatch, 0 regular surface."""
+    x, y, z = p
+    s_len = (z - HULL_REAR_Z) / (HULL_FRONT_Z - HULL_REAR_Z)
+    s_across = (HULL_HALF_WIDTH - x) / (2 * HULL_HALF_WIDTH)
+    if cut == 1:
+        return region_uv(REG_FRONT, s_across, (z - WINDSCREEN_TOP_Z) / (HULL_FRONT_Z - WINDSCREEN_TOP_Z))
+    if cut == -1:
+        return region_uv(REG_REAR, s_across, (HATCH_FRONT_Z - z) / (HATCH_FRONT_Z - HULL_REAR_Z))
+    if n[1] < -0.9:
+        # underside: same olive paint as the pods' booms, planar projection
+        return region_uv(REG_OLIVE, float(np.clip((x + 4.8) / 9.6, 0, 1)), float(np.clip((14.5 - z) / 29.0, 0, 1)))
+    if abs(n[0]) >= abs(n[1]) * 0.8 or n[1] < 0:
+        return region_uv(REG_SIDE, s_len, float(np.clip((ROOF_Y + 0.1 - y) / (ROOF_Y + 0.1), 0, 1)))
+    return region_uv(REG_TOP, s_len, s_across)
+
+
+def add_hull(mesh):
+    stations = [section_at(z) for z in hull_stations()]
+    count = len(stations[0])
+    for a, b in zip(stations, stations[1:]):
+        for i in range(count):
+            j = (i + 1) % count
+            quad = [a[i], a[j], b[j], b[i]]
+            ps = [p for p, _ in quad]
+            n = np.cross(ps[1] - ps[0], ps[2] - ps[0])
+            if np.linalg.norm(n) < 1e-9:
+                n = np.cross(ps[2] - ps[0], ps[3] - ps[0])
+            if np.linalg.norm(n) < 1e-9:
+                continue
+            n = n / np.linalg.norm(n)
+            # a face lies in the windscreen or hatch plane only if all its corners were cut
+            cuts = {c for _, c in quad}
+            cut = cuts.pop() if len(cuts) == 1 else 0
+            mesh.quad('hull', ps, [hull_uv(p, n, cut) for p in ps])
+    # stern cap (small face under the roof overhang)
+    ring = [p for p, _ in stations[0]]
+    center = sum(ring) / len(ring)
+    rear = region_uv(REG_REAR, 0.5, 0.995)
+    for i in range(count):
+        mesh.tri('hull', [ring[(i + 1) % count], ring[i], center], [rear] * 3)
 
 
 # ---------------------------------------------------------------- drive pods
@@ -333,29 +419,105 @@ def olive_from_luma(L, rng):
     return col
 
 
+def hull_texture(rng):
+    """Upper atlas half: hull paint with panel lines, strakes, vents, windscreen and cargo hatch (1024 x 1024)."""
+    luma = np.full((1024, 1024), 128.0, np.float32)
+    LINE, GROOVE = 62.0, 48.0
+
+    def coords(reg):
+        x0, y0, x1, y1 = reg
+        yy, xx = np.mgrid[0:y1 - y0, 0:x1 - x0].astype(np.float32)
+        return x0, y0, x1, y1, xx / (x1 - x0), yy / (y1 - y0)
+
+    def near(a, b, width):
+        return np.abs(a - b) < width
+
+    # sides: z along u, y along v
+    x0, y0, x1, y1, u, v = coords(REG_SIDE)
+    z = HULL_REAR_Z + u * (HULL_FRONT_Z - HULL_REAR_Z)
+    y = (ROOF_Y + 0.1) * (1 - v)
+    L = luma[y0:y1, x0:x1]
+    px = 0.03                                            # about one pixel in model units
+    L[near(y, 4.4, 2 * px) | near(y, 1.6, 2 * px)] = GROOVE
+    # Ancient-style stepped strake: a band whose upper edge steps down towards the bow
+    step_y = np.where(z < -4.0, 3.6, np.where(z < 4.5, 3.25, 2.9))
+    strake = (y > 2.05) & (y < step_y) & (z > -9.6) & (z < 11.0)
+    L[strake] = 140
+    L[strake & (near(y, step_y, 1.5 * px) | near(y, 2.05, 1.5 * px))] = LINE
+    for zs in (-4.0, 4.5):
+        L[near(z, zs, 1.5 * px) & (y > 2.05) & (y < 3.6)] = LINE
+    # vertical panel seams, staggered above and below the shoulder groove
+    for zs in np.arange(-13.0, 13.0, 3.2):
+        L[near(z, zs, 1.2 * px) & (y < 4.4) & (y > 1.6) & ~strake] = LINE
+        L[near(z, zs + 1.6, 1.2 * px) & (y > 4.4)] = LINE
+    # vent grille near the stern and a small service panel near the bow
+    vent = (z > -10.0) & (z < -8.2) & (y > 2.2) & (y < 3.6)
+    L[vent & ((np.floor((z + 10.0) / 0.18) % 2) == 0)] = GROOVE
+    panel = (z > 7.0) & (z < 8.6) & (y > 0.6) & (y < 1.4)
+    L[panel] = 112
+    L[panel & ~((z > 7.05) & (z < 8.55) & (y > 0.65) & (y < 1.35))] = LINE
+
+    # roof: z along u, x along v (right -> left)
+    x0, y0, x1, y1, u, v = coords(REG_TOP)
+    z = HULL_REAR_Z + u * (HULL_FRONT_Z - HULL_REAR_Z)
+    x = HULL_HALF_WIDTH - v * 2 * HULL_HALF_WIDTH
+    L = luma[y0:y1, x0:x1]
+    ax = np.abs(x)
+    L[ax < 1.25] = 136                                    # spine slightly lighter
+    L[near(ax, 1.25, 2 * px)] = GROOVE
+    L[near(ax, 2.9, 1.5 * px)] = LINE
+    for zs in np.arange(-12.8, 4.0, 2.4):
+        L[near(z, zs, 1.2 * px) & (ax < 1.25)] = LINE
+        L[near(z, zs + 1.2, 1.2 * px) & (ax > 1.25) & (ax < 2.9)] = LINE
+    # stepped line on the spine, mirroring the strakes on the sides
+    inner = np.where(z < -4.0, 0.7, 0.45)
+    L[near(ax, inner, 1.5 * px) & (z > -11.0) & (z < 3.0)] = LINE
+
+    # windscreen: x along u, z down the slope along v
+    x0, y0, x1, y1, u, v = coords(REG_FRONT)
+    x = HULL_HALF_WIDTH - u * 2 * HULL_HALF_WIDTH
+    z = WINDSCREEN_TOP_Z + v * (HULL_FRONT_Z - WINDSCREEN_TOP_Z)
+    L = luma[y0:y1, x0:x1]
+    L[near(z, 9.6, 3 * px) | near(z, 10.6, 3 * px)] = GROOVE   # nose ledge
+    L[(z > 11.2) & near(np.abs(x), 1.6, 1.5 * px)] = LINE
+    allowed = np.array([[half_width_at(piecewise(TOP_LINE, zz)) * piecewise(WIDTH_LINE, zz)]
+                        for zz in z[:, 0]], np.float32)
+    shape = (np.abs(x) / 3.0) ** 3 + (np.abs(z - 7.4) / 1.8) ** 3
+    window = (shape < 1) & (np.abs(x) < allowed - 0.3)
+    glass = window & (shape < 0.8) & (np.abs(x) < allowed - 0.5)
+
+    # cargo hatch: x along u, z up the slope along v
+    x0, y0, x1, y1, u, v = coords(REG_REAR)
+    x = HULL_HALF_WIDTH - u * 2 * HULL_HALF_WIDTH
+    t = v                                                 # 0 at the keel, 1 at the stern
+    L = luma[y0:y1, x0:x1]
+    frame = (np.abs(x) < 3.6) & (t > 0.04) & (t < 0.93)
+    L[frame] = 120
+    L[frame & ~((np.abs(x) < 3.5) & (t > 0.055) & (t < 0.915))] = GROOVE
+    for k in range(1, 7):
+        L[frame & near(t, 0.04 + k * 0.127, 0.004)] = LINE   # ramp ribs
+    L[frame & near(x, 0.0, 1.5 * px)] = LINE
+
+    arr = olive_from_luma(luma + rng.normal(0, 1.5, luma.shape), rng)
+
+    # windscreen glass with copper frame
+    fx0, fy0, fx1, fy1 = REG_FRONT
+    sub = arr[fy0:fy1, fx0:fx1]
+    copper = np.array([140, 84, 46], np.float32) * (1 + 0.15 * smooth_noise(rng, fy1 - fy0, fx1 - fx0, 6))[..., None]
+    ring = window & ~glass
+    sub[ring] = copper[ring]
+    sub[ring & (shape > 0.92)] *= 0.7
+    zz = WINDSCREEN_TOP_Z + np.mgrid[0:fy1 - fy0, 0:fx1 - fx0][0] / (fy1 - fy0) * (HULL_FRONT_Z - WINDSCREEN_TOP_Z)
+    xx = HULL_HALF_WIDTH - np.mgrid[0:fy1 - fy0, 0:fx1 - fx0][1] / (fx1 - fx0) * 2 * HULL_HALF_WIDTH
+    r = np.sqrt((xx / 2.7) ** 2 + ((zz - 7.0) / 1.6) ** 2)
+    shine = np.stack([30 + 70 * np.clip(1 - r, 0, 1) ** 2] * 3, axis=-1) * np.array([0.95, 0.98, 1.05])
+    sub[glass] = shine[glass]
+    return arr
+
+
 def build_texture():
     rng = np.random.default_rng(42)
-    src = Image.open(SRC_TEX).convert('L')
-    up = src.resize((1024, 1024), Image.LANCZOS)
-    L = np.asarray(up, dtype=np.float32)
-    arr = olive_from_luma(L, rng)
-
-    # cockpit window (dark spot top left): dark glass with copper frame
-    yy, xx = np.mgrid[0:1024, 0:1024]
-    win = (L < 45) & (xx > 20) & (xx < 240) & (yy > 180) & (yy < 330)
-    if win.any():
-        wimg = Image.fromarray((win * 255).astype(np.uint8))
-        # the frame lies inside the window area (where the UV island is surely visible)
-        glass_mask = np.asarray(wimg.filter(ImageFilter.MinFilter(19)), dtype=bool)
-        ring = win & ~glass_mask
-        ring_inner = ring & ~np.asarray(wimg.filter(ImageFilter.MinFilter(11)), dtype=bool)
-        copper = np.array([140, 84, 46], np.float32) * (1 + 0.15 * smooth_noise(rng, 1024, 1024, 6))[..., None]
-        arr[ring] = copper[ring]
-        arr[ring_inner] = copper[ring_inner] * 0.7
-        cy_, cx_ = yy[win].mean(), xx[win].mean()
-        r = np.sqrt(((xx - cx_) / 110) ** 2 + ((yy - cy_) / 70) ** 2)
-        glass = np.stack([30 + 70 * np.clip(1 - r, 0, 1) ** 2] * 3, axis=-1) * np.array([0.95, 0.98, 1.05])
-        arr[glass_mask] = glass[glass_mask]
+    arr = hull_texture(np.random.default_rng(1)).astype(np.float32)
 
     atlas = np.zeros((TH, TW, 3), dtype=np.float32)
     atlas[:1024] = arr
@@ -419,22 +581,8 @@ def build_texture():
 
 # ---------------------------------------------------------------- main model
 def build_jumper():
-    vs, vts, vns, faces = load_original()
     mesh = Mesh()
-
-    for f in faces:
-        pts = vs[[t[0] for t in f]]
-        uvs = [tuple(vts[t[1]]) for t in f]
-        uv2 = [remap_orig_uv(uv) for uv in uvs]
-        fn = np.cross(pts[1] - pts[0], pts[2] - pts[0])
-        fn = fn / (np.linalg.norm(fn) + 1e-12)
-        if fn[1] < -0.9:
-            # underside: same olive paint as the hull, planar projection (x = width, z = length)
-            uv2 = [region_uv(REG_OLIVE, float(np.clip((p[0] + 4.8) / 9.6, 0, 1)),
-                             float(np.clip((14.5 - p[2]) / 29.0, 0, 1))) for p in pts]
-        mesh.tri('hull', pts, uv2)
-
-
+    add_hull(mesh)
     add_pod(mesh, +1)
     add_pod(mesh, -1)
     return mesh
