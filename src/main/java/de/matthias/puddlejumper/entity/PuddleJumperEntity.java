@@ -131,8 +131,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     /** Selbst berechnete Geschwindigkeit; Fremdimpulse (Explosionen, Stöße, Treffer) werden damit verworfen. */
     private Vec3 ownVelocity = Vec3.ZERO;
     @Nullable private java.util.UUID lastDroneHit;
-    /** Drehung, die der Pilot noch mitmachen muss (wird in positionRider angewendet -> ruckelfrei). */
-    private float riderYawDelta;
     /** Einblend-Animation Schild/Tarnung (0..1) und kurzes Aufleuchten bei Treffern. */
     public float shieldAnim, shieldAnimO, cloakAnim, cloakAnimO;
     public int shieldFlash;
@@ -305,8 +303,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
         yawVelocity = yawVelocity * TURN_DRAG - in.turn() * TURN_ACCEL * (water ? 0.5f : 1f); // A (turn > 0) = links
         if (in.turn() == 0 && Math.abs(yawVelocity) < 0.02f) yawVelocity = 0;
-        setYRot(getYRot() + yawVelocity);
-        riderYawDelta += yawVelocity;
+        setYRot(getYRot() + yawVelocity); // nur das Schiff dreht, die Blickrichtung des Piloten bleibt
 
         double fwdAccel = in.forward() > 0 ? accel : accel * 0.6;
         Vec3 acc = forward().scale(in.forward() * fwdAccel)
@@ -488,14 +485,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     @Override
     protected void positionRider(Entity passenger, MoveFunction move) {
         if (!hasPassenger(passenger)) return;
-        // Pilotensitz vorne im Cockpit (Modell z ~ 6.3)
-        // Pilot dreht mit dem Schiff - hier (nach dem Reset der alten Blickrichtung) statt im Schiffs-Tick,
-        // sonst springt die Kamera jeden Tick ohne Interpolation
-        if (riderYawDelta != 0 && passenger == getControllingPassenger()) {
-            passenger.setYRot(passenger.getYRot() + riderYawDelta);
-            passenger.setYHeadRot(passenger.getYHeadRot() + riderYawDelta);
-            riderYawDelta = 0;
-        }
+        // Pilotensitz vorne im Cockpit (Modell z ~ 6.3). Der Pilot dreht nicht mit dem Schiff (A/D lässt die Kamera stehen).
         Vec3 f = forward().scale(6.3 * MODEL_SCALE);
         move.accept(passenger, getX() + f.x, getY() + getPassengersRidingOffset() + passenger.getMyRidingOffset(), getZ() + f.z);
     }

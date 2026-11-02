@@ -39,7 +39,7 @@ Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
 | Drehen | `A` / `D` |
 | Seitlich fliegen (ohne Drehung) | `Q` / `E` (im Jumper statt Wegwerfen/Inventar) |
 | Steigen / Sinken | `Leertaste` / `Strg` (Sprint-Taste) |
-| Umschauen | Maus (bewegt nur die Kamera; die Kamera dreht beim Kurven mit) |
+| Umschauen | Maus (bewegt nur die Kamera; beim Drehen mit `A`/`D` bleibt die Kamera stehen) |
 | Ziel wechseln | `Tab` (nächstgelegenes zuerst, dann immer das nächstgelegene noch nicht gewählte; nach dem letzten: kein Ziel; nach 3 s Pause beginnt es wieder beim nächsten) |
 | Drohne abfeuern | Linksklick (fliegt zum gewählten Ziel, egal wohin man schaut; ohne Ziel zum nächsten Feind vor dem Schiff) |
 | Tarnung an/aus | `C` |

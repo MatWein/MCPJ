@@ -24,8 +24,10 @@ run
 # Files from Forge MDK
 forge*changelog.txt
 run-data
+run-gametest
 run-server
 mc_server_kaffee_hart
+client-mods
 
 # python
 __pycache__

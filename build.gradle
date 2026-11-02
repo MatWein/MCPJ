@@ -105,6 +105,8 @@ minecraft {
         // By default, the server will crash when no gametests are provided.
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
+            // eigenes Verzeichnis: run/mods enthält reine Client-Mods (siehe copyClientMods)
+            workingDirectory project.file('run-gametest')
             property 'forge.enabledGameTestNamespaces', mod_id
         }
 
@@ -135,6 +137,14 @@ repositories {
     flatDir {
         dir 'mc_server_kaffee_hart/mods'
     }
+    // zusätzliche Client-Mods (z. B. Embeddium + Oculus für Shader) – nicht in run/mods legen, dort laden sie im Dev-Umfeld nicht
+    flatDir {
+        dir 'client-mods'
+    }
+}
+
+configurations {
+    clientMods { transitive = false }
 }
 
 dependencies {
@@ -163,6 +173,12 @@ dependencies {
                 def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
                 if (m.matches()) runtimeOnly fg.deobf("blank:${m.group(1)}:${m.group(2)}")
             }
+
+    // Reine Client-Mods aus client-mods/ (Embeddium, Oculus, ...): deobfuskiert, aber nur für runClient
+    fileTree(dir: 'client-mods', include: '*.jar').each {
+        def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
+        if (m.matches()) clientMods fg.deobf("blank:${m.group(1)}:${m.group(2)}")
+    }
 
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
@@ -237,3 +253,18 @@ tasks.register('fetchMcSources') {
         cfg.resolve().each { println "SOURCES: ${it}" }
     }
 }
+
+// Client-Mods (deobfuskiert) nach run/mods kopieren - nur der Client lädt sie
+def clientModsDir = file('run/mods')
+tasks.register('copyClientMods') {
+    inputs.files(configurations.clientMods)
+    doLast {
+        clientModsDir.mkdirs()
+        // alte Kopien (Präfix "dev-") entfernen, damit entfernte/aktualisierte Mods nicht liegen bleiben
+        clientModsDir.listFiles().findAll { it.name.startsWith('dev-') }.each { it.delete() }
+        configurations.clientMods.files.each { f ->
+            java.nio.file.Files.copy(f.toPath(), new File(clientModsDir, 'dev-' + f.name).toPath())
+        }
+    }
+}
+tasks.matching { it.name == 'runClient' }.configureEach { dependsOn 'copyClientMods' }
