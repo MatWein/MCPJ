@@ -1,8 +1,0 @@
-{
-  "engine": {
-    "subtitle": "subtitles.puddlejumper.engine",
-    "sounds": [
-      { "name": "puddlejumper:engine", "stream": false, "attenuation_distance": 32 }
-    ]
-  }
-}

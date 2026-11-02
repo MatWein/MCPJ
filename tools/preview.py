@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ASSETS = os.path.join(ROOT, 'src', 'main', 'resources', 'assets', 'puddlejumper')
+ASSETS = os.path.join(ROOT, 'src', 'main', 'resources', 'assets', 'mcpj')
 
 
 

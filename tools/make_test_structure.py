@@ -32,7 +32,7 @@ root = compound([
     (9, 'entities', list_of(10, [])),
 ])
 data = tag_header(10, '') + root
-out = os.path.join(os.path.dirname(__file__), '..', 'src', 'main', 'resources', 'data', 'puddlejumper', 'structures', 'platform.nbt')
+out = os.path.join(os.path.dirname(__file__), '..', 'src', 'main', 'resources', 'data', 'mcpj', 'structures', 'platform.nbt')
 os.makedirs(os.path.dirname(out), exist_ok=True)
 with gzip.open(out, 'wb') as f:
     f.write(data)

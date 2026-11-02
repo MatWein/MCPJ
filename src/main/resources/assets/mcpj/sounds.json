@@ -1,0 +1,8 @@
+{
+  "engine": {
+    "subtitle": "subtitles.mcpj.engine",
+    "sounds": [
+      { "name": "mcpj:engine", "stream": false, "attenuation_distance": 32 }
+    ]
+  }
+}

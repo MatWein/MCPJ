@@ -1,6 +1,7 @@
-# Puddle Jumper
+# MCPJ
 
-A flyable Puddle Jumper from *Stargate Atlantis* for Minecraft Forge 1.20.1 (Forge 47.4.16).
+MCPJ adds a flyable Puddle Jumper from *Stargate Atlantis* to Minecraft Forge 1.20.1 (Forge 47.4.16).
+It works on its own; other mods such as Just Stargate Mod or Mekanism are optional.
 About 10 blocks long, with cloak, shield, cargo hold, retractable drive pods, homing drones,
 headlights and an energy system that works with any Forge Energy mod.
 
@@ -32,7 +33,7 @@ New jumpers start with 20 % energy.
 | Extend / retract drive pods | `G` (otherwise automatic: retracted when landed, extended in the air, always extended when firing) |
 | Leave | `Shift` |
 
-All jumper keys can be rebound under *Options → Controls → Puddle Jumper*.
+All jumper keys can be rebound under *Options → Controls → MCPJ*.
 
 ## Features
 
@@ -114,9 +115,9 @@ are converted automatically). A **landed** jumper charges from all pads directly
 
 ## Configuration
 
-Gameplay values live in the server config `world/serverconfig/puddlejumper-server.toml` (synced to clients):
+Gameplay values live in the server config `world/serverconfig/mcpj-server.toml` (synced to clients):
 flight model, hull and impact damage, energy consumption, drones, targeting ranges, headlights, cargo pickup and
-the charging pad. The client config `config/puddlejumper-client.toml` holds the camera distance and the low energy
+the charging pad. The client config `config/mcpj-client.toml` holds the camera distance and the low energy
 warning threshold.
 
 ## Building
@@ -132,7 +133,7 @@ warning threshold.
 Requires Java 17 (Gradle downloads it if needed).
 
 `run-server/` is a regular Forge server for multiplayer tests (start with `run-server/run.sh` after copying
-`build/libs/puddlejumper-<version>.jar` into `run-server/mods/`). The build also loads every other jar in
+`build/libs/mcpj-<version>.jar` into `run-server/mods/`). The build also loads every other jar in
 `run-server/mods` (deobfuscated) into the development runs. `runClient` additionally gets Embeddium and Oculus
 (shaders) from the Modrinth maven; they are client-only and therefore copied to `run/mods` instead of the shared
 classpath. Their versions are set in `gradle.properties`. None of these mods is required: `-Pstandalone` leaves them
@@ -144,7 +145,7 @@ all out, for any run task.
 tools/preview.py                       software renderer for preview images (python3 tools/preview.py out.png [--open])
 tools/make_pad_textures.py             charging pad textures
 tools/make_test_structure.py           game test platform
-src/main/java/de/matthias/puddlejumper/
+src/main/java/de/mcpj/
   config/                              server and client config
   registry/                            blocks, items, entities, sounds, creative tab
   entity/jumper/                       the jumper: flight, energy, hull, systems, weapons, lights, cargo, animation
