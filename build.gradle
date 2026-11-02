@@ -268,3 +268,8 @@ tasks.register('copyClientMods') {
     }
 }
 tasks.matching { it.name == 'runClient' }.configureEach { dependsOn 'copyClientMods' }
+
+// Gametests immer in frischer Welt: sonst bleiben schwebende Jumper früherer Läufe stehen und stören
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+    doFirst { delete file('run-gametest/world') }
+}

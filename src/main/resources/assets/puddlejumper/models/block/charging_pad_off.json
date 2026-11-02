@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "puddlejumper:block/charging_pad_side_off",
+    "up": "puddlejumper:block/charging_pad_top_off",
+    "down": "puddlejumper:block/charging_pad_bottom",
+    "north": "puddlejumper:block/charging_pad_side_off",
+    "south": "puddlejumper:block/charging_pad_side_off",
+    "east": "puddlejumper:block/charging_pad_side_off",
+    "west": "puddlejumper:block/charging_pad_side_off"
+  }
+}

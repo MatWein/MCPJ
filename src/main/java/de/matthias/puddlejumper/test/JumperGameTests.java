@@ -309,4 +309,122 @@ public class JumperGameTests {
             h.succeed();
         });
     }
+
+    // ------------------------------------------------------------------ Energie
+
+    /** Neue Jumper starten mit 20 % Ladung; gelandet ohne Systeme kostet der Antrieb nichts. */
+    @GameTest(template = "platform")
+    public static void startChargeAndNoDrainWhenLanded(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 2, 12, 0);
+        h.runAfterDelay(2, () -> {
+            int expected = (int) Math.round(de.matthias.puddlejumper.Config.CAPACITY.get() * de.matthias.puddlejumper.Config.START_CHARGE.get());
+            h.assertTrue(j.getEnergy() == expected, "Startladung " + j.getEnergy() + " statt " + expected);
+            h.runAfterDelay(20, () -> {
+                h.assertTrue(j.onGround(), "Jumper sollte gelandet sein");
+                h.assertTrue(j.getEnergy() == expected, "Gelandet ohne Systeme verbraucht: " + (expected - j.getEnergy()));
+                h.succeed();
+            });
+        });
+    }
+
+    /** Schweben, Schild und Tarnung kosten Energie (unter Beschuss mehr). */
+    @GameTest(template = "platform", timeoutTicks = 100)
+    public static void systemsDrainEnergy(GameTestHelper h) {
+        // eigene Stelle: Tests können sich die Fläche teilen, andere Jumper darunter würden als Boden zählen
+        PuddleJumperEntity j = spawnJumper(h, 5, 6, 18, 0);
+        int[] e = new int[1];
+        h.runAfterDelay(2, () -> e[0] = j.getEnergy());
+        h.runAfterDelay(12, () -> {
+            int hover = e[0] - j.getEnergy();
+            h.assertTrue(hover >= 9 * 250 && hover <= 11 * 250, "Schweben: " + hover + " FE in 10 Ticks");
+            j.setShielded(true);
+            e[0] = j.getEnergy();
+        });
+        h.runAfterDelay(22, () -> {
+            int withShield = e[0] - j.getEnergy();
+            h.assertTrue(withShield >= 9 * 750, "Schild verbraucht zu wenig: " + withShield);
+            j.hurt(h.getLevel().damageSources().generic(), 10f); // abgefangen: 10 * 200 FE + doppelter Verbrauch
+            h.assertTrue(j.getHealth() == PuddleJumperEntity.MAX_HEALTH, "Schild hat Treffer nicht abgefangen");
+            e[0] = j.getEnergy();
+        });
+        h.runAfterDelay(32, () -> {
+            int underFire = e[0] - j.getEnergy();
+            h.assertTrue(underFire >= 9 * 1250, "Unter Beschuss nicht teurer: " + underFire);
+            h.succeed();
+        });
+    }
+
+    /** Reicht die Energie nicht, bricht der Schild zusammen und der Treffer geht durch; leer: alles aus. */
+    @GameTest(template = "platform")
+    public static void shieldCollapsesWithoutEnergy(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 2, 12, 0);
+        h.runAfterDelay(2, () -> {
+            j.setEnergy(1000);
+            j.setShielded(true);
+            j.setLightsOn(true);
+            j.hurt(h.getLevel().damageSources().generic(), 10f); // bräuchte 2000 FE -> zieht den Rest leer
+            h.assertTrue(!j.isShielded(), "Schild sollte zusammengebrochen sein");
+            h.assertTrue(j.getHealth() < PuddleJumperEntity.MAX_HEALTH, "Treffer ging nicht durch");
+            h.assertTrue(j.getEnergy() == 0 && !j.isLightsOn(), "Zusammenbruch sollte den Speicher leeren und alles abschalten");
+            j.setEnergy(10);          // Licht (20 FE/Tick) leert den Rest
+            j.setLightsOn(true);
+            h.runAfterDelay(3, () -> {
+                h.assertTrue(j.getEnergy() == 0, "Speicher sollte leer sein");
+                h.assertTrue(!j.isLightsOn(), "Licht sollte ohne Energie ausgehen");
+                h.succeed();
+            });
+        });
+    }
+
+    /** Ohne Energie stürzt der Jumper ab und nimmt beim harten Aufschlag Schaden (max. 30 %). */
+    @GameTest(template = "platform", timeoutTicks = 100)
+    public static void emptyJumperCrashes(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 9, 12, 0);
+        h.runAfterDelay(1, () -> j.setEnergy(0));
+        h.runAfterDelay(60, () -> {
+            h.assertTrue(j.onGround(), "Jumper ohne Energie ist nicht abgestürzt");
+            float lost = 1 - j.getHealth() / PuddleJumperEntity.MAX_HEALTH;
+            h.assertTrue(lost > 0.02f, "Kein Absturzschaden: " + lost);
+            h.assertTrue(lost <= PuddleJumperEntity.MAX_IMPACT_FRACTION + 0.001f, "Mehr als 30 % Schaden: " + lost);
+            h.succeed();
+        });
+    }
+
+    /** Aufprall-Kurve: Anecken folgenlos, normales Landen folgenlos, Vollgas/Sturz max. 30 %. */
+    @GameTest(template = "platform")
+    public static void impactCurve(GameTestHelper h) {
+        h.assertTrue(PuddleJumperEntity.impactFraction(0.3, 0) == 0, "Leichtes Anecken macht Schaden");
+        h.assertTrue(PuddleJumperEntity.impactFraction(0, 0.7) == 0, "Landen mit voller Sinkrate macht Schaden");
+        h.assertTrue(PuddleJumperEntity.impactFraction(0.7, 0) > 0.1f, "Mittlerer Aufprall zu harmlos");
+        h.assertTrue(PuddleJumperEntity.impactFraction(1.0, 0) == PuddleJumperEntity.MAX_IMPACT_FRACTION, "Vollgas nicht 30 %");
+        h.assertTrue(PuddleJumperEntity.impactFraction(5, 5) == PuddleJumperEntity.MAX_IMPACT_FRACTION, "Über 30 %");
+        h.succeed();
+    }
+
+    /** Gelandet auf versorgten Ladestationen: Jumper lädt, Station zeigt "lädt". */
+    @GameTest(template = "platform", timeoutTicks = 60)
+    public static void chargingPadCharges(GameTestHelper h) {
+        BlockPos[] pads = {new BlockPos(11, 1, 12), new BlockPos(12, 1, 12), new BlockPos(13, 1, 12)};
+        for (BlockPos p : pads) {
+            h.setBlock(p, ModRegistry.CHARGING_PAD.get());
+            var be = h.getBlockEntity(p);
+            be.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ENERGY).ifPresent(st -> {
+                int got = 0;
+                for (int k = 0; k < 10; k++) got += st.receiveEnergy(1_000_000, false); // max. 20k pro Aufruf
+                h.assertTrue(got == 200_000, "Station sollte 200k puffern, hat " + got);
+            });
+        }
+        PuddleJumperEntity j = spawnJumper(h, 12, 2, 12, 0);
+        int[] e = new int[1];
+        h.runAfterDelay(2, () -> e[0] = j.getEnergy());
+        h.runAfterDelay(22, () -> {
+            int gained = j.getEnergy() - e[0];
+            h.assertTrue(gained > 3 * 10_000 * 10, "Zu wenig geladen: " + gained);
+            var state = h.getBlockState(pads[1]);
+            h.assertTrue(state.getValue(de.matthias.puddlejumper.block.ChargingPadBlock.MODE)
+                    == de.matthias.puddlejumper.block.ChargingPadBlock.Mode.CHARGING, "Station zeigt nicht 'lädt'");
+            h.assertTrue(state.getLightEmission() == 15, "Ladende Station leuchtet nicht voll");
+            h.succeed();
+        });
+    }
 }

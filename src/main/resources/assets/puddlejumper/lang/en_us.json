@@ -36,5 +36,7 @@
   "key.puddlejumper.lights": "Toggle lights",
   "hud.puddlejumper.lights": "Lights: %s",
   "hud.puddlejumper.on.lights": "on",
-  "hud.puddlejumper.off.lights": "off"
+  "hud.puddlejumper.off.lights": "off",
+  "block.puddlejumper.charging_pad": "Jumper Charging Pad",
+  "hud.puddlejumper.energy": "Energy: %s %%"
 }

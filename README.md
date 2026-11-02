@@ -17,14 +17,8 @@ Benötigt Java 17 (wird von Gradle bei Bedarf automatisch geladen).
 
 ## Bekommen
 
-- Kreativ: Reiter **Werkzeuge & Hilfsmittel**
-- Rezept (Werkbank):
-
-  | | | |
-  |---|---|---|
-  | Eisenblock | Getöntes Glas | Eisenblock |
-  | Diamant | Redstoneblock | Diamant |
-  | Eisenblock | Truhe | Eisenblock |
+- Kreativ: Reiter **Werkzeuge & Hilfsmittel** (Jumper und **Jumper-Ladestation**)
+- Rezepte gibt es noch keine.
 
 Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
 
@@ -79,6 +73,47 @@ halb so schnell. Ist er mindestens zur Hälfte untergetaucht, verliert er ohne S
 Sekunde (HUD-Warnung). Beim Zerstören fallen Item und
 Ladung heraus (im Kreativmodus nur die Ladung).
 
+## Energie
+
+Der Jumper hat einen großen Energiespeicher (Forge Energy, FE). Neue Jumper – und Jumper aus älteren Spielständen –
+starten mit 20 % Ladung. Alles kostet Energie, auch im Kreativmodus:
+
+| Verbraucher | Standard |
+|---|---|
+| Speicher | 60 Mio. FE (≈ 150 MJ in Mekanism) |
+| Antrieb gelandet | 0 |
+| Antrieb in der Luft | 250 FE/t schwebend bis 1 500 FE/t bei Höchsttempo (≈ 3 h 20 min Schweben, ≈ 33 min Vollgas ≈ 40 km) |
+| Antrieb unter Wasser | × 1,5 |
+| Schutzschild | 500 FE/t, unter Wasser × 2, pro abgefangenem Schadenspunkt zusätzlich 200 FE |
+| Tarnung | 400 FE/t, unter Wasser × 1,5 |
+| unter Beschuss (2 s nach einem Treffer) | Schild und Tarnung × 2 |
+| Drohne | 150 000 FE pro Schuss |
+| Licht | 20 FE/t |
+
+Reicht die Energie für einen abgefangenen Treffer nicht, bricht der Schild zusammen und der Treffer geht durch.
+Ist der Speicher leer, fällt alles aus (Schild, Tarnung, Licht, Antrieb, Steuerung) und der Jumper **stürzt ab**.
+Das HUD zeigt Ladestand, Verbrauch bzw. Ladeleistung und die geschätzte Restzeit; unter 10 % blinkt die Anzeige
+und ein Warnton ertönt.
+
+Alle Werte stehen in der Server-Config `world/serverconfig/puddlejumper-server.toml`.
+
+### Jumper-Ladestation
+
+Ein Block, der Forge Energy von allen Seiten aufnimmt (Mekanism, Thermal, Immersive Engineering, … – Mekanism-Joule
+werden automatisch umgerechnet). Ein **gelandeter** Jumper lädt aus allen Stationen direkt unter seinem Rumpf
+(je Station 10 000 FE/t; mehrere Stationen nebeneinander, z. B. ein 3×9-Landefeld, laden entsprechend schneller).
+
+- aus (dunkel) → versorgt (leuchtet, Landebahn-Befeuerung) → lädt gerade (hell, Lichtstufe 15)
+- der Landepfeil zeigt in Blickrichtung beim Platzieren
+- ein Comparator an der Station gibt den Ladestand des gerade ladenden Jumpers aus
+
+## Kollisionen
+
+Aufpralle beschädigen die Hülle: Leichtes Anecken, Streifen an Wänden und normales Landen (auch mit voller
+Sinkrate) bleiben folgenlos. Ab ~8 m/s Aufprall gegen ein Hindernis bzw. ~15 m/s nach unten wächst der Schaden,
+bei Vollgas gegen eine Wand oder einem Absturz aus großer Höhe sind es höchstens **30 % der Hülle** pro Aufprall.
+Der Schild fängt auch Aufpralle ab (kostet Energie wie ein Treffer).
+
 ## Projektaufbau
 
 ```
@@ -86,10 +121,13 @@ assets/                               Original-Vorlage (OBJ + Textur), Basis fü
 tools/build_model.py                  erzeugt das verbesserte Modell + Texturatlas + Drohne + Item-Icon
 tools/preview.py                      Software-Renderer für Vorschaubilder (python3 tools/preview.py out.png [--open])
 tools/make_test_structure.py          GameTest-Plattform
+tools/make_pad_textures.py            Texturen der Ladestation
 src/main/java/de/matthias/puddlejumper/
   entity/PuddleJumperEntity.java      Flugphysik, Multipart-Hitbox, Laderaum, Tarnung, Drohnenstart
   entity/PuddleJumperPart.java        Bug-/Heck-Hitbox
   entity/DroneEntity.java             zielsuchende Drohne
+  block/ChargingPad*.java             Ladestation (Forge-Energy-Puffer, Zustände, Comparator)
+  Config.java                         Server-Config (Energiewerte)
   client/ObjModel.java                eigener OBJ-Loader/-Renderer (Gruppen, *_glow leuchtet)
   client/PuddleJumperRenderer.java    Animationen (Gondeln, Neigung, Tarnung, Ionenfahnen)
   client/…                            HUD, Tasten, Kamera, Triebwerkssound

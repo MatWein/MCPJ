@@ -5,6 +5,7 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
@@ -15,6 +16,7 @@ public class PuddleJumperMod {
     public PuddleJumperMod(FMLJavaModLoadingContext context) {
         IEventBus bus = context.getModEventBus();
         ModRegistry.register(bus);
+        context.registerConfig(ModConfig.Type.SERVER, Config.SPEC);
         bus.addListener(this::commonSetup);
         bus.addListener(this::addCreative);
     }
@@ -26,6 +28,7 @@ public class PuddleJumperMod {
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ModRegistry.PUDDLE_JUMPER_ITEM);
+            event.accept(ModRegistry.CHARGING_PAD_ITEM);
         }
     }
 }

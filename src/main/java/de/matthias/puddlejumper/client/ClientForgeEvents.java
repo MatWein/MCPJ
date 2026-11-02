@@ -78,6 +78,11 @@ public final class ClientForgeEvents {
         while (KeyBindings.PODS.consumeClick()) send(JumperActionPacket.Action.PODS, -1);
         while (KeyBindings.LIGHTS.consumeClick()) send(JumperActionPacket.Action.LIGHTS, -1);
         ClientState.validateTarget(jumper);
+        // Energie unter 10 %: leiser Warnton alle 2 s
+        if (jumper.getEnergyFraction() < 0.1f && jumper.tickCount % 40 == 0) {
+            Minecraft.getInstance().getSoundManager().play(
+                    SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BIT.get(), 0.6f, 0.35f));
+        }
     }
 
     /** Tab im Jumper: Ziel durchschalten (eigener Tasten-Kontext, außerhalb bleibt Tab die Spielerliste). */

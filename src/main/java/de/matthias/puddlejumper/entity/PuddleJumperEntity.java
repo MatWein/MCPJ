@@ -1,6 +1,10 @@
 package de.matthias.puddlejumper.entity;
 
+import de.matthias.puddlejumper.Config;
 import de.matthias.puddlejumper.ModRegistry;
+import de.matthias.puddlejumper.block.ChargingPadBlockEntity;
+import de.matthias.puddlejumper.network.JumperImpactPacket;
+import de.matthias.puddlejumper.network.ModNetwork;
 import de.matthias.puddlejumper.network.JumperActionPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -51,6 +55,8 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -94,6 +100,21 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private static final double WATER_ACCEL = 0.5, WATER_DRAG_THRUST = 0.955, WATER_DRAG_IDLE = 0.92;
     private static final float WATER_DAMAGE = 1f;
 
+    // Ohne Energie: freier Fall (Blöcke/Tick²), Luftwiderstand, Endgeschwindigkeit; unter Wasser sinkt er langsamer
+    private static final double GRAVITY = 0.08, FALL_DRAG = 0.98, MAX_FALL = 3.0;
+    private static final double WATER_GRAVITY = 0.02, WATER_FALL_DRAG = 0.9;
+    /**
+     * Aufprall (verlorenes Tempo in Blöcken/Tick): bis SAFE nichts, ab FULL der Höchstschaden {@link #MAX_IMPACT_FRACTION}.
+     * Nach unten großzügiger, damit normales Landen mit voller Sinkrate (~0,7) folgenlos bleibt.
+     */
+    private static final double IMPACT_H_SAFE = 0.4, IMPACT_H_FULL = 1.0;
+    private static final double IMPACT_DOWN_SAFE = 0.75, IMPACT_DOWN_FULL = 1.6;
+    public static final float MAX_IMPACT_FRACTION = 0.3f;
+    /** So lange (Ticks) nach einem Treffer gilt der Jumper als "unter Beschuss". */
+    private static final int UNDER_FIRE_TICKS = 40;
+    /** Alle so viele Ticks zieht der gelandete Jumper Strom aus den Ladestationen. */
+    private static final int CHARGE_INTERVAL = 5;
+
     private static final EntityDataAccessor<Boolean> DATA_CLOAKED = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_SHIELD = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_LIGHTS = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
@@ -102,6 +123,10 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private static final EntityDataAccessor<Integer> DATA_HURT_DIR = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> DATA_HEALTH = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> DATA_DAMAGE = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Integer> DATA_ENERGY = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_CAPACITY = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
+    /** Netto-Energiefluss (FE/Tick, geglättet): positiv = Verbrauch, negativ = Laden. Nur für die Anzeige. */
+    private static final EntityDataAccessor<Integer> DATA_FLOW = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
 
     private static final DustParticleOptions ION = new DustParticleOptions(new Vector3f(0.45f, 0.75f, 1.0f), 0.6f);
 
@@ -127,6 +152,12 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private boolean leftLauncher;
     private Vec3 lastServerPos = Vec3.ZERO;
     private Vec3 serverVelocity = Vec3.ZERO;
+    /** Energie schon gesetzt (aus Spielstand oder Startladung)? */
+    private boolean energyInitialized;
+    private int underFireTimer;
+    private int impactCooldown;
+    private int lastChargePerTick;
+    private float flowAvg;
 
     // Client-Animation
     public float podAnim, podAnimO;
@@ -167,7 +198,21 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         entityData.define(DATA_HURT_DIR, 1);
         entityData.define(DATA_DAMAGE, 0f);
         entityData.define(DATA_HEALTH, MAX_HEALTH);
+        entityData.define(DATA_ENERGY, 0);
+        entityData.define(DATA_CAPACITY, 1);
+        entityData.define(DATA_FLOW, 0);
     }
+
+    public int getEnergy() { return entityData.get(DATA_ENERGY); }
+    public void setEnergy(int v) {
+        energyInitialized = true;
+        entityData.set(DATA_ENERGY, Mth.clamp(v, 0, getCapacity()));
+    }
+    public int getCapacity() { return Math.max(1, entityData.get(DATA_CAPACITY)); }
+    public float getEnergyFraction() { return getEnergy() / (float) getCapacity(); }
+    public boolean hasEnergy() { return getEnergy() > 0; }
+    /** Geglätteter Netto-Fluss in FE/Tick (positiv = Verbrauch, negativ = Laden). */
+    public int getEnergyFlow() { return entityData.get(DATA_FLOW); }
 
     public boolean isCloaked() { return entityData.get(DATA_CLOAKED); }
     public void setCloaked(boolean v) { entityData.set(DATA_CLOAKED, v); }
@@ -177,9 +222,9 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     public void setLightsOn(boolean v) { entityData.set(DATA_LIGHTS, v); }
     public boolean isPodsOut() { return entityData.get(DATA_PODS_OUT); }
 
-    /** Triebwerke laufen: in der Luft (auch ohne Pilot) oder mit Pilot an Bord. */
+    /** Triebwerke laufen: mit Energie, in der Luft (auch ohne Pilot) oder mit Pilot an Bord. */
     public boolean enginesRunning() {
-        return isVehicle() || !onGround();
+        return hasEnergy() && (isVehicle() || !onGround());
     }
     public int getHurtTime() { return entityData.get(DATA_HURT_TIME); }
     public void setHurtTime(int v) { entityData.set(DATA_HURT_TIME, v); }
@@ -273,6 +318,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     @Override
     public void tick() {
+        if (!level().isClientSide) initEnergy();
         if (getHurtTime() > 0) setHurtTime(getHurtTime() - 1);
         if (getDamage() > 0) setDamage(Math.max(0, getDamage() - 1));
 
@@ -305,9 +351,13 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     /**
      * Steuerung unabhängig von der Maus: W/S Schub entlang der Bugrichtung, A/D drehen das Schiff,
-     * Leertaste/Strg steigen/sinken. Die Kamera des Piloten dreht beim Kurven mit (wie im Boot).
+     * Leertaste/Strg steigen/sinken. Die Blickrichtung des Piloten bleibt beim Drehen stehen.
      */
     private void flyControlled(Player pilot) {
+        if (!hasEnergy()) {        // Speicher leer: Antrieb aus, Steuerung tot -> Absturz
+            fallPhysics();
+            return;
+        }
         FlightInput in = FlightInput.source.get();
         boolean water = isSubmerged();
         double accel = water ? ACCEL * WATER_ACCEL : ACCEL;
@@ -331,8 +381,24 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     /** Ohne Pilot: Schwebe-Modus. Der Jumper rollt aus und bleibt stehen - in der Luft wie unter Wasser. */
     private void idlePhysics() {
+        if (!hasEnergy() && !onGround()) {
+            fallPhysics();
+            return;
+        }
         Vec3 v = getDeltaMovement().scale(onGround() ? 0.6 : isSubmerged() ? WATER_DRAG_IDLE : DRAG_IDLE);
         setDeltaMovement(v.lengthSqr() < 1.0e-5 ? Vec3.ZERO : v);
+    }
+
+    /** Ohne Energie: Schwerkraft wie bei einem Stein, unter Wasser sinkt er gebremst. */
+    private void fallPhysics() {
+        Vec3 v = getDeltaMovement();
+        if (isSubmerged()) {
+            v = v.scale(WATER_FALL_DRAG).add(0, -WATER_GRAVITY, 0);
+        } else {
+            double h = onGround() ? 0.6 : FALL_DRAG;
+            v = new Vec3(v.x * h, v.y * FALL_DRAG - GRAVITY, v.z * h);
+        }
+        setDeltaMovement(v.x, Math.max(v.y, -MAX_FALL), v.z);
     }
 
     /** Mindestens zur Hälfte unter Wasser. */
@@ -351,9 +417,50 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             Vec3 c = Entity.collideBoundingBox(this, d, segmentBox(off), level(), List.of());
             d = new Vec3(absMin(d.x, c.x), absMin(d.y, c.y), absMin(d.z, c.z));
         }
+        Vec3 before = position();
         move(MoverType.SELF, d);
+        Vec3 moved = position().subtract(before);
         Vec3 v = getDeltaMovement();
         setDeltaMovement(d.x != delta.x ? 0 : v.x, d.y != delta.y ? 0 : v.y, d.z != delta.z ? 0 : v.z);
+        detectImpact(delta, moved);
+    }
+
+    /**
+     * Aufprall erkennen: das Tempo auf jeder blockierten Achse geht verloren (= Aufprallgeschwindigkeit).
+     * Streifen an einer Wand kostet nur den Anteil quer zur Wand; Stufen hochsteigen zählt nicht.
+     */
+    private void detectImpact(Vec3 wanted, Vec3 moved) {
+        // Achse blockiert -> das Tempo in dieser Richtung geht beim Aufschlag komplett verloren
+        double lx = Math.abs(wanted.x - moved.x) > 1.0e-4 ? wanted.x : 0;
+        double lz = Math.abs(wanted.z - moved.z) > 1.0e-4 ? wanted.z : 0;
+        double lostH = Math.sqrt(lx * lx + lz * lz);
+        double down = wanted.y < 0 && moved.y - wanted.y > 1.0e-4 ? -wanted.y : 0;
+        if (lostH <= IMPACT_H_SAFE && down <= IMPACT_DOWN_SAFE) return;
+        if (level().isClientSide) {
+            ModNetwork.sendToServer(new JumperImpactPacket((float) lostH, (float) down)); // Server verbucht
+        } else {
+            onImpact((float) lostH, (float) down);
+        }
+    }
+
+    /** Anteil der Hülle, den ein Aufprall kostet (0 .. {@link #MAX_IMPACT_FRACTION}). */
+    public static float impactFraction(double lostH, double down) {
+        double h = Mth.clamp((lostH - IMPACT_H_SAFE) / (IMPACT_H_FULL - IMPACT_H_SAFE), 0, 1);
+        double v = Mth.clamp((down - IMPACT_DOWN_SAFE) / (IMPACT_DOWN_FULL - IMPACT_DOWN_SAFE), 0, 1);
+        return (float) Math.max(h, v) * MAX_IMPACT_FRACTION;
+    }
+
+    /** Server: Aufprall verbuchen (Werte vom Client werden auf plausible Grenzen gekappt). */
+    public void onImpact(float lostH, float down) {
+        if (level().isClientSide || isRemoved() || impactCooldown > 0) return;
+        float frac = impactFraction(Math.min(lostH, MAX_SPEED * 1.2), Math.min(down, MAX_FALL + 0.5));
+        if (frac <= 0) return;
+        impactCooldown = 5;
+        float amount = frac * MAX_HEALTH;
+        playSound(SoundEvents.GENERIC_EXPLODE, 0.5f + frac * 2f, 1.4f);
+        playSound(SoundEvents.ANVIL_LAND, 0.8f, 0.5f);
+        if (shieldAbsorbs(amount)) return;
+        applyHullDamage(amount, null, true);
     }
 
     /** Steht der Jumper auf etwas? (dünne Schicht unter Bug, Mitte und Heck) */
@@ -384,7 +491,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
         // Düsen: gelandet aus (mit Pilot nur Standglühen), schwebend an, mit Tempo heller
         engineGlowO = engineGlow;
-        float glowTarget = onGround() ? (isVehicle() ? 0.25f : 0f) : 0.6f + Mth.clamp((float) clientSpeed * 0.5f, 0f, 0.4f);
+        float glowTarget = !hasEnergy() ? 0f
+                : onGround() ? (isVehicle() ? 0.25f : 0f) : 0.6f + Mth.clamp((float) clientSpeed * 0.5f, 0f, 0.4f);
         engineGlow += (glowTarget - engineGlow) * 0.08f;
 
         Vec3 l = left();
@@ -433,6 +541,9 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         lastServerPos = pos;
 
         for (Entity e : getPassengers()) e.resetFallDistance();
+        if (underFireTimer > 0) underFireTimer--;
+        if (impactCooldown > 0) impactCooldown--;
+        tickEnergy();
         updateLights();
 
         // Wassereinbruch: ohne Schild 1 Hüllenpunkt pro Sekunde
@@ -564,6 +675,16 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     /** Server: Aktion des Piloten ausführen. */
     public void handleAction(ServerPlayer player, JumperActionPacket.Action action, int targetId) {
         if (getControllingPassenger() != player) return;
+        boolean turningOn = switch (action) {
+            case CLOAK -> !isCloaked();
+            case SHIELD -> !isShielded();
+            case LIGHTS -> !isLightsOn();
+            default -> false;
+        };
+        if (turningOn && !hasEnergy()) {
+            denied();
+            return;
+        }
         switch (action) {
             case CLOAK -> toggleCloak();
             case SHIELD -> {
@@ -581,6 +702,115 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
                 playSound(SoundEvents.LEVER_CLICK, 0.6f, isLightsOn() ? 1.2f : 0.9f);
             }
         }
+    }
+
+    // ------------------------------------------------------------------ Energie
+
+    @Override
+    public void onAddedToWorld() {
+        super.onAddedToWorld();
+        if (!level().isClientSide) initEnergy();
+    }
+
+    private void initEnergy() {
+        int cap = Config.CAPACITY.get();
+        if (entityData.get(DATA_CAPACITY) != cap) {
+            entityData.set(DATA_CAPACITY, cap);
+            if (getEnergy() > cap) entityData.set(DATA_ENERGY, cap);
+        }
+        if (!energyInitialized) setEnergy((int) Math.round(cap * Config.START_CHARGE.get()));
+    }
+
+    /** Server: Verbrauch aller Systeme abbuchen, gelandet aus Ladestationen nachladen. */
+    private void tickEnergy() {
+        boolean water = isSubmerged();
+        double underFire = underFireTimer > 0 ? Config.UNDER_FIRE_FACTOR.get() : 1.0;
+        double drain = 0;
+        if (!onGround() && hasEnergy()) {   // Antrieb nur in der Luft; gelandet kostet er nichts
+            double speed = Mth.clamp(serverVelocity.length() / MAX_SPEED, 0, 1);
+            double drive = Config.HOVER_DRAIN.get() + (Config.THRUST_DRAIN.get() - Config.HOVER_DRAIN.get()) * speed;
+            drain += water ? drive * Config.WATER_DRIVE_FACTOR.get() : drive;
+        }
+        if (isShielded()) drain += Config.SHIELD_DRAIN.get() * (water ? Config.SHIELD_WATER_FACTOR.get() : 1) * underFire;
+        if (isCloaked()) drain += Config.CLOAK_DRAIN.get() * (water ? Config.CLOAK_WATER_FACTOR.get() : 1) * underFire;
+        if (isLightsOn() && !isCloaked()) drain += Config.LIGHT_DRAIN.get();
+        int cost = (int) Math.round(drain);
+        if (cost > 0 && !consume(cost)) powerFailure();
+
+        if (onGround() && tickCount % CHARGE_INTERVAL == 0) lastChargePerTick = chargeFromPads() / CHARGE_INTERVAL;
+        else if (!onGround()) lastChargePerTick = 0;
+
+        flowAvg += ((cost - lastChargePerTick) - flowAvg) * 0.1f;
+        entityData.set(DATA_FLOW, Math.round(flowAvg));
+    }
+
+    /** Energie abbuchen; false (und Speicher leer), wenn sie nicht reicht. */
+    private boolean consume(int amount) {
+        int e = getEnergy();
+        if (e >= amount) {
+            setEnergy(e - amount);
+            return true;
+        }
+        setEnergy(0);
+        return false;
+    }
+
+    /** Speicher leer: alles schaltet ab, der Jumper stürzt ab. */
+    private void powerFailure() {
+        if (isShielded() || isCloaked() || isLightsOn()) {
+            playSound(SoundEvents.BEACON_DEACTIVATE, 1.2f, 0.6f);
+        }
+        playSound(SoundEvents.CONDUIT_DEACTIVATE, 1.5f, 0.7f);
+        setShielded(false);
+        setCloaked(false);
+        setLightsOn(false);
+    }
+
+    /** Aus allen Ladestationen direkt unter Bug, Mitte und Heck laden. @return geladene FE */
+    private int chargeFromPads() {
+        int room = getCapacity() - getEnergy();
+        Set<BlockPos> below = new HashSet<>();
+        int y = Mth.floor(getY() - 0.05);
+        for (double off : new double[]{SEGMENT_OFFSET, 0, -SEGMENT_OFFSET}) {
+            AABB b = segmentBox(off);
+            for (int x = Mth.floor(b.minX + 0.05); x <= Mth.floor(b.maxX - 0.05); x++) {
+                for (int z = Mth.floor(b.minZ + 0.05); z <= Mth.floor(b.maxZ - 0.05); z++) {
+                    below.add(new BlockPos(x, y, z));
+                }
+            }
+        }
+        float fill = getEnergyFraction();
+        int gained = 0;
+        for (BlockPos p : below) {
+            if (level().getBlockEntity(p) instanceof ChargingPadBlockEntity pad) {
+                gained += pad.drawForJumper(room - gained, CHARGE_INTERVAL, fill);
+            }
+        }
+        if (gained > 0) setEnergy(getEnergy() + gained);
+        return gained;
+    }
+
+    /**
+     * Schild fängt den Treffer ab, wenn genug Energie da ist (kostet pro Schadenspunkt).
+     * Reicht sie nicht, bricht der Schild zusammen und der Treffer geht durch.
+     */
+    private boolean shieldAbsorbs(float amount) {
+        underFireTimer = UNDER_FIRE_TICKS;
+        if (!isShielded()) return false;
+        int cost = Math.round(amount * Config.SHIELD_HIT_COST.get());
+        if (consume(cost)) {
+            level().broadcastEntityEvent(this, EVENT_SHIELD_HIT);
+            playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f, 1.6f);
+            return true;
+        }
+        setShielded(false);
+        playSound(SoundEvents.BEACON_DEACTIVATE, 1.2f, 0.8f);
+        if (!hasEnergy()) powerFailure();
+        return false;
+    }
+
+    private void denied() {
+        playSound(SoundEvents.DISPENSER_FAIL, 0.8f, 1.2f);
     }
 
     // ------------------------------------------------------------------ Licht
@@ -698,6 +928,11 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     private void fireDrone(ServerPlayer pilot, int targetId) {
         if (!droneReady()) return;
         lastDroneTick = level().getGameTime();
+        if (getEnergy() < Config.DRONE_COST.get()) {
+            denied();
+            return;
+        }
+        consume(Config.DRONE_COST.get());
         if (isCloaked()) toggleCloak(); // Waffen nur ungetarnt
         podsTimer = 100;
         entityData.set(DATA_PODS_OUT, true);
@@ -742,12 +977,6 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         Entity attacker = source.getEntity();
         if (attacker != null && hasPassenger(attacker)) return false;
         if (source.getDirectEntity() instanceof DroneEntity drone && drone.isFriendly(this)) return false;
-        if (isShielded()) {
-            // Schild: unzerstörbar, Treffer lässt die Blase kurz aufleuchten
-            level().broadcastEntityEvent(this, EVENT_SHIELD_HIT);
-            playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f, 1.6f);
-            return false;
-        }
 
         // Drohnen: fester Anteil der Hülle; Treffer + Explosion derselben Drohne zählen nur einmal
         if (source.getDirectEntity() instanceof DroneEntity drone) {
@@ -756,6 +985,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
             float full = MAX_HEALTH * DRONE_HIT_FRACTION;
             amount = source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION) ? Math.min(full, amount * full / 25f) : full;
         }
+        // Schild: hält alles ab, solange die Energie reicht; Treffer lässt die Blase kurz aufleuchten
+        if (shieldAbsorbs(amount)) return false;
 
         applyHullDamage(amount, attacker, true);
         return true;
@@ -853,6 +1084,10 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         staleLights.clear();
         for (long l : tag.getLongArray("LightBlocks")) staleLights.add(BlockPos.of(l));
         setHealth(tag.contains("Health") ? tag.getFloat("Health") : MAX_HEALTH);
+        if (tag.contains("Energy")) {   // ältere Jumper ohne Energie bekommen beim ersten Tick die Startladung
+            entityData.set(DATA_CAPACITY, Math.max(1, tag.getInt("Capacity")));
+            setEnergy(tag.getInt("Energy"));
+        }
         cargo.clearContent();
         ListTag list = tag.getList("Cargo", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
@@ -871,6 +1106,10 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         lights.addAll(getLightBlocks());
         tag.putLongArray("LightBlocks", lights.stream().mapToLong(BlockPos::asLong).toArray());
         tag.putFloat("Health", getHealth());
+        if (energyInitialized) {
+            tag.putInt("Energy", getEnergy());
+            tag.putInt("Capacity", getCapacity());
+        }
         ListTag list = new ListTag();
         for (int i = 0; i < cargo.getContainerSize(); i++) {
             ItemStack stack = cargo.getItem(i);

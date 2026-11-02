@@ -24,9 +24,9 @@ public final class JumperHud {
         Font font = mc.font;
 
         int x = 8;
-        int lines = 10;
+        int lines = 11;
         int y = height - 12 - lines * 11;
-        g.fill(x - 4, y - 4, x + 160, y + lines * 11, 0x80102028);
+        g.fill(x - 4, y - 4, x + 200, y + lines * 11, 0x80102028);
         g.fill(x - 4, y - 4, x - 2, y + lines * 11, 0xFF7FE6F2);
 
         double mps = j.clientSpeed * 20.0;
@@ -41,6 +41,7 @@ public final class JumperHud {
             if ((j.tickCount / 10) % 2 == 0) hullColor = 0xFF5040; // blinkt
         }
         line(g, font, x, y += 11, hullText, hullColor);
+        line(g, font, x, y += 11, energyText(j), energyColor(j));
         line(g, font, x, y += 11, state("cloak", j.isCloaked()), j.isCloaked() ? GOLD : GREY);
         line(g, font, x, y += 11, state("shield", j.isShielded()), j.isShielded() ? TEAL : GREY);
         line(g, font, x, y += 11, state("pods", j.podAnim > 0.5f), j.podAnim > 0.5f ? TEAL : GREY);
@@ -55,6 +56,40 @@ public final class JumperHud {
                 : Component.translatable("hud.puddlejumper.no_target");
         int targetColor = ClientState.target != null ? TargetMarkers.colorFor(ClientState.target, true) & 0xFFFFFF : GREY;
         line(g, font, x, y += 11, Component.translatable("hud.puddlejumper.target", target), targetColor);
+    }
+
+    /** "Energie: 62 % · −1,5k FE/t · ~12 min" bzw. "+50k FE/t" beim Laden. */
+    private static Component energyText(PuddleJumperEntity j) {
+        int pct = (int) Math.floor(j.getEnergyFraction() * 100);
+        int flow = j.getEnergyFlow();
+        Component c = Component.translatable("hud.puddlejumper.energy", pct);
+        if (flow > 0) {
+            long ticks = j.getEnergy() / Math.max(1, flow);
+            c = c.copy().append(" · -" + compact(flow) + " FE/t · ~" + duration(ticks));
+        } else if (flow < 0) {
+            c = c.copy().append(" · +" + compact(-flow) + " FE/t");
+        }
+        return c;
+    }
+
+    private static int energyColor(PuddleJumperEntity j) {
+        float f = j.getEnergyFraction();
+        if (f > 0.3f) return j.getEnergyFlow() < 0 ? 0x7FF29A : TEAL;
+        if (f > 0.1f) return GOLD;
+        return (j.tickCount / 10) % 2 == 0 ? 0xFF5040 : 0x803020; // blinkt
+    }
+
+    private static String compact(int v) {
+        if (v >= 1_000_000) return String.format("%.1fM", v / 1_000_000f);
+        if (v >= 1_000) return String.format("%.1fk", v / 1_000f);
+        return Integer.toString(v);
+    }
+
+    private static String duration(long ticks) {
+        long s = ticks / 20;
+        if (s >= 3600) return (s / 3600) + " h " + (s % 3600) / 60 + " min";
+        if (s >= 60) return (s / 60) + " min";
+        return s + " s";
     }
 
     private static Component state(String key, boolean on) {
