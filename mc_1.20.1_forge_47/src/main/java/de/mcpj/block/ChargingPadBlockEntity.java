@@ -1,6 +1,9 @@
 package de.mcpj.block;
 
-import de.mcpj.core.config.ServerConfig;
+import de.mcpj.core.pad.ChargingPad;
+import de.mcpj.core.pad.ChargingPadHost;
+import de.mcpj.core.pad.PadMode;
+import de.mcpj.util.NbtSaveData;
 import de.mcpj.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -16,51 +19,51 @@ import net.minecraftforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ChargingPadBlockEntity extends BlockEntity {
-    private static final int CHARGING_HOLD_TICKS = 10;
-    private static final int STATE_UPDATE_INTERVAL = 5;
-    private static final int MAX_COMPARATOR_LEVEL = 15;
-    private static final String ENERGY_TAG = "Energy";
-
-    private final ReceiveOnlyEnergyStorage storage = new ReceiveOnlyEnergyStorage(
-            () -> ServerConfig.CHARGING_PAD.buffer(), () -> ServerConfig.CHARGING_PAD.inputRate(), this::setChanged);
+/** The charging pad in the world; its logic is the core's {@link ChargingPad}, Forge Energy goes in from all sides. */
+public class ChargingPadBlockEntity extends BlockEntity implements ChargingPadHost {
+    private final ChargingPad pad = new ChargingPad(this);
+    private final IEnergyStorage storage = new PadEnergyStorage(pad);
     private LazyOptional<IEnergyStorage> energyCapability = LazyOptional.of(() -> storage);
-    private int chargingTimer;
-    private int comparatorLevel;
 
     public ChargingPadBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CHARGING_PAD.get(), pos, state);
     }
 
-    public static void serverTick(Level level, BlockPos pos, BlockState state, ChargingPadBlockEntity pad) {
-        if (pad.chargingTimer > 0 && --pad.chargingTimer == 0) pad.setComparatorLevel(0);
-        if (level.getGameTime() % STATE_UPDATE_INTERVAL != 0) return;
-        ChargingPadBlock.Mode mode = pad.currentMode();
-        if (state.getValue(ChargingPadBlock.MODE) != mode) {
-            level.setBlock(pos, state.setValue(ChargingPadBlock.MODE, mode), Block.UPDATE_ALL);
-        }
-    }
-
-    private ChargingPadBlock.Mode currentMode() {
-        if (chargingTimer > 0) return ChargingPadBlock.Mode.CHARGING;
-        return storage.getEnergyStored() > 0 ? ChargingPadBlock.Mode.POWERED : ChargingPadBlock.Mode.OFF;
+    public static void serverTick(Level level, BlockPos pos, BlockState state, ChargingPadBlockEntity entity) {
+        entity.pad.serverTick(level.getGameTime());
     }
 
     public int supplyJumper(int requested, int ticks, float jumperChargeFraction) {
-        chargingTimer = CHARGING_HOLD_TICKS;
-        setComparatorLevel(Math.round(jumperChargeFraction * MAX_COMPARATOR_LEVEL));
-        return storage.drain(Math.min(requested, ServerConfig.CHARGING_PAD.chargeRate() * ticks));
+        return pad.supplyJumper(requested, ticks, jumperChargeFraction);
     }
 
     public int getComparatorLevel() {
-        return comparatorLevel;
+        return pad.comparatorLevel();
     }
 
-    private void setComparatorLevel(int level) {
-        if (level == comparatorLevel) return;
-        comparatorLevel = level;
-        if (this.level != null) this.level.updateNeighbourForOutputSignal(worldPosition, getBlockState().getBlock());
+    // ------------------------------------------------------------------ ChargingPadHost
+
+    @Override
+    public void markChanged() {
+        setChanged();
     }
+
+    @Override
+    public void comparatorChanged() {
+        if (level != null) level.updateNeighbourForOutputSignal(worldPosition, getBlockState().getBlock());
+    }
+
+    @Override
+    public PadMode currentMode() {
+        return getBlockState().getValue(ChargingPadBlock.MODE).core();
+    }
+
+    @Override
+    public void setMode(PadMode mode) {
+        if (level != null) level.setBlock(worldPosition, getBlockState().setValue(ChargingPadBlock.MODE, ChargingPadBlock.Mode.of(mode)), Block.UPDATE_ALL);
+    }
+
+    // ------------------------------------------------------------------ Forge
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction side) {
@@ -83,12 +86,12 @@ public class ChargingPadBlockEntity extends BlockEntity {
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        storage.setEnergyStored(tag.getInt(ENERGY_TAG));
+        pad.load(new NbtSaveData(tag));
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
-        tag.putInt(ENERGY_TAG, storage.getEnergyStored());
+        pad.save(new NbtSaveData(tag));
     }
 }

@@ -1,29 +1,29 @@
 package de.mcpj.client.targeting;
 
 import de.mcpj.core.config.ServerConfig;
+import de.mcpj.core.math.Box;
+import de.mcpj.core.targeting.TargetCycle;
+import de.mcpj.core.targeting.TargetKind;
+import de.mcpj.util.Convert;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Tab selects the nearest target not yet chosen in the current round; after the last one no target is selected.
  * Chosen targets are remembered so moving mobs cannot reorder the cycle.
  */
+/** The pilot's selected target (client side); the cycling rules are the core's {@link TargetCycle}. */
 public final class TargetSelector {
-    private static final int CYCLE_RESET_TICKS = 60;
-    private static final long NEVER = -1_000_000L;
-    private static final Set<Integer> VISITED = new HashSet<>();
+    private static final TargetCycle CYCLE = new TargetCycle();
     @Nullable private static Entity target;
-    private static long lastCycleTick = NEVER;
 
     private TargetSelector() {}
 
@@ -47,21 +47,23 @@ public final class TargetSelector {
         return list;
     }
 
+    /** Distance to the nearest point of the entity (for jumpers: of the whole hull). */
     public static double distanceSqr(Entity entity, Vec3 from) {
-        AABB box = entity instanceof PuddleJumperEntity jumper ? jumper.fullBoundingBox() : entity.getBoundingBox();
-        double dx = Math.max(0, Math.max(box.minX - from.x, from.x - box.maxX));
-        double dy = Math.max(0, Math.max(box.minY - from.y, from.y - box.maxY));
-        double dz = Math.max(0, Math.max(box.minZ - from.z, from.z - box.maxZ));
-        return dx * dx + dy * dy + dz * dz;
+        Box box = entity instanceof PuddleJumperEntity jumper ? jumper.core().fullBox() : Convert.toCore(entity.getBoundingBox());
+        return TargetCycle.distanceSqr(box, Convert.toCore(from));
+    }
+
+    public static TargetKind kind(Entity entity) {
+        if (entity instanceof Enemy) return TargetKind.ENEMY;
+        if (entity instanceof PuddleJumperEntity) return TargetKind.JUMPER;
+        return TargetKind.NEUTRAL;
     }
 
     public static void cycle(PuddleJumperEntity jumper) {
-        long now = jumper.level().getGameTime();
-        if (now - lastCycleTick > CYCLE_RESET_TICKS) VISITED.clear();
-        lastCycleTick = now;
-        if (target != null) VISITED.add(target.getId());
-        target = candidates(jumper).stream().filter(entity -> !VISITED.contains(entity.getId())).findFirst().orElse(null);
-        if (target == null) VISITED.clear();
+        List<Entity> candidates = candidates(jumper);
+        Integer next = CYCLE.next(jumper.level().getGameTime(), target != null ? target.getId() : null,
+                candidates.stream().map(Entity::getId).toList());
+        target = next == null ? null : candidates.stream().filter(entity -> entity.getId() == next).findFirst().orElse(null);
     }
 
     public static void validate(PuddleJumperEntity jumper) {

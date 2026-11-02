@@ -1,5 +1,6 @@
 package de.mcpj.core.jumper;
 
+import de.mcpj.core.util.SaveData;
 import de.mcpj.core.math.Vec3d;
 
 /** Cloak, shield, lights and the pilot's actions; everything fails without energy. */

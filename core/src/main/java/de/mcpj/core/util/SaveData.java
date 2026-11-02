@@ -1,10 +1,10 @@
-package de.mcpj.core.jumper;
+package de.mcpj.core.util;
 
 import de.mcpj.core.math.BlockPosition;
 
 import java.util.List;
 
-/** Persistent key-value data of a ship (the platform stores it, e.g. as NBT). */
+/** Persistent key-value data of a ship or block (the platform stores it, e.g. as NBT). */
 public interface SaveData {
     boolean contains(String key);
 

@@ -4,7 +4,7 @@ import de.mcpj.McpjMod;
 import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import de.mcpj.core.math.BlockPosition;
-import de.mcpj.entity.jumper.Convert;
+import de.mcpj.util.Convert;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

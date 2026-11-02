@@ -1,5 +1,6 @@
 package de.mcpj.block;
 
+import de.mcpj.core.pad.PadMode;
 import de.mcpj.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,15 +21,24 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import org.jetbrains.annotations.Nullable;
 
 public class ChargingPadBlock extends BaseEntityBlock {
+    /** Block state for the core's {@link PadMode}. */
     public enum Mode implements StringRepresentable {
-        OFF("off", 0), POWERED("powered", 10), CHARGING("charging", 15);
+        OFF("off", PadMode.OFF), POWERED("powered", PadMode.POWERED), CHARGING("charging", PadMode.CHARGING);
 
         private final String serializedName;
-        private final int lightLevel;
+        private final PadMode core;
 
-        Mode(String serializedName, int lightLevel) {
+        Mode(String serializedName, PadMode core) {
             this.serializedName = serializedName;
-            this.lightLevel = lightLevel;
+            this.core = core;
+        }
+
+        public PadMode core() {
+            return core;
+        }
+
+        public static Mode of(PadMode mode) {
+            return values()[mode.ordinal()];
         }
 
         @Override
@@ -46,7 +56,7 @@ public class ChargingPadBlock extends BaseEntityBlock {
     }
 
     public static int lightLevel(BlockState state) {
-        return state.getValue(MODE).lightLevel;
+        return state.getValue(MODE).core().lightLevel();
     }
 
     @Override

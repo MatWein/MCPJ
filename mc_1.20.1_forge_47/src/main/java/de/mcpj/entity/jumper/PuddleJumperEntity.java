@@ -1,5 +1,7 @@
 package de.mcpj.entity.jumper;
 
+import de.mcpj.util.Convert;
+import de.mcpj.util.NbtSaveData;
 import de.mcpj.block.ChargingPadBlockEntity;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.core.jumper.Jumper;

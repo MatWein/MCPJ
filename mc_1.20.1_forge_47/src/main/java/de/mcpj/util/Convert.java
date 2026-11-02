@@ -1,4 +1,4 @@
-package de.mcpj.entity.jumper;
+package de.mcpj.util;
 
 import de.mcpj.core.math.BlockPosition;
 import de.mcpj.core.math.Box;
@@ -21,6 +21,10 @@ public final class Convert {
 
     public static AABB toMc(Box box) {
         return new AABB(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ());
+    }
+
+    public static Box toCore(AABB box) {
+        return new Box(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
     }
 
     public static BlockPos toMc(BlockPosition pos) {

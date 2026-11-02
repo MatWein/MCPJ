@@ -2,7 +2,7 @@ package de.mcpj.client.targeting;
 
 import de.mcpj.McpjMod;
 import de.mcpj.client.PilotContext;
-import de.mcpj.client.hud.HudColors;
+import de.mcpj.core.hud.HudColors;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -96,7 +96,7 @@ public final class TargetMarkers {
 
     private static void drawMarker(GuiGraphics graphics, Minecraft minecraft, Marker marker) {
         boolean selected = marker.entity == TargetSelector.target();
-        int color = HudColors.marker(marker.entity, selected);
+        int color = HudColors.marker(TargetSelector.kind(marker.entity), selected);
         int x0 = Math.round(marker.minX), y0 = Math.round(marker.minY), x1 = Math.round(marker.maxX), y1 = Math.round(marker.maxY);
         if (x1 - x0 < MIN_SIZE) { x0 -= MIN_SIZE / 2; x1 += MIN_SIZE / 2; }
         if (y1 - y0 < MIN_SIZE) { y0 -= MIN_SIZE / 2; y1 += MIN_SIZE / 2; }

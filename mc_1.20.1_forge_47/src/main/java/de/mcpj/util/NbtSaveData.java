@@ -1,6 +1,6 @@
-package de.mcpj.entity.jumper;
+package de.mcpj.util;
 
-import de.mcpj.core.jumper.SaveData;
+import de.mcpj.core.util.SaveData;
 import de.mcpj.core.math.BlockPosition;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /** The core's save data stored in the entity's NBT (positions as packed longs, as before). */
-record NbtSaveData(CompoundTag tag) implements SaveData {
+public record NbtSaveData(CompoundTag tag) implements SaveData {
     @Override
     public boolean contains(String key) {
         return tag.contains(key);

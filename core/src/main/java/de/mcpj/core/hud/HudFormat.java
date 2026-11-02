@@ -1,7 +1,8 @@
-package de.mcpj.client.hud;
+package de.mcpj.core.hud;
 
 import de.mcpj.core.util.Units;
 
+/** Number and duration formatting for the HUD. */
 final class HudFormat {
     private static final int THOUSAND = 1_000;
     private static final int MILLION = 1_000_000;

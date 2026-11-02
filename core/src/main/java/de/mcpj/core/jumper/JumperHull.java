@@ -1,5 +1,6 @@
 package de.mcpj.core.jumper;
 
+import de.mcpj.core.util.SaveData;
 import de.mcpj.core.config.HullConfig;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.core.math.MathUtil;
