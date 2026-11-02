@@ -30,6 +30,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.HasCustomInventoryScreen;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
@@ -222,9 +223,9 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     public void setLightsOn(boolean v) { entityData.set(DATA_LIGHTS, v); }
     public boolean isPodsOut() { return entityData.get(DATA_PODS_OUT); }
 
-    /** Triebwerke laufen: mit Energie, in der Luft (auch ohne Pilot) oder mit Pilot an Bord. */
+    /** Triebwerke laufen (und sind zu hören): nur in der Luft und mit Energie - gelandet ist es still. */
     public boolean enginesRunning() {
-        return hasEnergy() && (isVehicle() || !onGround());
+        return hasEnergy() && !onGround();
     }
     public int getHurtTime() { return entityData.get(DATA_HURT_TIME); }
     public void setHurtTime(int v) { entityData.set(DATA_HURT_TIME, v); }
@@ -545,6 +546,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         if (impactCooldown > 0) impactCooldown--;
         tickEnergy();
         updateLights();
+        if (tickCount % PICKUP_INTERVAL == 0) pickUpItems();
 
         // Wassereinbruch: ohne Schild 1 Hüllenpunkt pro Sekunde
         if (tickCount % 20 == 0 && isSubmerged() && !isShielded()) {
@@ -701,6 +703,33 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
                 setLightsOn(!isLightsOn());
                 playSound(SoundEvents.LEVER_CLICK, 0.6f, isLightsOn() ? 1.2f : 0.9f);
             }
+        }
+    }
+
+    // ------------------------------------------------------------------ Items aufsammeln
+
+    private static final int PICKUP_INTERVAL = 4;
+
+    /** Wie ein Spieler: herumliegende Items dicht am Rumpf landen im Laderaum. */
+    private void pickUpItems() {
+        AABB area = fullBoundingBox().inflate(1.0, 0.5, 1.0);
+        for (ItemEntity item : level().getEntitiesOfClass(ItemEntity.class, area, i -> i.isAlive() && !i.hasPickUpDelay())) {
+            ItemStack stack = item.getItem();
+            int before = stack.getCount();
+            ItemStack rest = cargo.addItem(stack.copy());
+            int taken = before - rest.getCount();
+            if (taken <= 0) continue;
+            // Vanilla castet den Sammler im Paket auf LivingEntity -> Animation zum Piloten, sonst nur Geräusch
+            LivingEntity pilot = getControllingPassenger();
+            if (pilot != null) {
+                ((net.minecraft.server.level.ServerLevel) level()).getChunkSource().broadcast(item,
+                        new net.minecraft.network.protocol.game.ClientboundTakeItemEntityPacket(item.getId(), pilot.getId(), taken));
+            } else {
+                level().playSound(null, item.getX(), item.getY(), item.getZ(), SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL,
+                        0.2f, (random.nextFloat() - random.nextFloat()) * 1.4f + 2.0f);
+            }
+            if (rest.isEmpty()) item.discard();
+            else item.setItem(rest);
         }
     }
 

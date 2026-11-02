@@ -55,7 +55,8 @@ Mobs verlieren den Piloten aus den Augen.
 Im Jumper werden alle Lebewesen und andere (ungetarnte) Puddle Jumper in 64 Blöcken Umkreis dezent
 markiert – Feinde rot, Jumper cyan, sonst weiß; das gewählte Ziel kräftig mit Name und Entfernung. Drohnen explodieren beim Einschlag (etwas kleiner als ein Creeper,
 Blockschaden nur bei aktivem `mobGriefing`); der eigene Jumper und Pilot bleiben verschont.
-Das Triebwerk ist auch von außen zu hören, solange es läuft (in der Luft oder mit Pilot).
+Das Triebwerk ist zu hören, solange der Jumper in der Luft ist; gelandet ist es still (auch mit Pilot).
+Herumliegende Items dicht am Rumpf sammelt der Jumper wie ein Spieler automatisch in seinen Laderaum ein.
 Der Jumper bekommt keinen Rückstoß: Explosionen, Treffer, Spieler, Mobs oder Wasserströmung verschieben ihn nicht
 (Schaden nimmt er trotzdem, außer mit aktivem Schild).
 Der Schutzschild legt eine sanft wabernde Energieblase mit verschwommenem Wasser-Effekt um den Jumper
