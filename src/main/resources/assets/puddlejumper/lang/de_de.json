@@ -32,5 +32,9 @@
   "key.puddlejumper.strafe_left": "Seitlich links",
   "key.puddlejumper.strafe_right": "Seitlich rechts",
   "key.puddlejumper.cargo": "Laderaum öffnen",
-  "hud.puddlejumper.water_warning": "  WASSER!"
+  "hud.puddlejumper.water_warning": "  WASSER!",
+  "key.puddlejumper.lights": "Licht an/aus",
+  "hud.puddlejumper.lights": "Licht: %s",
+  "hud.puddlejumper.on.lights": "an",
+  "hud.puddlejumper.off.lights": "aus"
 }

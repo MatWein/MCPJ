@@ -44,10 +44,11 @@ Item auf den Boden setzen → der Jumper erscheint in Blickrichtung.
 | Drohne abfeuern | Linksklick (fliegt zum gewählten Ziel, egal wohin man schaut; ohne Ziel zum nächsten Feind vor dem Schiff) |
 | Tarnung an/aus | `C` |
 | Schutzschild an/aus | `V` |
+| Licht an/aus | `L` (im Jumper statt Fortschritte) |
 | Antriebsgondeln aus/ein | `G` (sonst automatisch: gelandet eingefahren, in der Luft ausgefahren; beim Feuern immer aus) |
 | Aussteigen | `Shift` |
 
-Die Tasten `C`, `V`, `G`, `Tab`, `Q`/`E` und `I` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
+Die Tasten `C`, `V`, `G`, `L`, `Tab`, `Q`/`E` und `I` lassen sich unter *Optionen → Steuerung → Puddle Jumper* ändern.
 
 Der Jumper ist träge: Er beschleunigt und dreht gemächlich und rollt aus. Ohne Eingabe bremst er ab und
 schwebt auf der Stelle – auch wenn man in der Luft aussteigt, bleibt er dort stehen. Die Düsen leuchten,
@@ -66,6 +67,9 @@ Der Jumper bekommt keinen Rückstoß: Explosionen, Treffer, Spieler, Mobs oder W
 Der Schutzschild legt eine sanft wabernde Energieblase mit verschwommenem Wasser-Effekt um den Jumper
 und macht ihn unzerstörbar; Treffer lassen die Blase kurz aufleuchten.
 Beim Abfeuern einer Drohne wird die Tarnung deaktiviert.
+Mit `L` leuchtet der Jumper wie eine Fackel (Lichtstufe 15, in Rumpfmitte und vor dem Bug): Der Server setzt dafür
+unsichtbare Vanilla-Lichtblöcke (`minecraft:light`) in Luft oder Wasser und entfernt sie beim Weiterfliegen wieder.
+Getarnt bleibt das Licht aus.
 Die Hülle hält 240 Punkte aus (Diamantschwert: ~35 Schläge, ~23 kritische) – auch im Kreativmodus. Ein
 fremder Drohnentreffer kostet 60 %: die erste Drohne übersteht der Jumper knapp, die zweite zerstört ihn.
 Eine Selbstreparatur gibt es nicht.

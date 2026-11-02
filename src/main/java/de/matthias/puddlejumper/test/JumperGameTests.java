@@ -262,4 +262,26 @@ public class JumperGameTests {
             h.succeed();
         });
     }
+
+    /** Licht an: unsichtbare Lichtblöcke im Rumpf; aus, getarnt oder entfernt: wieder weg. */
+    @GameTest(template = "platform")
+    public static void lightsPlaceAndRemoveBlocks(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 12, 2, 12, 0);
+        BlockPos center = BlockPos.containing(j.position().add(0, PuddleJumperEntity.HEIGHT * 0.5, 0));
+        j.setLightsOn(true);
+        h.runAfterDelay(2, () -> {
+            h.assertTrue(h.getLevel().getBlockState(center).is(net.minecraft.world.level.block.Blocks.LIGHT), "Kein Lichtblock bei Licht an");
+            j.setCloaked(true);
+            h.runAfterDelay(2, () -> {
+                h.assertTrue(h.getLevel().getBlockState(center).isAir(), "Getarnt sollte es dunkel sein");
+                j.setCloaked(false);
+                h.runAfterDelay(2, () -> {
+                    h.assertTrue(h.getLevel().getBlockState(center).is(net.minecraft.world.level.block.Blocks.LIGHT), "Licht nach Enttarnen fehlt");
+                    j.discard();
+                    h.assertTrue(h.getLevel().getBlockState(center).isAir(), "Lichtblock nach Entfernen liegengeblieben");
+                    h.succeed();
+                });
+            });
+        });
+    }
 }

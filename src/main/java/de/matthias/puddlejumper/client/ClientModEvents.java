@@ -59,6 +59,7 @@ public final class ClientModEvents {
         event.register(KeyBindings.STRAFE_LEFT);
         event.register(KeyBindings.STRAFE_RIGHT);
         event.register(KeyBindings.CARGO);
+        event.register(KeyBindings.LIGHTS);
     }
 
     @SubscribeEvent

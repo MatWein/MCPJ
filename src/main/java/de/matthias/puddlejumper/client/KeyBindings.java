@@ -30,6 +30,8 @@ public final class KeyBindings {
     public static final KeyMapping STRAFE_LEFT = key("key.puddlejumper.strafe_left", GLFW.GLFW_KEY_Q, IN_JUMPER);
     public static final KeyMapping STRAFE_RIGHT = key("key.puddlejumper.strafe_right", GLFW.GLFW_KEY_E, IN_JUMPER);
     public static final KeyMapping CARGO = key("key.puddlejumper.cargo", GLFW.GLFW_KEY_I, IN_JUMPER);
+    // Im Jumper: L schaltet das Licht (statt Fortschritte)
+    public static final KeyMapping LIGHTS = key("key.puddlejumper.lights", GLFW.GLFW_KEY_L, IN_JUMPER);
 
     private KeyBindings() {}
 

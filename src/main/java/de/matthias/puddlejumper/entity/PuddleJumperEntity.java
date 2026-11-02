@@ -36,6 +36,12 @@ import net.minecraft.world.entity.vehicle.DismountHelper;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LightBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -43,6 +49,7 @@ import net.minecraftforge.entity.PartEntity;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -89,6 +96,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     private static final EntityDataAccessor<Boolean> DATA_CLOAKED = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_SHIELD = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_LIGHTS = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_PODS_OUT = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_HURT_TIME = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> DATA_HURT_DIR = SynchedEntityData.defineId(PuddleJumperEntity.class, EntityDataSerializers.INT);
@@ -154,6 +162,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         entityData.define(DATA_CLOAKED, false);
         entityData.define(DATA_SHIELD, false);
         entityData.define(DATA_PODS_OUT, false);
+        entityData.define(DATA_LIGHTS, false);
         entityData.define(DATA_HURT_TIME, 0);
         entityData.define(DATA_HURT_DIR, 1);
         entityData.define(DATA_DAMAGE, 0f);
@@ -164,6 +173,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     public void setCloaked(boolean v) { entityData.set(DATA_CLOAKED, v); }
     public boolean isShielded() { return entityData.get(DATA_SHIELD); }
     public void setShielded(boolean v) { entityData.set(DATA_SHIELD, v); }
+    public boolean isLightsOn() { return entityData.get(DATA_LIGHTS); }
+    public void setLightsOn(boolean v) { entityData.set(DATA_LIGHTS, v); }
     public boolean isPodsOut() { return entityData.get(DATA_PODS_OUT); }
 
     /** Triebwerke laufen: in der Luft (auch ohne Pilot) oder mit Pilot an Bord. */
@@ -422,6 +433,7 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         lastServerPos = pos;
 
         for (Entity e : getPassengers()) e.resetFallDistance();
+        updateLights();
 
         // Wassereinbruch: ohne Schild 1 Hüllenpunkt pro Sekunde
         if (tickCount % 20 == 0 && isSubmerged() && !isShielded()) {
@@ -564,7 +576,67 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
                 playSound(podsOverride ? SoundEvents.IRON_DOOR_OPEN : SoundEvents.IRON_DOOR_CLOSE, 0.8f, 0.7f);
             }
             case FIRE -> fireDrone(player, targetId);
+            case LIGHTS -> {
+                setLightsOn(!isLightsOn());
+                playSound(SoundEvents.LEVER_CLICK, 0.6f, isLightsOn() ? 1.2f : 0.9f);
+            }
         }
+    }
+
+    // ------------------------------------------------------------------ Licht
+
+    /** Licht-Stufe der Scheinwerfer (wie eine Fackel = 14, hier volle 15). */
+    private static final int LIGHT_LEVEL = 15;
+    /** Vom Jumper gesetzte unsichtbare Lichtblöcke (werden beim Weiterfliegen wieder entfernt). */
+    private final List<BlockPos> placedLights = new ArrayList<>();
+
+    /**
+     * Minecraft kennt keine bewegten Lichtquellen: Der Server setzt unsichtbare Vanilla-Lichtblöcke
+     * (minecraft:light) in Rumpfmitte und vor den Bug und räumt sie hinter dem Schiff wieder weg.
+     * Nur in Luft oder Wasser (dann wassergeflutet). Getarnt bleibt es dunkel.
+     */
+    private void updateLights() {
+        List<BlockPos> wanted = new ArrayList<>(2);
+        if (isLightsOn() && !isCloaked() && isAlive()) {
+            Vec3 f = forward();
+            Vec3 center = position().add(0, HEIGHT * 0.5, 0);
+            wanted.add(BlockPos.containing(center));
+            wanted.add(BlockPos.containing(center.add(f.scale(5.0 * RENDER_SIZE))));
+        }
+        // nicht mehr benötigte Lichter entfernen
+        placedLights.removeIf(p -> {
+            if (wanted.contains(p)) return false;
+            removeLight(p);
+            return true;
+        });
+        for (BlockPos p : wanted) {
+            if (placedLights.contains(p) || !level().isLoaded(p)) continue;
+            BlockState old = level().getBlockState(p);
+            boolean water = old.getFluidState().is(Fluids.WATER) && old.getFluidState().isSource() && old.is(Blocks.WATER);
+            if (!old.isAir() && !water) continue;
+            BlockState light = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, LIGHT_LEVEL)
+                    .setValue(BlockStateProperties.WATERLOGGED, water);
+            if (level().setBlock(p, light, Block.UPDATE_CLIENTS)) placedLights.add(p.immutable());
+        }
+    }
+
+    private void removeLight(BlockPos p) {
+        if (!level().isLoaded(p)) return;
+        BlockState s = level().getBlockState(p);
+        if (!s.is(Blocks.LIGHT)) return; // inzwischen etwas anderes dort
+        BlockState back = s.getValue(BlockStateProperties.WATERLOGGED) ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState();
+        level().setBlock(p, back, Block.UPDATE_CLIENTS);
+    }
+
+    private void clearLights() {
+        for (BlockPos p : placedLights) removeLight(p);
+        placedLights.clear();
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (!level().isClientSide) clearLights();
+        super.remove(reason);
     }
 
     private void toggleCloak() {
@@ -736,6 +808,10 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     protected void readAdditionalSaveData(CompoundTag tag) {
         setCloaked(tag.getBoolean("Cloaked"));
         setShielded(tag.getBoolean("Shielded"));
+        setLightsOn(tag.getBoolean("Lights"));
+        // nach Absturz/Neustart liegengebliebene Lichtblöcke beim nächsten Tick aufräumen
+        placedLights.clear();
+        for (long l : tag.getLongArray("LightBlocks")) placedLights.add(BlockPos.of(l));
         setHealth(tag.contains("Health") ? tag.getFloat("Health") : MAX_HEALTH);
         cargo.clearContent();
         ListTag list = tag.getList("Cargo", Tag.TAG_COMPOUND);
@@ -750,6 +826,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putBoolean("Cloaked", isCloaked());
         tag.putBoolean("Shielded", isShielded());
+        tag.putBoolean("Lights", isLightsOn());
+        tag.putLongArray("LightBlocks", placedLights.stream().mapToLong(BlockPos::asLong).toArray());
         tag.putFloat("Health", getHealth());
         ListTag list = new ListTag();
         for (int i = 0; i < cargo.getContainerSize(); i++) {

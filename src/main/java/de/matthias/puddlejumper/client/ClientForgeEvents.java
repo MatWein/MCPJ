@@ -54,6 +54,7 @@ public final class ClientForgeEvents {
                 Minecraft mc = Minecraft.getInstance();
                 if (KeyBindings.STRAFE_LEFT.getKey().equals(mc.options.keyDrop.getKey())) while (mc.options.keyDrop.consumeClick()) {}
                 if (KeyBindings.STRAFE_RIGHT.getKey().equals(mc.options.keyInventory.getKey())) while (mc.options.keyInventory.consumeClick()) {}
+                if (KeyBindings.LIGHTS.getKey().equals(mc.options.keyAdvancements.getKey())) while (mc.options.keyAdvancements.consumeClick()) {}
             }
             return;
         }
@@ -69,11 +70,13 @@ public final class ClientForgeEvents {
             while (KeyBindings.CLOAK.consumeClick()) {}
             while (KeyBindings.SHIELD.consumeClick()) {}
             while (KeyBindings.PODS.consumeClick()) {}
+            while (KeyBindings.LIGHTS.consumeClick()) {}
             return;
         }
         while (KeyBindings.CLOAK.consumeClick()) send(JumperActionPacket.Action.CLOAK, -1);
         while (KeyBindings.SHIELD.consumeClick()) send(JumperActionPacket.Action.SHIELD, -1);
         while (KeyBindings.PODS.consumeClick()) send(JumperActionPacket.Action.PODS, -1);
+        while (KeyBindings.LIGHTS.consumeClick()) send(JumperActionPacket.Action.LIGHTS, -1);
         ClientState.validateTarget(jumper);
     }
 
