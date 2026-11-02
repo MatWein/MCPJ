@@ -587,37 +587,68 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
 
     /** Licht-Stufe der Scheinwerfer (wie eine Fackel = 14, hier volle 15). */
     private static final int LIGHT_LEVEL = 15;
-    /** Vom Jumper gesetzte unsichtbare Lichtblöcke (werden beim Weiterfliegen wieder entfernt). */
-    private final List<BlockPos> placedLights = new ArrayList<>();
+    /** Ein Licht wird erst versetzt, wenn das Schiff so weit (Blöcke) davon weg ist ... */
+    private static final double LIGHT_MOVE_DIST = 2.0;
+    /** ... und höchstens alle so viele Ticks - spart Licht-Neuberechnung und Chunk-Neubau beim Client. */
+    private static final int LIGHT_INTERVAL = 4;
+    /** Ab diesem Tempo (Blöcke/Tick) nur noch das Bug-Licht. */
+    private static final double LIGHT_FAST_SPEED = 0.5;
+    private static final int LIGHT_CENTER = 0, LIGHT_BOW = 1;
+    /** Vom Jumper gesetzte unsichtbare Lichtblöcke je Platz (Mitte, Bug), null = keiner. */
+    private final BlockPos[] lightSlots = new BlockPos[2];
+    /** Aus dem Spielstand geladene Lichtblöcke (z. B. nach Absturz) - werden beim ersten Tick entfernt. */
+    private final List<BlockPos> staleLights = new ArrayList<>();
 
     /**
      * Minecraft kennt keine bewegten Lichtquellen: Der Server setzt unsichtbare Vanilla-Lichtblöcke
      * (minecraft:light) in Rumpfmitte und vor den Bug und räumt sie hinter dem Schiff wieder weg.
      * Nur in Luft oder Wasser (dann wassergeflutet). Getarnt bleibt es dunkel.
+     *
+     * <p>Sparsam: ein Licht wandert erst mit, wenn das Schiff mehr als {@link #LIGHT_MOVE_DIST} Blöcke
+     * davon entfernt ist, und höchstens alle {@link #LIGHT_INTERVAL} Ticks; bei hohem Tempo nur das Bug-Licht.</p>
      */
     private void updateLights() {
-        List<BlockPos> wanted = new ArrayList<>(2);
-        if (isLightsOn() && !isCloaked() && isAlive()) {
-            Vec3 f = forward();
-            Vec3 center = position().add(0, HEIGHT * 0.5, 0);
-            wanted.add(BlockPos.containing(center));
-            wanted.add(BlockPos.containing(center.add(f.scale(5.0 * RENDER_SIZE))));
+        if (!staleLights.isEmpty()) {
+            for (BlockPos p : staleLights) removeLight(p);
+            staleLights.clear();
         }
-        // nicht mehr benötigte Lichter entfernen
-        placedLights.removeIf(p -> {
-            if (wanted.contains(p)) return false;
-            removeLight(p);
-            return true;
-        });
-        for (BlockPos p : wanted) {
-            if (placedLights.contains(p) || !level().isLoaded(p)) continue;
-            BlockState old = level().getBlockState(p);
-            boolean water = old.getFluidState().is(Fluids.WATER) && old.getFluidState().isSource() && old.is(Blocks.WATER);
-            if (!old.isAir() && !water) continue;
-            BlockState light = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, LIGHT_LEVEL)
-                    .setValue(BlockStateProperties.WATERLOGGED, water);
-            if (level().setBlock(p, light, Block.UPDATE_CLIENTS)) placedLights.add(p.immutable());
+        if (!isLightsOn() || isCloaked() || !isAlive()) {
+            clearLights();
+            return;
         }
+        boolean fast = serverVelocity.length() > LIGHT_FAST_SPEED;
+        boolean moveTick = tickCount % LIGHT_INTERVAL == 0;
+        Vec3 center = position().add(0, HEIGHT * 0.5, 0);
+        Vec3[] targets = {center, center.add(forward().scale(5.0 * RENDER_SIZE))};
+        for (int i = 0; i < lightSlots.length; i++) {
+            BlockPos cur = lightSlots[i];
+            if (i == LIGHT_CENTER && fast) {               // schnell: Mitte aus
+                if (cur != null) removeLight(cur);
+                lightSlots[i] = null;
+                continue;
+            }
+            // neues Licht sofort, bestehendes nur im Takt und bei genügend Abstand versetzen
+            if (cur != null && (!moveTick || cur.getCenter().distanceTo(targets[i]) <= LIGHT_MOVE_DIST)) continue;
+            BlockPos next = BlockPos.containing(targets[i]);
+            if (next.equals(cur) || (cur != null && next.equals(lightSlots[1 - i]))) continue;
+            if (placeLight(next)) {
+                if (cur != null) removeLight(cur);
+                lightSlots[i] = next;
+            } else if (cur != null && cur.getCenter().distanceTo(targets[i]) > 2 * LIGHT_MOVE_DIST) {
+                removeLight(cur);                          // kein Platz (Block im Weg): altes Licht nicht hinterherziehen
+                lightSlots[i] = null;
+            }
+        }
+    }
+
+    private boolean placeLight(BlockPos p) {
+        if (!level().isLoaded(p)) return false;
+        BlockState old = level().getBlockState(p);
+        boolean water = old.is(Blocks.WATER) && old.getFluidState().isSource();
+        if (!old.isAir() && !water) return false;
+        BlockState light = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, LIGHT_LEVEL)
+                .setValue(BlockStateProperties.WATERLOGGED, water);
+        return level().setBlock(p, light, Block.UPDATE_CLIENTS);
     }
 
     private void removeLight(BlockPos p) {
@@ -629,8 +660,17 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
     }
 
     private void clearLights() {
-        for (BlockPos p : placedLights) removeLight(p);
-        placedLights.clear();
+        for (int i = 0; i < lightSlots.length; i++) {
+            if (lightSlots[i] != null) removeLight(lightSlots[i]);
+            lightSlots[i] = null;
+        }
+    }
+
+    /** Aktuell gesetzte Lichtblöcke (für Tests). */
+    public List<BlockPos> getLightBlocks() {
+        List<BlockPos> list = new ArrayList<>(2);
+        for (BlockPos p : lightSlots) if (p != null) list.add(p);
+        return list;
     }
 
     @Override
@@ -810,8 +850,8 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         setShielded(tag.getBoolean("Shielded"));
         setLightsOn(tag.getBoolean("Lights"));
         // nach Absturz/Neustart liegengebliebene Lichtblöcke beim nächsten Tick aufräumen
-        placedLights.clear();
-        for (long l : tag.getLongArray("LightBlocks")) placedLights.add(BlockPos.of(l));
+        staleLights.clear();
+        for (long l : tag.getLongArray("LightBlocks")) staleLights.add(BlockPos.of(l));
         setHealth(tag.contains("Health") ? tag.getFloat("Health") : MAX_HEALTH);
         cargo.clearContent();
         ListTag list = tag.getList("Cargo", Tag.TAG_COMPOUND);
@@ -827,7 +867,9 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         tag.putBoolean("Cloaked", isCloaked());
         tag.putBoolean("Shielded", isShielded());
         tag.putBoolean("Lights", isLightsOn());
-        tag.putLongArray("LightBlocks", placedLights.stream().mapToLong(BlockPos::asLong).toArray());
+        List<BlockPos> lights = new ArrayList<>(staleLights);
+        lights.addAll(getLightBlocks());
+        tag.putLongArray("LightBlocks", lights.stream().mapToLong(BlockPos::asLong).toArray());
         tag.putFloat("Health", getHealth());
         ListTag list = new ListTag();
         for (int i = 0; i < cargo.getContainerSize(); i++) {

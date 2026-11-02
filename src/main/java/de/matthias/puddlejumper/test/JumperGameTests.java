@@ -284,4 +284,29 @@ public class JumperGameTests {
             });
         });
     }
+
+    /** Lichter wandern sparsam mit: kleine Bewegung -> bleibt stehen, größere -> versetzt, altes weg. */
+    @GameTest(template = "platform", timeoutTicks = 60)
+    public static void lightsFollowLazily(GameTestHelper h) {
+        PuddleJumperEntity j = spawnJumper(h, 8, 2, 12, 0);
+        j.setLightsOn(true);
+        double x0 = j.getX();
+        BlockPos[] first = new BlockPos[1];
+        h.runAfterDelay(2, () -> {
+            h.assertTrue(j.getLightBlocks().size() == 2, "Erwarte 2 Lichter, sind " + j.getLightBlocks().size());
+            first[0] = j.getLightBlocks().get(0);
+        });
+        for (int k = 1; k <= 13; k++) { // langsam (0,3 Blöcke/Tick) entlang +X schieben
+            final int step = k;
+            h.runAfterDelay(2 + k, () -> j.setPos(x0 + 0.3 * step, j.getY(), j.getZ()));
+        }
+        h.runAfterDelay(6, () -> h.assertTrue(j.getLightBlocks().contains(first[0]),
+                "Licht nach kleiner Bewegung schon versetzt"));
+        h.runAfterDelay(25, () -> {
+            h.assertTrue(!j.getLightBlocks().contains(first[0]), "Mittel-Licht ist nicht mitgewandert");
+            h.assertTrue(h.getLevel().getBlockState(first[0]).isAir(), "Altes Licht nicht entfernt");
+            h.assertTrue(j.getLightBlocks().size() == 2, "Erwarte wieder 2 Lichter");
+            h.succeed();
+        });
+    }
 }

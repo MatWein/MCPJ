@@ -69,7 +69,8 @@ und macht ihn unzerstörbar; Treffer lassen die Blase kurz aufleuchten.
 Beim Abfeuern einer Drohne wird die Tarnung deaktiviert.
 Mit `L` leuchtet der Jumper wie eine Fackel (Lichtstufe 15, in Rumpfmitte und vor dem Bug): Der Server setzt dafür
 unsichtbare Vanilla-Lichtblöcke (`minecraft:light`) in Luft oder Wasser und entfernt sie beim Weiterfliegen wieder.
-Getarnt bleibt das Licht aus.
+Um Licht-Updates zu sparen, wandert ein Licht erst ab 2 Blöcken Abstand und höchstens alle 4 Ticks mit; im schnellen
+Flug (> 10 m/s) leuchtet nur das Bug-Licht. Getarnt bleibt das Licht aus.
 Die Hülle hält 240 Punkte aus (Diamantschwert: ~35 Schläge, ~23 kritische) – auch im Kreativmodus. Ein
 fremder Drohnentreffer kostet 60 %: die erste Drohne übersteht der Jumper knapp, die zweite zerstört ihn.
 Eine Selbstreparatur gibt es nicht.
