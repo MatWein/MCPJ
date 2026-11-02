@@ -149,21 +149,21 @@ client-only and therefore copied to `run/mods` instead of the shared classpath. 
 ## Project layout
 
 ```
-core/src/main/java/de/mcpj/core/       game logic without Minecraft (moving here step by step)
-mc_1.20.1_forge_47/src/main/java/de/mcpj/
-  config/                              server and client config
-  registry/                            blocks, items, entities, sounds, creative tab
-  entity/jumper/                       the jumper: flight, energy, hull, systems, weapons, lights, cargo, animation
-  entity/drone/                        homing drone
-  block/                               charging pad (Forge Energy buffer, states, comparator)
-  network/                             pilot actions and impact reports
-  event/                               cloak, passenger protection, dimension travel and drone explosion handling
-  compat/                              optional integrations (Just Stargate Mod)
-  client/                              rendering, HUD, input, camera, targeting, sounds
-  gametest/                            game tests
-tools/preview.py                       software renderer for preview images (python3 tools/preview.py out.png [--open])
-tools/make_pad_textures.py             charging pad textures
-tools/make_test_structure.py           game test platform
+core/src/main/java/de/mcpj/core/       game logic without Minecraft or a mod loader (plain Java 17)
+  config/                              all settings (ConfigBuilder: implemented per platform)
+  jumper/                              the ship: flight, energy, hull, shield/cloak/lights, pods, weapons, animation;
+                                       JumperHost/JumperSync are what a platform provides
+  drone/  pad/                         homing drone, charging pad
+  targeting/  hud/                     target cycling, HUD content (lines, warnings, colors)
+  render/                              OBJ mesh, shield bubble, ion plumes, attitude (VertexSink: drawn by the platform)
+  math/  util/                         vectors, boxes, units, save data
+core/src/test/                         unit tests of the game logic (no Minecraft)
+mc_1.20.1_forge_47/src/main/java/de/mcpj/forge/
+  entity/  block/  item/  registry/    Minecraft objects hosting the core logic
+  client/                              rendering, HUD drawing, input, camera, sounds
+  network/  event/  compat/  config/   packets, Forge events, Just Stargate Mod, Forge config adapter
+  gametest/                            game tests (headless server)
+tools/                                 texture, test structure and preview scripts
 ```
 
 ### Model
