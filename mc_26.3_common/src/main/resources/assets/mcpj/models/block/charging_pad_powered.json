@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "mcpj:block/charging_pad_side_powered",
+    "up": "mcpj:block/charging_pad_top_powered",
+    "down": "mcpj:block/charging_pad_bottom",
+    "north": "mcpj:block/charging_pad_side_powered",
+    "south": "mcpj:block/charging_pad_side_powered",
+    "east": "mcpj:block/charging_pad_side_powered",
+    "west": "mcpj:block/charging_pad_side_powered"
+  }
+}

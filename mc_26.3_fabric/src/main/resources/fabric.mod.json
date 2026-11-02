@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": ["${mod_authors}"],
+  "license": "All-Rights-Reserved",
+  "icon": "assets/mcpj/textures/item/puddle_jumper.png",
+  "environment": "*",
+  "accessWidener": "mcpj.classtweaker",
+  "entrypoints": {
+    "main": ["de.mcpj.fabric.McpjFabric"],
+    "client": ["de.mcpj.fabric.client.McpjFabricClient"]
+  },
+  "mixins": ["mcpj.mixins.json"],
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

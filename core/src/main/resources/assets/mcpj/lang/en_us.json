@@ -6,6 +6,7 @@
   "message.mcpj.no_space": "Not enough space for the Puddle Jumper here",
   "container.mcpj.cargo": "Puddle Jumper Cargo Hold",
   "key.categories.mcpj": "MCPJ",
+  "key.category.mcpj.jumper": "MCPJ",
   "key.mcpj.cloak": "Toggle cloak",
   "key.mcpj.pods": "Extend/retract drive pods",
   "subtitles.mcpj.engine": "Puddle Jumper hums",

@@ -6,6 +6,7 @@
   "message.mcpj.no_space": "Hier ist nicht genug Platz für den Puddle Jumper",
   "container.mcpj.cargo": "Laderaum des Puddle Jumpers",
   "key.categories.mcpj": "MCPJ",
+  "key.category.mcpj.jumper": "MCPJ",
   "key.mcpj.cloak": "Tarnung umschalten",
   "key.mcpj.pods": "Antriebsgondeln aus-/einfahren",
   "subtitles.mcpj.engine": "Puddle Jumper summt",
