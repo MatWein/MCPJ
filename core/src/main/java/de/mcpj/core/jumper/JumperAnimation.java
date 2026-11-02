@@ -1,8 +1,9 @@
-package de.mcpj.entity.jumper;
+package de.mcpj.core.jumper;
 
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
+import de.mcpj.core.math.MathUtil;
+import de.mcpj.core.math.Vec3d;
 
+/** Client-side animation state: pods, shield and cloak fades, engine glow, banking and pitch. */
 public final class JumperAnimation {
     private static final float POD_SPEED = 0.035f;
     private static final float SHIELD_FADE_SPEED = 0.06f;
@@ -21,7 +22,7 @@ public final class JumperAnimation {
     private static final float MAX_PITCH = 28f;
     private static final float TILT_RESPONSE = 0.12f;
 
-    private final PuddleJumperEntity jumper;
+    private final Jumper jumper;
     private final JumperExhaust exhaust;
     private float podExtension, podExtensionOld;
     private float shield, shieldOld;
@@ -32,20 +33,21 @@ public final class JumperAnimation {
     private int shieldFlash;
     private double speed;
 
-    JumperAnimation(PuddleJumperEntity jumper) {
+    JumperAnimation(Jumper jumper) {
         this.jumper = jumper;
         this.exhaust = new JumperExhaust(jumper);
     }
 
     void tick() {
-        Vec3 velocity = jumper.position().subtract(jumper.xo, jumper.yo, jumper.zo);
+        JumperHost host = jumper.host();
+        Vec3d velocity = host.location().subtract(host.previousLocation());
         speed = velocity.length();
         podExtensionOld = podExtension;
-        podExtension = approach(podExtension, jumper.isPodsOut() ? 1f : 0f, POD_SPEED);
+        podExtension = MathUtil.approach(podExtension, jumper.isPodsOut() ? 1f : 0f, POD_SPEED);
         shieldOld = shield;
-        shield = approach(shield, jumper.isShielded() ? 1f : 0f, SHIELD_FADE_SPEED);
+        shield = MathUtil.approach(shield, jumper.isShielded() ? 1f : 0f, SHIELD_FADE_SPEED);
         cloakOld = cloak;
-        cloak = approach(cloak, jumper.isCloaked() ? 1f : 0f, CLOAK_FADE_SPEED);
+        cloak = MathUtil.approach(cloak, jumper.isCloaked() ? 1f : 0f, CLOAK_FADE_SPEED);
         if (shieldFlash > 0) shieldFlash--;
         engineGlowOld = engineGlow;
         engineGlow += (targetGlow() - engineGlow) * GLOW_RESPONSE;
@@ -55,25 +57,26 @@ public final class JumperAnimation {
 
     private float targetGlow() {
         if (!jumper.energy().hasEnergy()) return 0f;
-        if (jumper.onGround()) return jumper.isVehicle() ? GLOW_IDLE_PILOTED : 0f;
-        return GLOW_AIRBORNE + Mth.clamp((float) speed * GLOW_PER_SPEED, 0f, GLOW_SPEED_BONUS_MAX);
+        if (jumper.host().onGround()) return jumper.host().hasPassengers() ? GLOW_IDLE_PILOTED : 0f;
+        return GLOW_AIRBORNE + MathUtil.clamp((float) speed * GLOW_PER_SPEED, 0f, GLOW_SPEED_BONUS_MAX);
     }
 
-    private void updateTilt(Vec3 velocity) {
-        Vec3 left = jumper.left();
-        Vec3 forward = jumper.forward();
-        double sideSpeed = left.x * velocity.x + left.z * velocity.z;
-        double forwardSpeed = forward.x * velocity.x + forward.z * velocity.z;
-        float yawDelta = Mth.wrapDegrees(jumper.getYRot() - jumper.yRotO);
-        float targetRoll = Mth.clamp(yawDelta * ROLL_PER_TURN - (float) sideSpeed * ROLL_PER_SIDE_SPEED, -MAX_ROLL, MAX_ROLL);
-        float targetPitch = Mth.clamp((float) (-velocity.y * PITCH_PER_CLIMB + forwardSpeed * PITCH_PER_SPEED), -MAX_PITCH, MAX_PITCH);
+    private void updateTilt(Vec3d velocity) {
+        Vec3d left = jumper.left();
+        Vec3d forward = jumper.forward();
+        double sideSpeed = left.x() * velocity.x() + left.z() * velocity.z();
+        double forwardSpeed = forward.x() * velocity.x() + forward.z() * velocity.z();
+        float yawDelta = MathUtil.wrapDegrees(jumper.host().yaw() - jumper.host().previousYaw());
+        float targetRoll = MathUtil.clamp(yawDelta * ROLL_PER_TURN - (float) sideSpeed * ROLL_PER_SIDE_SPEED, -MAX_ROLL, MAX_ROLL);
+        float targetPitch = MathUtil.clamp((float) (-velocity.y() * PITCH_PER_CLIMB + forwardSpeed * PITCH_PER_SPEED), -MAX_PITCH, MAX_PITCH);
         rollOld = roll;
         pitchOld = pitch;
         roll += (targetRoll - roll) * TILT_RESPONSE;
         pitch += (targetPitch - pitch) * TILT_RESPONSE;
     }
 
-    void flashShield() {
+    /** The shield absorbed a hit (event from the server). */
+    public void flashShield() {
         shieldFlash = SHIELD_FLASH_TICKS;
     }
 
@@ -82,28 +85,28 @@ public final class JumperAnimation {
     }
 
     public float podExtension(float partialTick) {
-        float t = Mth.lerp(partialTick, podExtensionOld, podExtension);
+        float t = MathUtil.lerp(partialTick, podExtensionOld, podExtension);
         return t * t * (3 - 2 * t);
     }
 
     public float shield(float partialTick) {
-        return Mth.lerp(partialTick, shieldOld, shield);
+        return MathUtil.lerp(partialTick, shieldOld, shield);
     }
 
     public float cloak(float partialTick) {
-        return Mth.lerp(partialTick, cloakOld, cloak);
+        return MathUtil.lerp(partialTick, cloakOld, cloak);
     }
 
     public float engineGlow(float partialTick) {
-        return Mth.lerp(partialTick, engineGlowOld, engineGlow);
+        return MathUtil.lerp(partialTick, engineGlowOld, engineGlow);
     }
 
     public float roll(float partialTick) {
-        return Mth.lerp(partialTick, rollOld, roll);
+        return MathUtil.lerp(partialTick, rollOld, roll);
     }
 
     public float pitch(float partialTick) {
-        return Mth.lerp(partialTick, pitchOld, pitch);
+        return MathUtil.lerp(partialTick, pitchOld, pitch);
     }
 
     public float shieldFlash(float partialTick) {
@@ -112,9 +115,5 @@ public final class JumperAnimation {
 
     public boolean podsMostlyOut() {
         return podExtension > 0.5f;
-    }
-
-    private static float approach(float current, float target, float step) {
-        return current < target ? Math.min(target, current + step) : Math.max(target, current - step);
     }
 }

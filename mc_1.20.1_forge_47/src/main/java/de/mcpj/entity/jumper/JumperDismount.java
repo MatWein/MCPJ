@@ -1,5 +1,6 @@
 package de.mcpj.entity.jumper;
 
+import de.mcpj.core.jumper.JumperGeometry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;

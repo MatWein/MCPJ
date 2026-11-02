@@ -1,22 +1,21 @@
-package de.mcpj.entity.jumper;
+package de.mcpj.core.jumper;
 
 import org.jetbrains.annotations.Nullable;
 
-import static de.mcpj.entity.jumper.PuddleJumperEntity.PODS_OUT;
-
-final class JumperPods {
-    private final PuddleJumperEntity jumper;
+/** Drive pods: retracted when landed, extended in the air, always extended when firing; G overrides. */
+public final class JumperPods {
+    private final Jumper jumper;
     @Nullable private Boolean manualState;
     private boolean wasLanded;
     private int deployTimer;
 
-    JumperPods(PuddleJumperEntity jumper) {
+    JumperPods(Jumper jumper) {
         this.jumper = jumper;
     }
 
     void tick() {
         if (deployTimer > 0) deployTimer--;
-        boolean landed = jumper.onGround();
+        boolean landed = jumper.host().onGround();
         if (landed != wasLanded) {
             manualState = null;
             wasLanded = landed;
@@ -37,6 +36,6 @@ final class JumperPods {
     }
 
     private void setOut(boolean out) {
-        if (out != jumper.isPodsOut()) jumper.getEntityData().set(PODS_OUT, out);
+        if (out != jumper.isPodsOut()) jumper.sync().setPodsOut(out);
     }
 }

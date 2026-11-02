@@ -1,23 +1,22 @@
-package de.mcpj.entity.jumper;
+package de.mcpj.core.jumper;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Mob;
+import de.mcpj.core.math.Vec3d;
 
+/** Cloak, shield, lights and the pilot's actions; everything fails without energy. */
 public final class JumperSystems {
     private static final double CLOAK_FORGET_RANGE = 48;
     private static final String CLOAKED_TAG = "Cloaked";
     private static final String SHIELDED_TAG = "Shielded";
     private static final String LIGHTS_TAG = "Lights";
 
-    private final PuddleJumperEntity jumper;
+    private final Jumper jumper;
 
-    JumperSystems(PuddleJumperEntity jumper) {
+    JumperSystems(Jumper jumper) {
         this.jumper = jumper;
     }
 
-    public void perform(ServerPlayer pilot, JumperAction action, int targetId) {
-        if (jumper.getControllingPassenger() != pilot) return;
+    /** A pilot action; the platform has already checked that it comes from the pilot. */
+    public void perform(JumperAction action, Vec3d pilotLook, int targetId) {
         if (switchesOn(action) && !jumper.energy().hasEnergy()) {
             JumperSounds.denied(jumper);
             return;
@@ -27,7 +26,7 @@ public final class JumperSystems {
             case SHIELD -> setShield(!jumper.isShielded());
             case LIGHTS -> setLights(!jumper.isLightsOn());
             case PODS -> jumper.pods().toggle();
-            case FIRE -> jumper.weapons().fire(pilot, targetId);
+            case FIRE -> jumper.weapons().fire(pilotLook, targetId);
         }
     }
 
@@ -41,29 +40,23 @@ public final class JumperSystems {
     }
 
     void setCloak(boolean on) {
-        jumper.setCloaked(on);
+        jumper.sync().setCloaked(on);
         JumperSounds.cloakToggled(jumper, on);
-        if (on) loseMobPursuers();
+        if (on) jumper.host().loseMobPursuers(CLOAK_FORGET_RANGE);
     }
 
     private void setShield(boolean on) {
-        jumper.setShielded(on);
+        jumper.sync().setShielded(on);
         JumperSounds.shieldToggled(jumper, on);
     }
 
     private void setLights(boolean on) {
-        jumper.setLightsOn(on);
+        jumper.sync().setLightsOn(on);
         JumperSounds.lightsToggled(jumper, on);
     }
 
-    private void loseMobPursuers() {
-        for (Mob mob : jumper.level().getEntitiesOfClass(Mob.class, jumper.getBoundingBox().inflate(CLOAK_FORGET_RANGE))) {
-            if (mob.getTarget() != null && jumper.hasPassenger(mob.getTarget())) mob.setTarget(null);
-        }
-    }
-
     void collapseShield() {
-        jumper.setShielded(false);
+        jumper.sync().setShielded(false);
         JumperSounds.shieldCollapsed(jumper);
         if (!jumper.energy().hasEnergy()) powerFailure();
     }
@@ -71,24 +64,24 @@ public final class JumperSystems {
     void powerFailure() {
         if (jumper.isShielded() || jumper.isCloaked() || jumper.isLightsOn()) JumperSounds.shieldCollapsed(jumper);
         JumperSounds.powerFailure(jumper);
-        jumper.setShielded(false);
-        jumper.setCloaked(false);
-        jumper.setLightsOn(false);
+        jumper.sync().setShielded(false);
+        jumper.sync().setCloaked(false);
+        jumper.sync().setLightsOn(false);
     }
 
     void denied() {
         JumperSounds.denied(jumper);
     }
 
-    void load(CompoundTag tag) {
-        jumper.setCloaked(tag.getBoolean(CLOAKED_TAG));
-        jumper.setShielded(tag.getBoolean(SHIELDED_TAG));
-        jumper.setLightsOn(tag.getBoolean(LIGHTS_TAG));
+    public void load(SaveData data) {
+        jumper.sync().setCloaked(data.getBoolean(CLOAKED_TAG));
+        jumper.sync().setShielded(data.getBoolean(SHIELDED_TAG));
+        jumper.sync().setLightsOn(data.getBoolean(LIGHTS_TAG));
     }
 
-    void save(CompoundTag tag) {
-        tag.putBoolean(CLOAKED_TAG, jumper.isCloaked());
-        tag.putBoolean(SHIELDED_TAG, jumper.isShielded());
-        tag.putBoolean(LIGHTS_TAG, jumper.isLightsOn());
+    public void save(SaveData data) {
+        data.putBoolean(CLOAKED_TAG, jumper.isCloaked());
+        data.putBoolean(SHIELDED_TAG, jumper.isShielded());
+        data.putBoolean(LIGHTS_TAG, jumper.isLightsOn());
     }
 }

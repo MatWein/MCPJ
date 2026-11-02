@@ -1,19 +1,15 @@
-package de.mcpj.entity.jumper;
+package de.mcpj.core.jumper;
 
-import de.mcpj.core.jumper.JumperMedium;
 import de.mcpj.core.config.FlightConfig;
 import de.mcpj.core.config.ServerConfig;
-import de.mcpj.network.JumperImpactPacket;
-import de.mcpj.network.ModNetwork;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
+import de.mcpj.core.math.Box;
+import de.mcpj.core.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
+/**
+ * Inert flight model. It runs where the ship is controlled (the pilot's client, otherwise the server):
+ * thrust, turning, drag per medium, falling without energy, collisions of all three hull segments and impacts.
+ */
 public final class JumperFlight {
     public static final double MAX_FALL_SPEED = 3.0;
     private static final double GRAVITY = 0.08;
@@ -32,40 +28,41 @@ public final class JumperFlight {
     private static final double GROUND_PROBE_OVERLAP = 0.01;
     private static final int ARRIVAL_WINDOW_TICKS = 20;
 
-    private final PuddleJumperEntity jumper;
+    private final Jumper jumper;
     private float yawVelocity;
-    private Vec3 ownVelocity = Vec3.ZERO;
-    @Nullable private Vec3 arrivalVelocity;
+    private Vec3d ownVelocity = Vec3d.ZERO;
+    @Nullable private Vec3d arrivalVelocity;
     private int arrivalTicks;
 
-    JumperFlight(PuddleJumperEntity jumper) {
+    JumperFlight(Jumper jumper) {
         this.jumper = jumper;
     }
 
     /** After a portal: whoever controls the ship (pilot client or server) continues with this velocity. */
-    void arrive(Vec3 velocity) {
+    public void arrive(Vec3d velocity) {
         arrivalVelocity = velocity;
         arrivalTicks = ARRIVAL_WINDOW_TICKS;
     }
 
     void tick() {
+        JumperHost host = jumper.host();
         takeOverArrivalVelocity();
         // External impulses (explosions, hits, players) are discarded: only our own velocity counts.
-        jumper.setDeltaMovement(ownVelocity);
-        if (!jumper.isControlledByLocalInstance()) {
-            jumper.setDeltaMovement(Vec3.ZERO);
-            ownVelocity = Vec3.ZERO;
+        host.setVelocity(ownVelocity);
+        if (!host.isControlledLocally()) {
+            host.setVelocity(Vec3d.ZERO);
+            ownVelocity = Vec3d.ZERO;
             return;
         }
-        if (jumper.getControllingPassenger() instanceof Player) steer(FlightInput.source.get());
+        if (host.hasPilot()) steer(FlightInput.source.get());
         else drift();
-        moveWithSegments(jumper.getDeltaMovement());
-        ownVelocity = jumper.getDeltaMovement();
+        moveWithSegments(host.velocity());
+        ownVelocity = host.velocity();
     }
 
     private void takeOverArrivalVelocity() {
         if (arrivalVelocity == null) return;
-        if (jumper.isControlledByLocalInstance()) {
+        if (jumper.host().isControlledLocally()) {
             ownVelocity = arrivalVelocity;
             arrivalVelocity = null;
         } else if (--arrivalTicks <= 0) {
@@ -74,6 +71,7 @@ public final class JumperFlight {
     }
 
     private void steer(FlightInput input) {
+        JumperHost host = jumper.host();
         if (!jumper.energy().hasEnergy()) {
             fall();
             return;
@@ -84,73 +82,75 @@ public final class JumperFlight {
 
         yawVelocity = yawVelocity * config.turnDrag() - input.turn() * config.turnAccelerationPerTick() * config.turnFactor(medium);
         if (input.turn() == 0 && Math.abs(yawVelocity) < TURN_REST_SPEED) yawVelocity = 0;
-        jumper.setYRot(jumper.getYRot() + yawVelocity);
+        host.setYaw(host.yaw() + yawVelocity);
 
         double forwardAcceleration = input.forward() > 0 ? acceleration : acceleration * config.reverseFactor();
-        Vec3 thrust = jumper.forward().scale(input.forward() * forwardAcceleration)
+        Vec3d thrust = jumper.forward().scale(input.forward() * forwardAcceleration)
                 .add(jumper.left().scale(input.strafe() * acceleration * config.strafeFactor()))
                 .add(0, input.vertical() * acceleration * config.verticalFactor(), 0);
 
         double drag = input.hasThrust() ? config.thrustDrag(medium) : config.idleDrag(medium);
-        Vec3 velocity = jumper.getDeltaMovement().scale(drag).add(thrust);
+        Vec3d velocity = host.velocity().scale(drag).add(thrust);
         double maxSpeed = config.maxSpeedPerTick();
         if (velocity.lengthSqr() > maxSpeed * maxSpeed) velocity = velocity.normalize().scale(maxSpeed);
-        if (!input.hasThrust() && velocity.lengthSqr() < REST_SPEED_SQR) velocity = Vec3.ZERO;
-        jumper.setDeltaMovement(velocity);
+        if (!input.hasThrust() && velocity.lengthSqr() < REST_SPEED_SQR) velocity = Vec3d.ZERO;
+        host.setVelocity(velocity);
     }
 
     private void drift() {
-        if (!jumper.energy().hasEnergy() && !jumper.onGround()) {
+        JumperHost host = jumper.host();
+        if (!jumper.energy().hasEnergy() && !host.onGround()) {
             fall();
             return;
         }
-        double drag = jumper.onGround() ? GROUND_FRICTION : ServerConfig.FLIGHT.idleDrag(jumper.medium());
-        Vec3 velocity = jumper.getDeltaMovement().scale(drag);
-        jumper.setDeltaMovement(velocity.lengthSqr() < REST_SPEED_SQR ? Vec3.ZERO : velocity);
+        double drag = host.onGround() ? GROUND_FRICTION : ServerConfig.FLIGHT.idleDrag(jumper.medium());
+        Vec3d velocity = host.velocity().scale(drag);
+        host.setVelocity(velocity.lengthSqr() < REST_SPEED_SQR ? Vec3d.ZERO : velocity);
     }
 
     private void fall() {
-        Vec3 velocity = jumper.getDeltaMovement();
+        JumperHost host = jumper.host();
+        Vec3d velocity = host.velocity();
         JumperMedium medium = jumper.medium();
         if (medium == JumperMedium.LAVA) {
             velocity = velocity.scale(LAVA_FALL_DRAG).add(0, -LAVA_GRAVITY, 0);
         } else if (medium == JumperMedium.WATER) {
             velocity = velocity.scale(WATER_FALL_DRAG).add(0, -WATER_GRAVITY, 0);
         } else {
-            double horizontalDrag = jumper.onGround() ? GROUND_FRICTION : FALL_DRAG;
-            velocity = new Vec3(velocity.x * horizontalDrag, velocity.y * FALL_DRAG - GRAVITY, velocity.z * horizontalDrag);
+            double horizontalDrag = host.onGround() ? GROUND_FRICTION : FALL_DRAG;
+            velocity = new Vec3d(velocity.x() * horizontalDrag, velocity.y() * FALL_DRAG - GRAVITY, velocity.z() * horizontalDrag);
         }
-        jumper.setDeltaMovement(velocity.x, Math.max(velocity.y, -MAX_FALL_SPEED), velocity.z);
+        host.setVelocity(velocity.withY(Math.max(velocity.y(), -MAX_FALL_SPEED)));
     }
 
-    private void moveWithSegments(Vec3 wanted) {
+    private void moveWithSegments(Vec3d wanted) {
+        JumperHost host = jumper.host();
         if (wanted.lengthSqr() < MIN_MOVE_SQR) {
-            jumper.move(MoverType.SELF, Vec3.ZERO);
+            host.moveBy(Vec3d.ZERO);
             return;
         }
-        Vec3 allowed = wanted;
+        // the main body collides on its own when moving; bow and stern are checked here
+        Vec3d allowed = wanted;
         for (double offset : new double[]{JumperGeometry.SEGMENT_OFFSET, -JumperGeometry.SEGMENT_OFFSET}) {
-            Vec3 collided = Entity.collideBoundingBox(jumper, allowed, jumper.segmentBox(offset), jumper.level(), List.of());
-            allowed = new Vec3(smallerMagnitude(allowed.x, collided.x), smallerMagnitude(allowed.y, collided.y),
-                    smallerMagnitude(allowed.z, collided.z));
+            Vec3d collided = host.collide(allowed, jumper.segmentBox(offset));
+            allowed = new Vec3d(smallerMagnitude(allowed.x(), collided.x()), smallerMagnitude(allowed.y(), collided.y()),
+                    smallerMagnitude(allowed.z(), collided.z()));
         }
-        Vec3 before = jumper.position();
-        jumper.move(MoverType.SELF, allowed);
-        Vec3 moved = jumper.position().subtract(before);
-        Vec3 velocity = jumper.getDeltaMovement();
-        jumper.setDeltaMovement(allowed.x != wanted.x ? 0 : velocity.x, allowed.y != wanted.y ? 0 : velocity.y,
-                allowed.z != wanted.z ? 0 : velocity.z);
+        Vec3d moved = host.moveBy(allowed);
+        Vec3d velocity = host.velocity();
+        host.setVelocity(new Vec3d(allowed.x() != wanted.x() ? 0 : velocity.x(), allowed.y() != wanted.y() ? 0 : velocity.y(),
+                allowed.z() != wanted.z() ? 0 : velocity.z()));
         detectImpact(wanted, moved);
     }
 
-    private void detectImpact(Vec3 wanted, Vec3 moved) {
-        double blockedX = isBlocked(wanted.x, moved.x) ? wanted.x : 0;
-        double blockedZ = isBlocked(wanted.z, moved.z) ? wanted.z : 0;
+    private void detectImpact(Vec3d wanted, Vec3d moved) {
+        double blockedX = isBlocked(wanted.x(), moved.x()) ? wanted.x() : 0;
+        double blockedZ = isBlocked(wanted.z(), moved.z()) ? wanted.z() : 0;
         double horizontalSpeed = Math.sqrt(blockedX * blockedX + blockedZ * blockedZ);
-        double fallSpeed = wanted.y < 0 && moved.y - wanted.y > BLOCKED_EPSILON ? -wanted.y : 0;
+        double fallSpeed = wanted.y() < 0 && moved.y() - wanted.y() > BLOCKED_EPSILON ? -wanted.y() : 0;
         if (JumperHull.impactFraction(horizontalSpeed, fallSpeed) <= 0) return;
-        if (jumper.level().isClientSide) {
-            ModNetwork.sendToServer(new JumperImpactPacket((float) horizontalSpeed, (float) fallSpeed));
+        if (jumper.host().isClientSide()) {
+            jumper.host().reportImpact((float) horizontalSpeed, (float) fallSpeed);
         } else {
             jumper.hull().onImpact((float) horizontalSpeed, (float) fallSpeed);
         }
@@ -161,11 +161,11 @@ public final class JumperFlight {
     }
 
     boolean probeGround() {
-        for (double offset : PuddleJumperEntity.segmentOffsets()) {
-            AABB segment = jumper.segmentBox(offset);
-            AABB probe = new AABB(segment.minX + GROUND_PROBE_INSET, segment.minY - GROUND_PROBE_DEPTH, segment.minZ + GROUND_PROBE_INSET,
-                    segment.maxX - GROUND_PROBE_INSET, segment.minY + GROUND_PROBE_OVERLAP, segment.maxZ - GROUND_PROBE_INSET);
-            if (!jumper.level().noCollision(jumper, probe)) return true;
+        for (double offset : Jumper.segmentOffsets()) {
+            Box segment = jumper.segmentBox(offset);
+            Box probe = new Box(segment.minX() + GROUND_PROBE_INSET, segment.minY() - GROUND_PROBE_DEPTH, segment.minZ() + GROUND_PROBE_INSET,
+                    segment.maxX() - GROUND_PROBE_INSET, segment.minY() + GROUND_PROBE_OVERLAP, segment.maxZ() - GROUND_PROBE_INSET);
+            if (!jumper.host().isFree(probe)) return true;
         }
         return false;
     }

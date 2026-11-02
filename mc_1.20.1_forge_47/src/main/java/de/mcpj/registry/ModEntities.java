@@ -2,7 +2,7 @@ package de.mcpj.registry;
 
 import de.mcpj.McpjMod;
 import de.mcpj.entity.drone.DroneEntity;
-import de.mcpj.entity.jumper.JumperGeometry;
+import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;

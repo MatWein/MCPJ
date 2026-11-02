@@ -1,18 +1,13 @@
 package de.mcpj.entity.jumper;
 
+import de.mcpj.core.math.Vec3d;
 import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3f;
 
 import java.util.List;
-
-import static de.mcpj.entity.jumper.PuddleJumperEntity.ARRIVALS;
-import static de.mcpj.entity.jumper.PuddleJumperEntity.ARRIVAL_VELOCITY;
 
 /**
  * Teleports through portals and stargates (e.g. Just Stargate Mod) as one unit: the passengers stay seated and
@@ -27,7 +22,7 @@ public final class JumperTravel {
     @Nullable private Departure pendingTeleport;
 
     /** State before a teleport: who was on board, how fast and in which direction the ship flew. */
-    record Departure(List<Entity> passengers, Vec3 velocity, float yaw) {}
+    record Departure(List<Entity> passengers, Vec3d velocity, float yaw) {}
 
     JumperTravel(PuddleJumperEntity jumper) {
         this.jumper = jumper;
@@ -39,7 +34,7 @@ public final class JumperTravel {
     }
 
     Departure depart() {
-        return new Departure(List.copyOf(jumper.getPassengers()), jumper.serverVelocity(), jumper.getYRot());
+        return new Departure(List.copyOf(jumper.getPassengers()), jumper.core().serverVelocity(), jumper.getYRot());
     }
 
     /** Called on the new jumper after a dimension change: bring the passengers over and keep flying. */
@@ -80,15 +75,6 @@ public final class JumperTravel {
     }
 
     private void continueFlight(Departure departure) {
-        Vec3 velocity = departure.velocity().yRot((departure.yaw() - jumper.getYRot()) * Mth.DEG_TO_RAD);
-        jumper.flight().arrive(velocity);
-        jumper.getEntityData().set(ARRIVAL_VELOCITY, velocity.toVector3f());
-        jumper.getEntityData().set(ARRIVALS, jumper.getEntityData().get(ARRIVALS) + 1);
-    }
-
-    /** Client: the server announced an arrival; the pilot's client takes over the speed. */
-    void onArrivalSynced() {
-        Vector3f velocity = jumper.getEntityData().get(ARRIVAL_VELOCITY);
-        jumper.flight().arrive(new Vec3(velocity));
+        jumper.core().continueAfterTeleport(departure.velocity(), departure.yaw());
     }
 }

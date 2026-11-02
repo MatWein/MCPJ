@@ -4,7 +4,7 @@ import de.mcpj.client.PilotContext;
 import de.mcpj.client.input.FireControl;
 import de.mcpj.client.targeting.TargetSelector;
 import de.mcpj.core.config.ClientConfig;
-import de.mcpj.entity.jumper.JumperEnergy;
+import de.mcpj.core.jumper.JumperEnergy;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import de.mcpj.core.util.Units;
 import net.minecraft.client.Minecraft;

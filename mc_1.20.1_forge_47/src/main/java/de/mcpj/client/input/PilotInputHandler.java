@@ -3,7 +3,7 @@ package de.mcpj.client.input;
 import de.mcpj.McpjMod;
 import de.mcpj.client.PilotContext;
 import de.mcpj.client.targeting.TargetSelector;
-import de.mcpj.entity.jumper.JumperAction;
+import de.mcpj.core.jumper.JumperAction;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import de.mcpj.network.JumperActionPacket;
 import de.mcpj.network.ModNetwork;

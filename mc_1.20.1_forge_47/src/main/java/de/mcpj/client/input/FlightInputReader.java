@@ -1,6 +1,6 @@
 package de.mcpj.client.input;
 
-import de.mcpj.entity.jumper.FlightInput;
+import de.mcpj.core.jumper.FlightInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 

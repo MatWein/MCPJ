@@ -1,8 +1,10 @@
 package de.mcpj.gametest;
 
 import de.mcpj.McpjMod;
-import de.mcpj.entity.jumper.JumperGeometry;
+import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
+import de.mcpj.core.math.BlockPosition;
+import de.mcpj.entity.jumper.Convert;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -43,7 +45,7 @@ public class JumperLightTests {
         PuddleJumperEntity jumper = spawnJumper(helper, 8, 2, 12, 0);
         jumper.setLightsOn(true);
         double startX = jumper.getX();
-        BlockPos[] first = new BlockPos[1];
+        BlockPosition[] first = new BlockPosition[1];
         helper.runAfterDelay(2, () -> {
             helper.assertTrue(jumper.lights().placedBlocks().size() == 2, "Expected 2 lights, got " + jumper.lights().placedBlocks().size());
             first[0] = jumper.lights().placedBlocks().get(0);
@@ -55,7 +57,7 @@ public class JumperLightTests {
         helper.runAfterDelay(6, () -> helper.assertTrue(jumper.lights().placedBlocks().contains(first[0]), "Light moved after a small movement"));
         helper.runAfterDelay(25, () -> {
             helper.assertTrue(!jumper.lights().placedBlocks().contains(first[0]), "Center light did not follow");
-            helper.assertTrue(helper.getLevel().getBlockState(first[0]).isAir(), "Old light not removed");
+            helper.assertTrue(helper.getLevel().getBlockState(Convert.toMc(first[0])).isAir(), "Old light not removed");
             helper.assertTrue(jumper.lights().placedBlocks().size() == 2, "Expected 2 lights again");
             helper.succeed();
         });

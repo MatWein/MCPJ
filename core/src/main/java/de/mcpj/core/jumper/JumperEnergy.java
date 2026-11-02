@@ -1,21 +1,15 @@
-package de.mcpj.entity.jumper;
+package de.mcpj.core.jumper;
 
-import de.mcpj.core.jumper.JumperMedium;
-import de.mcpj.block.ChargingPadBlockEntity;
 import de.mcpj.core.config.EnergyConfig;
 import de.mcpj.core.config.ServerConfig;
-import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.AABB;
+import de.mcpj.core.math.BlockPosition;
+import de.mcpj.core.math.Box;
+import de.mcpj.core.math.MathUtil;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static de.mcpj.entity.jumper.PuddleJumperEntity.CAPACITY;
-import static de.mcpj.entity.jumper.PuddleJumperEntity.ENERGY;
-import static de.mcpj.entity.jumper.PuddleJumperEntity.ENERGY_FLOW;
-
+/** Energy storage (Forge Energy units): drive, shield, cloak and lights drain it, landed ships charge from pads. */
 public final class JumperEnergy {
     private static final int CHARGE_INTERVAL = 5;
     private static final float FLOW_SMOOTHING = 0.1f;
@@ -24,21 +18,21 @@ public final class JumperEnergy {
     private static final String ENERGY_TAG = "Energy";
     private static final String CAPACITY_TAG = "Capacity";
 
-    private final PuddleJumperEntity jumper;
+    private final Jumper jumper;
     private boolean initialized;
     private int chargePerTick;
     private float smoothedFlow;
 
-    JumperEnergy(PuddleJumperEntity jumper) {
+    JumperEnergy(Jumper jumper) {
         this.jumper = jumper;
     }
 
     public int stored() {
-        return jumper.getEntityData().get(ENERGY);
+        return jumper.sync().storedEnergy();
     }
 
     public int capacity() {
-        return Math.max(1, jumper.getEntityData().get(CAPACITY));
+        return Math.max(1, jumper.sync().capacity());
     }
 
     public float fraction() {
@@ -51,12 +45,12 @@ public final class JumperEnergy {
 
     /** Smoothed net flow in FE/tick: positive = consumption, negative = charging. */
     public int flow() {
-        return jumper.getEntityData().get(ENERGY_FLOW);
+        return jumper.sync().energyFlow();
     }
 
     public void set(int energy) {
         initialized = true;
-        jumper.getEntityData().set(ENERGY, Mth.clamp(energy, 0, capacity()));
+        jumper.sync().setStoredEnergy(MathUtil.clamp(energy, 0, capacity()));
     }
 
     public boolean tryConsume(int amount) {
@@ -74,8 +68,8 @@ public final class JumperEnergy {
 
     void initialize() {
         int capacity = ServerConfig.ENERGY.capacity();
-        if (jumper.getEntityData().get(CAPACITY) != capacity) {
-            jumper.getEntityData().set(CAPACITY, capacity);
+        if (jumper.sync().capacity() != capacity) {
+            jumper.sync().setCapacity(capacity);
             if (stored() > capacity) set(capacity);
         }
         if (!initialized) set((int) Math.round(capacity * ServerConfig.ENERGY.startCharge()));
@@ -85,18 +79,18 @@ public final class JumperEnergy {
         int consumption = (int) Math.round(drivePower() + systemsPower());
         if (consumption > 0 && !drain(consumption)) jumper.systems().powerFailure();
 
-        if (!jumper.onGround()) chargePerTick = 0;
-        else if (jumper.tickCount % CHARGE_INTERVAL == 0) chargePerTick = chargeFromPads() / CHARGE_INTERVAL;
+        if (!jumper.host().onGround()) chargePerTick = 0;
+        else if (jumper.host().tickCount() % CHARGE_INTERVAL == 0) chargePerTick = chargeFromPads() / CHARGE_INTERVAL;
 
         smoothedFlow += ((consumption - chargePerTick) - smoothedFlow) * FLOW_SMOOTHING;
-        jumper.getEntityData().set(ENERGY_FLOW, Math.round(smoothedFlow));
+        jumper.sync().setEnergyFlow(Math.round(smoothedFlow));
     }
 
     private double drivePower() {
-        if (jumper.onGround() || !hasEnergy()) return 0;
+        if (jumper.host().onGround() || !hasEnergy()) return 0;
         EnergyConfig config = ServerConfig.ENERGY;
-        double speedShare = Mth.clamp(jumper.serverVelocity().length() / ServerConfig.FLIGHT.maxSpeedPerTick(), 0, 1);
-        double power = Mth.lerp(speedShare, config.hoverDrain(), config.thrustDrain());
+        double speedShare = MathUtil.clamp(jumper.serverVelocity().length() / ServerConfig.FLIGHT.maxSpeedPerTick(), 0, 1);
+        double power = MathUtil.lerp(speedShare, config.hoverDrain(), config.thrustDrain());
         return power * config.driveFactor(jumper.medium());
     }
 
@@ -115,38 +109,36 @@ public final class JumperEnergy {
         int room = capacity() - stored();
         float chargeFraction = fraction();
         int gained = 0;
-        for (BlockPos pos : blocksBelowHull()) {
-            if (jumper.level().getBlockEntity(pos) instanceof ChargingPadBlockEntity pad) {
-                gained += pad.supplyJumper(room - gained, CHARGE_INTERVAL, chargeFraction);
-            }
+        for (BlockPosition pos : blocksBelowHull()) {
+            gained += jumper.host().chargeFromPad(pos, room - gained, CHARGE_INTERVAL, chargeFraction);
         }
         if (gained > 0) set(stored() + gained);
         return gained;
     }
 
-    private Set<BlockPos> blocksBelowHull() {
-        Set<BlockPos> below = new HashSet<>();
-        int y = Mth.floor(jumper.getY() - PAD_PROBE_DEPTH);
-        for (double offset : PuddleJumperEntity.segmentOffsets()) {
-            AABB segment = jumper.segmentBox(offset);
-            for (int x = Mth.floor(segment.minX + PAD_PROBE_INSET); x <= Mth.floor(segment.maxX - PAD_PROBE_INSET); x++) {
-                for (int z = Mth.floor(segment.minZ + PAD_PROBE_INSET); z <= Mth.floor(segment.maxZ - PAD_PROBE_INSET); z++) {
-                    below.add(new BlockPos(x, y, z));
+    private Set<BlockPosition> blocksBelowHull() {
+        Set<BlockPosition> below = new HashSet<>();
+        int y = Jumper.floor(jumper.host().location().y() - PAD_PROBE_DEPTH);
+        for (double offset : Jumper.segmentOffsets()) {
+            Box segment = jumper.segmentBox(offset);
+            for (int x = Jumper.floor(segment.minX() + PAD_PROBE_INSET); x <= Jumper.floor(segment.maxX() - PAD_PROBE_INSET); x++) {
+                for (int z = Jumper.floor(segment.minZ() + PAD_PROBE_INSET); z <= Jumper.floor(segment.maxZ() - PAD_PROBE_INSET); z++) {
+                    below.add(new BlockPosition(x, y, z));
                 }
             }
         }
         return below;
     }
 
-    void load(CompoundTag tag) {
-        if (!tag.contains(ENERGY_TAG)) return;
-        jumper.getEntityData().set(CAPACITY, Math.max(1, tag.getInt(CAPACITY_TAG)));
-        set(tag.getInt(ENERGY_TAG));
+    public void load(SaveData data) {
+        if (!data.contains(ENERGY_TAG)) return;
+        jumper.sync().setCapacity(Math.max(1, data.getInt(CAPACITY_TAG)));
+        set(data.getInt(ENERGY_TAG));
     }
 
-    void save(CompoundTag tag) {
+    public void save(SaveData data) {
         if (!initialized) return;
-        tag.putInt(ENERGY_TAG, stored());
-        tag.putInt(CAPACITY_TAG, capacity());
+        data.putInt(ENERGY_TAG, stored());
+        data.putInt(CAPACITY_TAG, capacity());
     }
 }

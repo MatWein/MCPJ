@@ -2,8 +2,8 @@ package de.mcpj.gametest;
 
 import de.mcpj.McpjMod;
 import de.mcpj.core.config.ServerConfig;
-import de.mcpj.entity.jumper.JumperGeometry;
-import de.mcpj.entity.jumper.JumperHull;
+import de.mcpj.core.jumper.JumperGeometry;
+import de.mcpj.core.jumper.JumperHull;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;

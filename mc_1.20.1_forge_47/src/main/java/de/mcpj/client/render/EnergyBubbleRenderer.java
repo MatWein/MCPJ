@@ -3,7 +3,7 @@ package de.mcpj.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.mcpj.McpjMod;
-import de.mcpj.entity.jumper.JumperGeometry;
+import de.mcpj.core.jumper.JumperGeometry;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;

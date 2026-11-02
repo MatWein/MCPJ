@@ -10,7 +10,7 @@ import de.mcpj.client.render.PuddleJumperRenderer;
 import de.mcpj.client.sound.EngineSounds;
 import de.mcpj.client.sound.PilotSounds;
 import de.mcpj.client.targeting.TargetMarkers;
-import de.mcpj.entity.jumper.FlightInput;
+import de.mcpj.core.jumper.FlightInput;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import de.mcpj.network.PilotSoundPacket;
 import de.mcpj.registry.ModEntities;

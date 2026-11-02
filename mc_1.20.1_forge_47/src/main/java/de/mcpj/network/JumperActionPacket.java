@@ -1,6 +1,6 @@
 package de.mcpj.network;
 
-import de.mcpj.entity.jumper.JumperAction;
+import de.mcpj.core.jumper.JumperAction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -19,6 +19,6 @@ public record JumperActionPacket(JumperAction action, int targetId) {
     }
 
     public static void handle(JumperActionPacket packet, Supplier<NetworkEvent.Context> context) {
-        ModNetwork.handleFromPilot(context, (jumper, pilot) -> jumper.systems().perform(pilot, packet.action, packet.targetId));
+        ModNetwork.handleFromPilot(context, (jumper, pilot) -> jumper.performPilotAction(pilot, packet.action, packet.targetId));
     }
 }

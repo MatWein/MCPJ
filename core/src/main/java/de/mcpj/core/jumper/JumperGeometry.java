@@ -1,4 +1,4 @@
-package de.mcpj.entity.jumper;
+package de.mcpj.core.jumper;
 
 public final class JumperGeometry {
     public static final float RENDER_SCALE = 1.3f;
