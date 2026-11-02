@@ -25,6 +25,7 @@ run
 forge*changelog.txt
 run-data
 run-server
+mc_server_kaffee_hart
 
 # python
 __pycache__

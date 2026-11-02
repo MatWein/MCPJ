@@ -74,6 +74,10 @@ minecraft {
             // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
             property 'forge.logging.console.level', 'debug'
 
+            // Mixin-Refmaps fremder Mods (JSG, Mekanism, ...) auf Dev-Namen umschreiben
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+
             mods {
                 "${mod_id}" {
                     source sourceSets.main
@@ -126,6 +130,11 @@ repositories {
     // flatDir {
     //     dir 'libs'
     // }
+
+    // Mods des Testservers "Kaffee Hart" (JSG, Mekanism, CC:Tweaked, ...) – werden für den Dev-Client deobfuskiert
+    flatDir {
+        dir 'mc_server_kaffee_hart/mods'
+    }
 }
 
 dependencies {
@@ -146,6 +155,14 @@ dependencies {
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
     // The group id is ignored when searching -- in this case, it is "blank"
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
+
+    // Alle Mod-JARs aus mc_server_kaffee_hart/mods auch im Dev-Client laden (gleiche Mods wie der Server)
+    fileTree(dir: 'mc_server_kaffee_hart/mods', include: '*.jar')
+            .filter { !it.name.startsWith(mod_id) }
+            .each {
+                def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
+                if (m.matches()) runtimeOnly fg.deobf("blank:${m.group(1)}:${m.group(2)}")
+            }
 
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
