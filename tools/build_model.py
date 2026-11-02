@@ -5,6 +5,7 @@ Output (src/main/resources/assets/puddlejumper/):
   models/entity/puddle_jumper.obj   groups: hull, pod_left/right (+ _glow nozzles, _ports drone ports)
   models/entity/drone.obj
   textures/entity/puddle_jumper.png (atlas)
+  textures/entity/puddle_jumper_n.png (LabPBR normal map, used by shader packs via Oculus/Iris)
   textures/entity/drone.png
   textures/item/puddle_jumper.png   (rendered item icon)
   textures/entity/shield.png        (tileable caustics pattern for shield and cloak bubble)
@@ -40,6 +41,7 @@ REG_PLUME = (768, 1536, 1024, 2048)   # ion plume (u = across, v = length), rend
 # drive pods (model units), must match JumperGeometry.POD_* in Java
 POD_X, POD_Y = 4.95, 4.3
 POD_REAR_Z, POD_FRONT_Z = -12.2, 1.0
+POD_GROOVES = (3.4, 6.6, 9.4)        # groove positions behind the rear end
 
 
 
@@ -126,10 +128,14 @@ def add_box(mesh, group, lo, hi, reg, tile=4.0):
 
 # ---------------------------------------------------------------- hull
 HULL_REAR_Z, HULL_FRONT_Z = -14.45, 14.45
-HULL_HALF_WIDTH, ROOF_Y = 4.77, 7.3
+HULL_HALF_WIDTH, ROOF_Y = 4.9, 7.3      # half width including the shoulder ledge
 # cross-section, right half from the keel to the roof spine (x, y); mirrored for the left half
-HULL_PROFILE = [(0.0, 0.0), (3.3, 0.0), (4.6, 1.2), (4.77, 1.6), (4.77, 4.4), (3.9, 5.7),
-                (2.2, 6.7), (1.3, 6.8), (1.2, 7.3), (0.0, 7.3)]
+# with a recessed side channel (y 2.05 .. 4.15) for the strake plates and a ledge along the shoulder
+HULL_PROFILE = [(0.0, 0.0), (3.3, 0.0), (4.6, 1.2), (4.77, 1.6), (4.77, 1.95), (4.64, 2.05), (4.64, 4.15),
+                (4.9, 4.25), (4.9, 4.5), (4.77, 4.6), (3.9, 5.7), (2.2, 6.7), (1.3, 6.8), (1.2, 7.3), (0.0, 7.3)]
+SIDE_CHANNEL = (4.64, 2.05, 4.15)       # x, y bottom, y top of the recessed channel
+STRAKE_STEPS = [(-9.6, -4.0, 3.6), (-4.0, 4.5, 3.25), (4.5, 11.0, 2.9)]   # (z0, z1, top y) of the raised plates
+STRAKE_BOTTOM_Y, STRAKE_THICKNESS = 2.2, 0.1
 # top line along the length (z, y): flat roof, then the windscreen sloping down to the nose with a small ledge
 TOP_LINE = [(HULL_REAR_Z, 7.3), (3.6, 7.3), (5.6, 5.2), (9.6, 2.5), (10.6, 2.45), (HULL_FRONT_Z, 0.0)]
 # bottom line (z, y): flat keel, then the cargo hatch rising to the stern
@@ -230,6 +236,40 @@ def add_hull(mesh):
         mesh.tri('hull', [ring[(i + 1) % count], ring[i], center], [rear] * 3)
 
 
+def add_box_uv(mesh, group, lo, hi, uv_of, skip=()):
+    """Axis-aligned box with outward faces; uv_of(point, normal) gives the UV per corner.
+    skip: face names ('-x', '+x', '-y', '+y', '-z', '+z') to leave out (hidden faces)."""
+    x0, y0, z0 = lo
+    x1, y1, z1 = hi
+    P = lambda x, y, z: np.array([x, y, z], float)
+    faces = {
+        '+y': [P(x0, y1, z0), P(x0, y1, z1), P(x1, y1, z1), P(x1, y1, z0)],
+        '-y': [P(x0, y0, z0), P(x1, y0, z0), P(x1, y0, z1), P(x0, y0, z1)],
+        '+z': [P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)],
+        '-z': [P(x1, y0, z0), P(x0, y0, z0), P(x0, y1, z0), P(x1, y1, z0)],
+        '+x': [P(x1, y0, z1), P(x1, y0, z0), P(x1, y1, z0), P(x1, y1, z1)],
+        '-x': [P(x0, y0, z0), P(x0, y0, z1), P(x0, y1, z1), P(x0, y1, z0)],
+    }
+    for name, q in faces.items():
+        if name in skip:
+            continue
+        n = np.cross(q[1] - q[0], q[2] - q[0])
+        n /= np.linalg.norm(n)
+        mesh.quad(group, q, [uv_of(p, n) for p in q])
+
+
+def add_strakes(mesh):
+    """Raised, stepped plates in the side channel (the Ancient-style strakes)."""
+    x_in = SIDE_CHANNEL[0] - 0.05
+    x_out = SIDE_CHANNEL[0] + STRAKE_THICKNESS
+    for z0, z1, top in STRAKE_STEPS:
+        for side in (1, -1):
+            lo, hi = sorted([side * x_in, side * x_out])
+            inner = '-x' if side > 0 else '+x'
+            add_box_uv(mesh, 'hull', (lo, STRAKE_BOTTOM_Y, z0), (hi, top, z1),
+                       lambda p, n: hull_uv(p, n, 0), skip=(inner,))
+
+
 # ---------------------------------------------------------------- drive pods
 def pod_profile():
     """Cross-section (x, y) relative to the pod axis; the pod is narrow and tall."""
@@ -252,7 +292,12 @@ def add_pod(mesh, side):
     cx, cy = side * POD_X, POD_Y
     z_rear, z_front = POD_REAR_Z, POD_FRONT_Z
     # rings: (z, scale), rounded at the front
-    rings = [(z_rear, 1.0), (z_rear + 0.35, 1.04), (z_front - 1.4, 1.04), (z_front - 0.55, 0.9), (z_front, 0.62)]
+    # rings (z, scale): rear collar, three recessed grooves, a bead behind the rounded nose
+    rings = [(z_rear, 1.1), (z_rear + 0.6, 1.1), (z_rear + 0.6, 1.04)]
+    for g in POD_GROOVES:
+        rings += [(z_rear + g, 1.04), (z_rear + g, 0.97), (z_rear + g + 0.2, 0.97), (z_rear + g + 0.2, 1.04)]
+    rings += [(z_front - 1.6, 1.04), (z_front - 1.6, 1.09), (z_front - 1.25, 1.09), (z_front - 1.25, 1.02),
+              (z_front - 0.55, 0.9), (z_front, 0.62)]
     perim = [0.0]
     for i in range(nprof):
         a, b = np.array(prof[i]), np.array(prof[(i + 1) % nprof])
@@ -271,9 +316,15 @@ def add_pod(mesh, side):
             t0, t1 = (rings[r][0] - z_rear) / L, (rings[r + 1][0] - z_rear) / L
             uv = [region_uv(REG_POD, t0, s0), region_uv(REG_POD, t0, s1), region_uv(REG_POD, t1, s1), region_uv(REG_POD, t1, s0)]
             n = np.cross(q[1] - q[0], q[2] - q[0])
-            out = (q[0] + q[2]) / 2 - np.array([cx, cy, (q[0][2] + q[2][2]) / 2])
-            if n @ out < 0:
-                q, uv = q[::-1], uv[::-1]
+            if rings[r][0] == rings[r + 1][0]:
+                # step face between two rings at the same z: faces forward when the pod steps in
+                facing = 1 if rings[r + 1][1] < rings[r][1] else -1
+                if n[2] * facing < 0:
+                    q, uv = q[::-1], uv[::-1]
+            else:
+                out = (q[0] + q[2]) / 2 - np.array([cx, cy, (q[0][2] + q[2][2]) / 2])
+                if n @ out < 0:
+                    q, uv = q[::-1], uv[::-1]
             mesh.quad(g, q, uv)
     # nose cap (flat, slightly domed)
     tip = np.array([cx, cy, z_front + 0.12])
@@ -312,6 +363,14 @@ def add_pod(mesh, side):
             q = q[::-1]
         uvs = [region_uv(REG_PORT, 0.05, 0.95), region_uv(REG_PORT, 0.95, 0.95), region_uv(REG_PORT, 0.95, 0.05), region_uv(REG_PORT, 0.05, 0.05)]
         mesh.quad(gp, q, uvs)
+    # cooling fins on the outer side, over the grille bands of the texture
+    x_out = cx + side * w * 1.04
+    fin_uv = lambda p, n: region_uv(REG_OLIVE, 0.1, 0.05)
+    for t0, t1 in ((0.08, 0.22), (0.62, 0.80)):
+        for zf in np.linspace(z_rear + L * t0 + 0.1, z_rear + L * t1 - 0.1, 5):
+            lo, hi = sorted([x_out - side * 0.05, x_out + side * 0.12])
+            inner = '-x' if side > 0 else '+x'
+            add_box_uv(mesh, g, (lo, cy - 0.55, zf - 0.06), (hi, cy + 0.55, zf + 0.06), fin_uv, skip=(inner,))
     # boom (olive like the hull), visible when extended
     for zc in (z_rear + 2.5, z_front - 3.0):
         x_a, x_b = sorted([cx - side * 0.8, cx - side * 2.4])
@@ -411,8 +470,12 @@ def olive_from_luma(L, rng):
     k_light = np.clip(t / 2.5, 0, 1)[..., None]
     col = base + (dark - base) * k_dark + (light - base) * k_light
     # engraving: edges lit top-left, shaded bottom-right
-    emb = (shift(L, 1, 1) - shift(L, -1, -1))
-    col += np.clip(emb, -60, 60)[..., None] * 0.35
+    emb = (shift(L, 1, 1) - shift(L, -1, -1)) + 0.5 * (shift(L, 2, 2) - shift(L, -2, -2))
+    col += np.clip(emb, -80, 80)[..., None] * 0.4
+    # soft shading next to grooves and lines (baked ambient occlusion)
+    groove = Image.fromarray((np.clip((100 - L) / 50, 0, 1) * 255).astype(np.uint8))
+    ao = np.asarray(groove.filter(ImageFilter.GaussianBlur(4)), np.float32) / 255
+    col *= (1 - 0.35 * ao)[..., None]
     # paint mottling and fine grain
     col *= (1 + 0.10 * smooth_noise(rng, h, w, 48))[..., None]
     col += rng.normal(0, 3.0, (h, w, 1))
@@ -482,9 +545,9 @@ def hull_texture(rng):
     L[(z > 11.2) & near(np.abs(x), 1.6, 1.5 * px)] = LINE
     allowed = np.array([[half_width_at(piecewise(TOP_LINE, zz)) * piecewise(WIDTH_LINE, zz)]
                         for zz in z[:, 0]], np.float32)
-    shape = (np.abs(x) / 3.0) ** 3 + (np.abs(z - 7.4) / 1.8) ** 3
-    window = (shape < 1) & (np.abs(x) < allowed - 0.3)
-    glass = window & (shape < 0.8) & (np.abs(x) < allowed - 0.5)
+    shape = (np.abs(x) / 4.1) ** 4 + (np.abs(z - 6.9) / 2.6) ** 4
+    window = (shape < 1) & (np.abs(x) < allowed - 0.25)
+    glass = window & (shape < 0.72) & (np.abs(x) < allowed - 0.55)
 
     # cargo hatch: x along u, z up the slope along v
     x0, y0, x1, y1, u, v = coords(REG_REAR)
@@ -499,6 +562,10 @@ def hull_texture(rng):
     L[frame & near(x, 0.0, 1.5 * px)] = LINE
 
     arr = olive_from_luma(luma + rng.normal(0, 1.5, luma.shape), rng)
+    height = luma.copy()
+    fx0, fy0, fx1, fy1 = REG_FRONT
+    height[fy0:fy1, fx0:fx1][window] = 150
+    height[fy0:fy1, fx0:fx1][glass] = 90
 
     # windscreen glass with copper frame
     fx0, fy0, fx1, fy1 = REG_FRONT
@@ -506,21 +573,23 @@ def hull_texture(rng):
     copper = np.array([140, 84, 46], np.float32) * (1 + 0.15 * smooth_noise(rng, fy1 - fy0, fx1 - fx0, 6))[..., None]
     ring = window & ~glass
     sub[ring] = copper[ring]
-    sub[ring & (shape > 0.92)] *= 0.7
+    sub[ring & (shape > 0.9)] *= 0.7
     zz = WINDSCREEN_TOP_Z + np.mgrid[0:fy1 - fy0, 0:fx1 - fx0][0] / (fy1 - fy0) * (HULL_FRONT_Z - WINDSCREEN_TOP_Z)
     xx = HULL_HALF_WIDTH - np.mgrid[0:fy1 - fy0, 0:fx1 - fx0][1] / (fx1 - fx0) * 2 * HULL_HALF_WIDTH
-    r = np.sqrt((xx / 2.7) ** 2 + ((zz - 7.0) / 1.6) ** 2)
+    r = np.sqrt((xx / 3.6) ** 2 + ((zz - 6.4) / 2.2) ** 2)
     shine = np.stack([30 + 70 * np.clip(1 - r, 0, 1) ** 2] * 3, axis=-1) * np.array([0.95, 0.98, 1.05])
     sub[glass] = shine[glass]
-    return arr
+    return arr, height
 
 
 def build_texture():
     rng = np.random.default_rng(42)
-    arr = hull_texture(np.random.default_rng(1)).astype(np.float32)
+    arr, hull_height = hull_texture(np.random.default_rng(1))
 
     atlas = np.zeros((TH, TW, 3), dtype=np.float32)
     atlas[:1024] = arr
+    height = np.full((TH, TW), 128.0, np.float32)     # for the normal map; 128 = flat
+    height[:1024] = hull_height
 
     def region(reg):
         x0, y0, x1, y1 = reg
@@ -538,6 +607,7 @@ def build_texture():
     pod = olive_from_luma(luma, rng)
     pod[:, :8] = 34                                        # dark rear plate (nozzles)
     atlas[y0:y1, x0:x1] = pod
+    height[y0:y1, x0:x1] = luma
 
     # glow (hull lights, display): white to cyan, radial
     x0, y0, x1, y1, h, w, yy, xx = region(REG_GLOW)
@@ -566,6 +636,7 @@ def build_texture():
     steps = (np.abs(xx - w * 0.5 - 40 * np.sign(np.sin(yy / h * math.pi * 6))) < 2)
     luma[steps] = 60
     atlas[y0:y1, x0:x1] = olive_from_luma(luma + rng.normal(0, 4, (h, w)), rng)
+    height[y0:y1, x0:x1] = luma
 
     # ion plume: white-blue core at the nozzle, fading softly (additive: black = invisible)
     x0, y0, x1, y1, h, w, yy, xx = region(REG_PLUME)
@@ -576,13 +647,29 @@ def build_texture():
     k = across * along * streak
     atlas[y0:y1, x0:x1] = np.stack([(90 + 150 * k) * k, (150 + 105 * k) * k, 255 * k], axis=-1)
 
-    return Image.fromarray(np.clip(atlas, 0, 255).astype(np.uint8), 'RGB')
+    return Image.fromarray(np.clip(atlas, 0, 255).astype(np.uint8), 'RGB'), height
+
+
+def normal_map(height, strength=1 / 30):
+    """LabPBR normal map from a height field: RG = normal (DirectX, green down), B = ambient occlusion,
+    A = height (kept at 1 so shader packs do not apply parallax displacement)."""
+    h = np.asarray(Image.fromarray(np.clip(height, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8)),
+                   np.float32)
+    gx = (np.roll(h, -1, axis=1) - np.roll(h, 1, axis=1)) / 2
+    gy = (np.roll(h, -1, axis=0) - np.roll(h, 1, axis=0)) / 2
+    n = np.stack([-gx * strength, -gy * strength, np.ones_like(h)], axis=-1)
+    n /= np.linalg.norm(n, axis=-1, keepdims=True)
+    groove = Image.fromarray((np.clip((100 - height) / 50, 0, 1) * 255).astype(np.uint8))
+    ao = 1 - 0.5 * np.asarray(groove.filter(ImageFilter.GaussianBlur(3)), np.float32) / 255
+    rgba = np.stack([n[..., 0] * 0.5 + 0.5, n[..., 1] * 0.5 + 0.5, ao, np.ones_like(ao)], axis=-1)
+    return Image.fromarray(np.clip(rgba * 255, 0, 255).astype(np.uint8), 'RGBA')
 
 
 # ---------------------------------------------------------------- main model
 def build_jumper():
     mesh = Mesh()
     add_hull(mesh)
+    add_strakes(mesh)
     add_pod(mesh, +1)
     add_pod(mesh, -1)
     return mesh
@@ -633,7 +720,9 @@ def shield_texture():
 def main():
     for d in ('models/entity', 'textures/entity', 'textures/item'):
         os.makedirs(os.path.join(OUT, d), exist_ok=True)
-    build_texture().save(os.path.join(OUT, 'textures', 'entity', 'puddle_jumper.png'))
+    atlas, height = build_texture()
+    atlas.save(os.path.join(OUT, 'textures', 'entity', 'puddle_jumper.png'))
+    normal_map(height).save(os.path.join(OUT, 'textures', 'entity', 'puddle_jumper_n.png'))
     build_jumper().write(os.path.join(OUT, 'models', 'entity', 'puddle_jumper.obj'))
     build_drone().write(os.path.join(OUT, 'models', 'entity', 'drone.obj'))
     drone_texture().save(os.path.join(OUT, 'textures', 'entity', 'drone.png'))
