@@ -4,8 +4,6 @@ import de.matthias.puddlejumper.config.ServerConfig;
 import de.matthias.puddlejumper.entity.drone.DroneEntity;
 import de.matthias.puddlejumper.network.JumperActionPacket;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
@@ -59,8 +57,7 @@ public final class JumperWeapons {
         drone.setPos(spawn);
         drone.setDeltaMovement(velocity);
         jumper.level().addFreshEntity(drone);
-        jumper.level().playSound(null, spawn.x, spawn.y, spawn.z, SoundEvents.FIRECHARGE_USE, SoundSource.NEUTRAL, 0.8f, 1.8f);
-        jumper.level().playSound(null, spawn.x, spawn.y, spawn.z, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.NEUTRAL, 1.5f, 0.6f);
+        JumperSounds.droneLaunched(jumper);
     }
 
     @Nullable

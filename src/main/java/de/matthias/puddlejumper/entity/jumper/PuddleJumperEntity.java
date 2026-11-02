@@ -1,10 +1,13 @@
 package de.matthias.puddlejumper.entity.jumper;
 
 import de.matthias.puddlejumper.entity.drone.DroneEntity;
+import de.matthias.puddlejumper.network.ModNetwork;
+import de.matthias.puddlejumper.network.PilotSoundPacket;
 import de.matthias.puddlejumper.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializer;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -499,9 +502,13 @@ public class PuddleJumperEntity extends Entity implements HasCustomInventoryScre
         super.remove(reason);
     }
 
+    /** Everyone else hears ship sounds at the ship; the pilot hears them in the cockpit (see PilotSoundPacket). */
     @Override
     public void playSound(SoundEvent sound, float volume, float pitch) {
-        if (!isSilent()) level().playSound(null, getX(), getY(), getZ(), sound, getSoundSource(), volume, pitch);
+        if (isSilent()) return;
+        ServerPlayer pilot = getControllingPassenger() instanceof ServerPlayer player ? player : null;
+        level().playSound(pilot, getX(), getY(), getZ(), sound, getSoundSource(), volume, pitch);
+        if (pilot != null) ModNetwork.sendToPlayer(pilot, new PilotSoundPacket(sound, volume, pitch));
     }
 
     @Override

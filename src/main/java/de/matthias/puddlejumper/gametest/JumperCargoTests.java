@@ -43,8 +43,10 @@ public class JumperCargoTests {
     @GameTest(template = PLATFORM, timeoutTicks = 60)
     public static void picksUpNearbyItems(GameTestHelper helper) {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
-        Vec3 beside = helper.absoluteVec(new Vec3(14.5, 2, 12));
-        ItemEntity item = new ItemEntity(helper.getLevel(), beside.x, beside.y, beside.z, new ItemStack(Items.EMERALD, 5));
+        // hull edge at x 13.43 (half width 1.43), pickup range 1 block: half a block beside the hull, without the
+        // random spawn velocity of item entities so the item cannot drift out of range
+        Vec3 beside = helper.absoluteVec(new Vec3(13.9, 2, 12));
+        ItemEntity item = new ItemEntity(helper.getLevel(), beside.x, beside.y, beside.z, new ItemStack(Items.EMERALD, 5), 0, 0, 0);
         helper.getLevel().addFreshEntity(item);
         helper.succeedWhen(() -> {
             helper.assertTrue(item.isRemoved(), "Item was not picked up");

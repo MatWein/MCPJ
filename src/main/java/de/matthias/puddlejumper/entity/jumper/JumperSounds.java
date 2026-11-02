@@ -22,16 +22,18 @@ final class JumperSounds {
         jumper.playSound(SoundEvents.ANVIL_LAND, 0.25f, 1.6f);
     }
 
+    /** Conduit: a shimmering, watery energy hum that matches the bubble's water look. */
     static void shieldToggled(PuddleJumperEntity jumper, boolean on) {
-        jumper.playSound(on ? SoundEvents.BEACON_POWER_SELECT : SoundEvents.BEACON_DEACTIVATE, 1.0f, on ? 1.4f : 1.8f);
+        jumper.playSound(on ? SoundEvents.CONDUIT_ACTIVATE : SoundEvents.CONDUIT_DEACTIVATE, 1.0f, on ? 1.2f : 1.4f);
     }
 
     static void shieldCollapsed(PuddleJumperEntity jumper) {
         jumper.playSound(SoundEvents.BEACON_DEACTIVATE, 1.2f, 0.8f);
     }
 
+    /** Illusioner vanishing into its mirror images: a magical whoosh, higher when vanishing, lower when reappearing. */
     static void cloakToggled(PuddleJumperEntity jumper, boolean on) {
-        jumper.playSound(on ? SoundEvents.BEACON_ACTIVATE : SoundEvents.BEACON_DEACTIVATE, 1.0f, 1.6f);
+        jumper.playSound(SoundEvents.ILLUSIONER_MIRROR_MOVE, 1.0f, on ? 1.2f : 0.8f);
     }
 
     static void lightsToggled(PuddleJumperEntity jumper, boolean on) {
@@ -40,6 +42,11 @@ final class JumperSounds {
 
     static void podsToggled(PuddleJumperEntity jumper, boolean out) {
         jumper.playSound(out ? SoundEvents.IRON_DOOR_OPEN : SoundEvents.IRON_DOOR_CLOSE, 0.8f, 0.7f);
+    }
+
+    static void droneLaunched(PuddleJumperEntity jumper) {
+        jumper.playSound(SoundEvents.FIRECHARGE_USE, 0.8f, 1.8f);
+        jumper.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.5f, 0.6f);
     }
 
     static void powerFailure(PuddleJumperEntity jumper) {

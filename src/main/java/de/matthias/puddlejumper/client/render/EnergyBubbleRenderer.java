@@ -25,8 +25,8 @@ final class EnergyBubbleRenderer {
     private static final float FRESNEL_BASE = 0.2f;
     private static final float FRESNEL_RIM = 0.8f;
     private static final float MIN_VIEW_DISTANCE = 1e-4f;
-    private static final float TINT_RED = 0.6f;
-    private static final float TINT_GREEN = 0.85f;
+    private static final float TINT_RED = 0.5f;
+    private static final float TINT_GREEN = 0.78f;
     private static final float WOBBLE_SPEED_A = 0.07f;
     private static final float WOBBLE_SPEED_B = -0.05f;
     private static final float WOBBLE_WEIGHT_B = 0.6f;

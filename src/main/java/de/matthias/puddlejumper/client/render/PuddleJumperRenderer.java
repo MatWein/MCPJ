@@ -141,6 +141,6 @@ public class PuddleJumperRenderer extends EntityRenderer<PuddleJumperEntity> {
         float shieldIntensity = shield * (SHIELD_BASE_INTENSITY + SHIELD_FLASH_INTENSITY * animation.shieldFlash(partialTick));
         float cloakIntensity = cloak * (1 - shield) * (ownShip ? CLOAK_INTENSITY_OWN : CLOAK_INTENSITY_OTHERS);
         float intensity = shieldIntensity + cloakIntensity;
-        if (intensity > MIN_BUBBLE_INTENSITY) EnergyBubbleRenderer.render(poseStack, buffers, intensity, SHIELD_WOBBLE * shield, time);
+        if (intensity > MIN_BUBBLE_INTENSITY) DeferredBubbles.add(poseStack, intensity, SHIELD_WOBBLE * shield, time);
     }
 }

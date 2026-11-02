@@ -8,9 +8,11 @@ import de.matthias.puddlejumper.client.render.DroneRenderer;
 import de.matthias.puddlejumper.client.render.ModelCache;
 import de.matthias.puddlejumper.client.render.PuddleJumperRenderer;
 import de.matthias.puddlejumper.client.sound.EngineSounds;
+import de.matthias.puddlejumper.client.sound.PilotSounds;
 import de.matthias.puddlejumper.client.targeting.TargetMarkers;
 import de.matthias.puddlejumper.entity.jumper.FlightInput;
 import de.matthias.puddlejumper.entity.jumper.PuddleJumperEntity;
+import de.matthias.puddlejumper.network.PilotSoundPacket;
 import de.matthias.puddlejumper.registry.ModEntities;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -30,6 +32,7 @@ public final class ClientSetup {
     public static void onClientSetup(FMLClientSetupEvent event) {
         FlightInput.source = FlightInputReader::read;
         PuddleJumperEntity.clientTicker = EngineSounds::tick;
+        PilotSoundPacket.player = PilotSounds::play;
     }
 
     @SubscribeEvent
