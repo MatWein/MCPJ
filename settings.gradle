@@ -28,3 +28,4 @@ include 'mc_1.20.1_fabric'
 // Minecraft 26.3 (unobfuscated, Java 25): vanilla code shared by both loaders, then one module per loader
 include 'mc_26.3_common'
 include 'mc_26.3_fabric'
+include 'mc_26.3_neoforge'

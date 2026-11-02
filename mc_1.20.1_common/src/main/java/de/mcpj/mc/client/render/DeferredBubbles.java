@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
@@ -55,7 +55,7 @@ public final class DeferredBubbles {
      * world rendering still has on RenderSystem's model-view stack at this point (it is taken out once), or null if
      * it was already removed (depends on where the loader hooks in).
      */
-    public static void renderPending(@Nullable PoseStack.Pose cameraPose) {
+    public static void renderPending(PoseStack.@Nullable Pose cameraPose) {
         if (PENDING.isEmpty()) return;
         MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         Matrix4f undoCamera = cameraPose != null ? new Matrix4f(cameraPose.pose()).invert() : new Matrix4f();

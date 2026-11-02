@@ -60,7 +60,7 @@ public final class JumperFlightTestCases {
             double sternOffset = parts.get(1).getX() - jumper.getX();
             helper.assertTrue(Math.abs(bowOffset + JumperGeometry.SEGMENT_OFFSET) < 0.01, "Bow segment misplaced: " + bowOffset);
             helper.assertTrue(Math.abs(sternOffset - JumperGeometry.SEGMENT_OFFSET) < 0.01, "Stern segment misplaced: " + sternOffset);
-            helper.assertTrue(jumper.onGround(), "Jumper on the floor should count as landed (at " + helper.relativeVec(jumper.position()) + ", below: " + helper.getBlockState(net.minecraft.core.BlockPos.containing(helper.relativeVec(jumper.position())).below()) + ")");
+            helper.assertTrue(jumper.onGround(), "Jumper on the floor should count as landed");
             helper.assertTrue(!jumper.isPodsOut(), "Pods should be retracted when landed");
             helper.succeed();
         });

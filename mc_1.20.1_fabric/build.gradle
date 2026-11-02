@@ -12,6 +12,8 @@ base {
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 dependencies {
+    // @Nullable (type annotations, as Minecraft 26.x uses them); compile time only
+    compileOnly "org.jspecify:jspecify:${jspecify_version}"
     minecraft "com.mojang:minecraft:${minecraft_version}"
     // Mojang's names, as in the Forge module
     mappings loom.officialMojangMappings()

@@ -613,7 +613,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
     }
 
     /** The loader calls this when the ship was added to a level. */
-    protected void onAddedToLevel() {
+    protected void onJoinedLevel() {
         core.onAdded();
     }
 

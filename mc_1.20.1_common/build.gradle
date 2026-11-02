@@ -14,6 +14,8 @@ loom {
 }
 
 dependencies {
+    // @Nullable (type annotations, as Minecraft 26.x uses them); compile time only
+    compileOnly "org.jspecify:jspecify:${jspecify_version}"
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
     implementation project(':core')
@@ -25,4 +27,11 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 17
+}
+
+// Minecraft code that compiles unchanged against every supported version (mc_core_common) is part of this module;
+// the loader modules take it along with the rest of this source set
+sourceSets.main {
+    java.srcDir(rootProject.file('mc_core_common/src/main/java'))
+    resources.srcDir(rootProject.file('mc_core_common/src/main/resources'))
 }

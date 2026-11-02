@@ -14,7 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.entity.PartEntity;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A hull segment (bow or stern) as a Forge part entity. */
 public class PuddleJumperPart extends PartEntity<PuddleJumperEntity> implements JumperSegment {

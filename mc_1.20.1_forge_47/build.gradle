@@ -70,6 +70,8 @@ configurations {
 obfuscation.createRemappingConfiguration(configurations.clientMods)
 
 dependencies {
+    // @Nullable (type annotations, as Minecraft 26.x uses them); compile time only
+    compileOnly "org.jspecify:jspecify:${jspecify_version}"
     // the game logic; its classes are packed into this mod's jar (see jar task)
     implementation project(':core')
 

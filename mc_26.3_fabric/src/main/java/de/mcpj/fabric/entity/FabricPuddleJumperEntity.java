@@ -44,6 +44,6 @@ public class FabricPuddleJumperEntity extends PuddleJumperEntity {
 
     /** Fabric calls this when the ship is loaded into a level (see McpjFabric). */
     public void loaded() {
-        onAddedToLevel();
+        onJoinedLevel();
     }
 }

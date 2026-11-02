@@ -13,7 +13,7 @@
     "main": ["de.mcpj.fabric.McpjFabric"],
     "client": ["de.mcpj.fabric.client.McpjFabricClient"]
   },
-  "mixins": ["mcpj.mixins.json"],
+  "mixins": ["mcpj.mixins.json", "mcpj.fabric.mixins.json"],
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
     "minecraft": "~${minecraft_version}",
