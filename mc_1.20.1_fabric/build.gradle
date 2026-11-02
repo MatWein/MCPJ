@@ -1,0 +1,61 @@
+plugins {
+    id 'fabric-loom'
+}
+
+version = "${mod_version}+mc${minecraft_version}-fabric"
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    // Mojang's names, as in the Forge module
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+
+    // the game logic; its classes are packed into this mod's jar (see jar task)
+    implementation project(':core')
+}
+
+loom {
+    runs {
+        client {
+            runDir 'run'
+        }
+        server {
+            runDir 'run-server'
+            programArgs 'nogui'
+        }
+    }
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+            // the core is part of the mod (its classes and shared assets), not a separate library
+            sourceSet 'main', project(':core')
+        }
+    }
+}
+
+processResources {
+    var replaceProperties = [mod_id: mod_id, mod_name: mod_name, mod_version: mod_version, mod_authors: mod_authors,
+                             mod_description: mod_description, minecraft_version: minecraft_version,
+                             fabric_loader_version: fabric_loader_version]
+    inputs.properties replaceProperties
+    filesMatching('fabric.mod.json') {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+jar {
+    from(project(':core').sourceSets.main.output)
+}

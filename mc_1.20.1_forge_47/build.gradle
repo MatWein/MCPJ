@@ -2,7 +2,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'net.minecraftforge.gradle'
 }
 
 // the jar name tells which Minecraft version and loader it is for: mcpj-<version>+mc<mc version>-forge.jar

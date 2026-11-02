@@ -5,6 +5,18 @@ pluginManagement {
             name = 'MinecraftForge'
             url = 'https://maven.minecraftforge.net/'
         }
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+    }
+}
+
+// The foojay plugin (Java downloads) brings Gson 2.9, which would also be used by Fabric Loom and cannot handle
+// records; settings plugins are loaded first, so raise Gson here.
+buildscript {
+    dependencies {
+        classpath 'com.google.code.gson:gson:2.10.1'
     }
 }
 
@@ -17,3 +29,4 @@ rootProject.name = 'mcpj'
 include 'core'
 // one module per Minecraft version and mod loader, each builds its own mod jar
 include 'mc_1.20.1_forge_47'
+include 'mc_1.20.1_fabric'

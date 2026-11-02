@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": ["${mod_authors}"],
+  "license": "All-Rights-Reserved",
+  "icon": "assets/mcpj/textures/item/puddle_jumper.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["de.mcpj.fabric.McpjFabric"]
+  },
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=17",
+    "fabric-api": "*"
+  }
+}
