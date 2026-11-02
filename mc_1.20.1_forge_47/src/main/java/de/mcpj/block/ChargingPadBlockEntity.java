@@ -1,6 +1,6 @@
 package de.mcpj.block;
 
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

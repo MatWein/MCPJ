@@ -1,30 +1,29 @@
-package de.mcpj.config;
+package de.mcpj.core.config;
 
-import de.mcpj.entity.jumper.JumperMedium;
+import de.mcpj.core.jumper.JumperMedium;
 import de.mcpj.core.util.Units;
-import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class EnergyConfig {
     private static final int MAX_DRAIN = 1_000_000;
 
-    private final ForgeConfigSpec.IntValue capacity;
-    private final ForgeConfigSpec.DoubleValue startCharge;
-    private final ForgeConfigSpec.IntValue hoverDrain;
-    private final ForgeConfigSpec.IntValue thrustDrain;
-    private final ForgeConfigSpec.DoubleValue waterDriveFactor;
-    private final ForgeConfigSpec.DoubleValue lavaDriveFactor;
-    private final ForgeConfigSpec.IntValue shieldDrain;
-    private final ForgeConfigSpec.DoubleValue shieldWaterFactor;
-    private final ForgeConfigSpec.DoubleValue shieldLavaFactor;
-    private final ForgeConfigSpec.IntValue shieldHitCost;
-    private final ForgeConfigSpec.IntValue cloakDrain;
-    private final ForgeConfigSpec.DoubleValue cloakWaterFactor;
-    private final ForgeConfigSpec.DoubleValue cloakLavaFactor;
-    private final ForgeConfigSpec.DoubleValue underFireFactor;
-    private final ForgeConfigSpec.DoubleValue underFireSeconds;
-    private final ForgeConfigSpec.IntValue lightDrain;
+    private final IntSetting capacity;
+    private final DoubleSetting startCharge;
+    private final IntSetting hoverDrain;
+    private final IntSetting thrustDrain;
+    private final DoubleSetting waterDriveFactor;
+    private final DoubleSetting lavaDriveFactor;
+    private final IntSetting shieldDrain;
+    private final DoubleSetting shieldWaterFactor;
+    private final DoubleSetting shieldLavaFactor;
+    private final IntSetting shieldHitCost;
+    private final IntSetting cloakDrain;
+    private final DoubleSetting cloakWaterFactor;
+    private final DoubleSetting cloakLavaFactor;
+    private final DoubleSetting underFireFactor;
+    private final DoubleSetting underFireSeconds;
+    private final IntSetting lightDrain;
 
-    EnergyConfig(ForgeConfigSpec.Builder builder) {
+    EnergyConfig(ConfigBuilder builder) {
         builder.comment("Energy of the Puddle Jumper in Forge Energy (FE). Mekanism converts automatically (1 FE = 2.5 J).")
                 .push("energy");
         capacity = builder.comment("Storage capacity")

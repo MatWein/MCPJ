@@ -1,6 +1,6 @@
 package de.mcpj.client.targeting;
 
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;

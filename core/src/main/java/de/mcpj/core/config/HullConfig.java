@@ -1,21 +1,20 @@
-package de.mcpj.config;
+package de.mcpj.core.config;
 
 import de.mcpj.core.util.Units;
-import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class HullConfig {
-    private final ForgeConfigSpec.DoubleValue maxHull;
-    private final ForgeConfigSpec.DoubleValue droneHitFraction;
-    private final ForgeConfigSpec.DoubleValue waterDamagePerSecond;
-    private final ForgeConfigSpec.DoubleValue lavaDamagePerSecond;
-    private final ForgeConfigSpec.DoubleValue destructionExplosionPower;
-    private final ForgeConfigSpec.DoubleValue impactSafeSpeed;
-    private final ForgeConfigSpec.DoubleValue impactFullSpeed;
-    private final ForgeConfigSpec.DoubleValue impactSafeFallSpeed;
-    private final ForgeConfigSpec.DoubleValue impactFullFallSpeed;
-    private final ForgeConfigSpec.DoubleValue maxImpactFraction;
+    private final DoubleSetting maxHull;
+    private final DoubleSetting droneHitFraction;
+    private final DoubleSetting waterDamagePerSecond;
+    private final DoubleSetting lavaDamagePerSecond;
+    private final DoubleSetting destructionExplosionPower;
+    private final DoubleSetting impactSafeSpeed;
+    private final DoubleSetting impactFullSpeed;
+    private final DoubleSetting impactSafeFallSpeed;
+    private final DoubleSetting impactFullFallSpeed;
+    private final DoubleSetting maxImpactFraction;
 
-    HullConfig(ForgeConfigSpec.Builder builder) {
+    HullConfig(ConfigBuilder builder) {
         builder.comment("Hull integrity and damage").push("hull");
         maxHull = builder.comment("Hull points (a diamond sword deals 7 per hit)")
                 .defineInRange("maxHull", 240.0, 1.0, 100_000.0);
@@ -43,23 +42,23 @@ public final class HullConfig {
     }
 
     public float maxHull() {
-        return maxHull.get().floatValue();
+        return (float) maxHull.get();
     }
 
     public float droneHitFraction() {
-        return droneHitFraction.get().floatValue();
+        return (float) droneHitFraction.get();
     }
 
     public float waterDamagePerSecond() {
-        return waterDamagePerSecond.get().floatValue();
+        return (float) waterDamagePerSecond.get();
     }
 
     public float lavaDamagePerSecond() {
-        return lavaDamagePerSecond.get().floatValue();
+        return (float) lavaDamagePerSecond.get();
     }
 
     public float destructionExplosionPower() {
-        return destructionExplosionPower.get().floatValue();
+        return (float) destructionExplosionPower.get();
     }
 
     public double impactSafeSpeedPerTick() {
@@ -79,6 +78,6 @@ public final class HullConfig {
     }
 
     public float maxImpactFraction() {
-        return maxImpactFraction.get().floatValue();
+        return (float) maxImpactFraction.get();
     }
 }

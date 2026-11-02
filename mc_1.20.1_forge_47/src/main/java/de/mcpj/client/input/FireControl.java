@@ -1,6 +1,6 @@
 package de.mcpj.client.input;
 
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.ServerConfig;
 import net.minecraft.world.level.Level;
 
 public final class FireControl {

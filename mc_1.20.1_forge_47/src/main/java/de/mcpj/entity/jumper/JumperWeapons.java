@@ -1,6 +1,6 @@
 package de.mcpj.entity.jumper;
 
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.entity.drone.DroneEntity;
 import de.mcpj.network.JumperActionPacket;
 import net.minecraft.server.level.ServerPlayer;

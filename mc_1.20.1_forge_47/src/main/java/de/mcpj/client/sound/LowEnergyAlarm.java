@@ -2,7 +2,7 @@ package de.mcpj.client.sound;
 
 import de.mcpj.McpjMod;
 import de.mcpj.client.PilotContext;
-import de.mcpj.config.ClientConfig;
+import de.mcpj.core.config.ClientConfig;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;

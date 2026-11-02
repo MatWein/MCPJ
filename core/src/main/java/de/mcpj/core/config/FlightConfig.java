@@ -1,29 +1,28 @@
-package de.mcpj.config;
+package de.mcpj.core.config;
 
-import de.mcpj.entity.jumper.JumperMedium;
+import de.mcpj.core.jumper.JumperMedium;
 import de.mcpj.core.util.Units;
-import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class FlightConfig {
-    private final ForgeConfigSpec.DoubleValue maxSpeed;
-    private final ForgeConfigSpec.DoubleValue acceleration;
-    private final ForgeConfigSpec.DoubleValue reverseFactor;
-    private final ForgeConfigSpec.DoubleValue strafeFactor;
-    private final ForgeConfigSpec.DoubleValue verticalFactor;
-    private final ForgeConfigSpec.DoubleValue turnAcceleration;
-    private final ForgeConfigSpec.DoubleValue thrustDrag;
-    private final ForgeConfigSpec.DoubleValue idleDrag;
-    private final ForgeConfigSpec.DoubleValue turnDrag;
-    private final ForgeConfigSpec.DoubleValue waterAccelerationFactor;
-    private final ForgeConfigSpec.DoubleValue waterTurnFactor;
-    private final ForgeConfigSpec.DoubleValue waterThrustDrag;
-    private final ForgeConfigSpec.DoubleValue waterIdleDrag;
-    private final ForgeConfigSpec.DoubleValue lavaAccelerationFactor;
-    private final ForgeConfigSpec.DoubleValue lavaTurnFactor;
-    private final ForgeConfigSpec.DoubleValue lavaThrustDrag;
-    private final ForgeConfigSpec.DoubleValue lavaIdleDrag;
+    private final DoubleSetting maxSpeed;
+    private final DoubleSetting acceleration;
+    private final DoubleSetting reverseFactor;
+    private final DoubleSetting strafeFactor;
+    private final DoubleSetting verticalFactor;
+    private final DoubleSetting turnAcceleration;
+    private final DoubleSetting thrustDrag;
+    private final DoubleSetting idleDrag;
+    private final DoubleSetting turnDrag;
+    private final DoubleSetting waterAccelerationFactor;
+    private final DoubleSetting waterTurnFactor;
+    private final DoubleSetting waterThrustDrag;
+    private final DoubleSetting waterIdleDrag;
+    private final DoubleSetting lavaAccelerationFactor;
+    private final DoubleSetting lavaTurnFactor;
+    private final DoubleSetting lavaThrustDrag;
+    private final DoubleSetting lavaIdleDrag;
 
-    FlightConfig(ForgeConfigSpec.Builder builder) {
+    FlightConfig(ConfigBuilder builder) {
         builder.comment("Flight model of the Puddle Jumper").push("flight");
         maxSpeed = builder.comment("Top speed in blocks per second")
                 .defineInRange("maxSpeed", 20.0, 1.0, 100.0);
@@ -103,7 +102,7 @@ public final class FlightConfig {
     }
 
     public float turnDrag() {
-        return turnDrag.get().floatValue();
+        return (float) turnDrag.get();
     }
 
     public double accelerationFactor(JumperMedium medium) {
@@ -117,8 +116,8 @@ public final class FlightConfig {
     public float turnFactor(JumperMedium medium) {
         return switch (medium) {
             case AIR -> 1f;
-            case WATER -> waterTurnFactor.get().floatValue();
-            case LAVA -> lavaTurnFactor.get().floatValue();
+            case WATER -> (float) waterTurnFactor.get();
+            case LAVA -> (float) lavaTurnFactor.get();
         };
     }
 }

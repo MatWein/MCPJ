@@ -1,7 +1,7 @@
 package de.mcpj.entity.jumper;
 
-import de.mcpj.config.HullConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.HullConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.entity.drone.DroneEntity;
 import de.mcpj.registry.ModItems;
 import de.mcpj.core.util.Units;

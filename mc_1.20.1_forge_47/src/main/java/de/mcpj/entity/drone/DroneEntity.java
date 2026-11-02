@@ -1,7 +1,7 @@
 package de.mcpj.entity.drone;
 
-import de.mcpj.config.DroneConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.DroneConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import de.mcpj.entity.jumper.PuddleJumperPart;
 import de.mcpj.registry.ModEntities;

@@ -1,7 +1,7 @@
 package de.mcpj.entity.drone;
 
-import de.mcpj.config.DroneConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.DroneConfig;
+import de.mcpj.core.config.ServerConfig;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;

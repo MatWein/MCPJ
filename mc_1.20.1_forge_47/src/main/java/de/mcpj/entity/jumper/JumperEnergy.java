@@ -1,8 +1,9 @@
 package de.mcpj.entity.jumper;
 
+import de.mcpj.core.jumper.JumperMedium;
 import de.mcpj.block.ChargingPadBlockEntity;
-import de.mcpj.config.EnergyConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.EnergyConfig;
+import de.mcpj.core.config.ServerConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;

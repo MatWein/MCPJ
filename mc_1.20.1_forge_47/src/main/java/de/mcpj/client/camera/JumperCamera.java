@@ -2,7 +2,7 @@ package de.mcpj.client.camera;
 
 import de.mcpj.McpjMod;
 import de.mcpj.client.PilotContext;
-import de.mcpj.config.ClientConfig;
+import de.mcpj.core.config.ClientConfig;
 import de.mcpj.entity.jumper.JumperGeometry;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import net.minecraft.client.Camera;

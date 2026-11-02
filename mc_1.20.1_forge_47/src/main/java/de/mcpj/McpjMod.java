@@ -1,8 +1,7 @@
 package de.mcpj;
 
 import de.mcpj.compat.StargateCompat;
-import de.mcpj.config.ClientConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.config.ForgeConfigs;
 import de.mcpj.network.ModNetwork;
 import de.mcpj.registry.ModCreativeTabs;
 import de.mcpj.registry.ModRegistries;
@@ -20,8 +19,8 @@ public final class McpjMod {
     public McpjMod(FMLJavaModLoadingContext context) {
         IEventBus modBus = context.getModEventBus();
         ModRegistries.register(modBus);
-        context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
-        context.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
+        context.registerConfig(ModConfig.Type.SERVER, ForgeConfigs.SERVER);
+        context.registerConfig(ModConfig.Type.CLIENT, ForgeConfigs.CLIENT);
         modBus.addListener(McpjMod::onCommonSetup);
         modBus.addListener(ModCreativeTabs::onBuildContents);
         StargateCompat.register();

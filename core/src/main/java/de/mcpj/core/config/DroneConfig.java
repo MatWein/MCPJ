@@ -1,19 +1,18 @@
-package de.mcpj.config;
+package de.mcpj.core.config;
 
 import de.mcpj.core.util.Units;
-import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class DroneConfig {
-    private final ForgeConfigSpec.IntValue cooldownTicks;
-    private final ForgeConfigSpec.IntValue energyCost;
-    private final ForgeConfigSpec.DoubleValue damage;
-    private final ForgeConfigSpec.DoubleValue explosionPower;
-    private final ForgeConfigSpec.DoubleValue speed;
-    private final ForgeConfigSpec.DoubleValue waterSpeedFactor;
-    private final ForgeConfigSpec.DoubleValue lifetimeSeconds;
-    private final ForgeConfigSpec.DoubleValue retargetRange;
+    private final IntSetting cooldownTicks;
+    private final IntSetting energyCost;
+    private final DoubleSetting damage;
+    private final DoubleSetting explosionPower;
+    private final DoubleSetting speed;
+    private final DoubleSetting waterSpeedFactor;
+    private final DoubleSetting lifetimeSeconds;
+    private final DoubleSetting retargetRange;
 
-    DroneConfig(ForgeConfigSpec.Builder builder) {
+    DroneConfig(ConfigBuilder builder) {
         builder.comment("Drone weapons").push("drones");
         cooldownTicks = builder.comment("Ticks between two launches")
                 .defineInRange("cooldownTicks", 15, 1, 1200);
@@ -43,11 +42,11 @@ public final class DroneConfig {
     }
 
     public float damage() {
-        return damage.get().floatValue();
+        return (float) damage.get();
     }
 
     public float explosionPower() {
-        return explosionPower.get().floatValue();
+        return (float) explosionPower.get();
     }
 
     public double speedPerTick() {

@@ -1,13 +1,11 @@
-package de.mcpj.config;
-
-import net.minecraftforge.common.ForgeConfigSpec;
+package de.mcpj.core.config;
 
 public final class CargoConfig {
-    private final ForgeConfigSpec.BooleanValue autoPickup;
-    private final ForgeConfigSpec.DoubleValue pickupRange;
-    private final ForgeConfigSpec.IntValue pickupIntervalTicks;
+    private final BooleanSetting autoPickup;
+    private final DoubleSetting pickupRange;
+    private final IntSetting pickupIntervalTicks;
 
-    CargoConfig(ForgeConfigSpec.Builder builder) {
+    CargoConfig(ConfigBuilder builder) {
         builder.comment("Cargo hold").push("cargo");
         autoPickup = builder.comment("Collect dropped items close to the hull into the cargo hold")
                 .define("autoPickup", true);

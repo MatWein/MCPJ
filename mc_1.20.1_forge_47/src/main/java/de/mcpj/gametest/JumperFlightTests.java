@@ -1,7 +1,7 @@
 package de.mcpj.gametest;
 
 import de.mcpj.McpjMod;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.entity.jumper.JumperGeometry;
 import de.mcpj.entity.jumper.JumperHull;
 import de.mcpj.entity.jumper.PuddleJumperEntity;

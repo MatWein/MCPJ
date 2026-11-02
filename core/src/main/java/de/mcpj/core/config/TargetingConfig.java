@@ -1,13 +1,11 @@
-package de.mcpj.config;
-
-import net.minecraftforge.common.ForgeConfigSpec;
+package de.mcpj.core.config;
 
 public final class TargetingConfig {
-    private final ForgeConfigSpec.DoubleValue scanRange;
-    private final ForgeConfigSpec.DoubleValue lockRange;
-    private final ForgeConfigSpec.DoubleValue autoTargetRange;
+    private final DoubleSetting scanRange;
+    private final DoubleSetting lockRange;
+    private final DoubleSetting autoTargetRange;
 
-    TargetingConfig(ForgeConfigSpec.Builder builder) {
+    TargetingConfig(ConfigBuilder builder) {
         builder.comment("Target acquisition").push("targeting");
         scanRange = builder.comment("Range in which targets are marked and can be selected (blocks)")
                 .defineInRange("scanRange", 64.0, 1.0, 256.0);

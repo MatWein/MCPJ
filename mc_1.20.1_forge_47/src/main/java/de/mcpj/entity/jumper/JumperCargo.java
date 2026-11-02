@@ -1,7 +1,7 @@
 package de.mcpj.entity.jumper;
 
-import de.mcpj.config.CargoConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.CargoConfig;
+import de.mcpj.core.config.ServerConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;

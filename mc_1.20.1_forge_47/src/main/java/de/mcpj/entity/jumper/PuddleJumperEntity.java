@@ -1,5 +1,6 @@
 package de.mcpj.entity.jumper;
 
+import de.mcpj.core.jumper.JumperMedium;
 import de.mcpj.entity.drone.DroneEntity;
 import de.mcpj.network.ModNetwork;
 import de.mcpj.network.PilotSoundPacket;

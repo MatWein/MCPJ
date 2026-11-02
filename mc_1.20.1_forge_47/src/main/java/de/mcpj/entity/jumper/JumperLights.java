@@ -1,7 +1,7 @@
 package de.mcpj.entity.jumper;
 
-import de.mcpj.config.LightConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.LightConfig;
+import de.mcpj.core.config.ServerConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;

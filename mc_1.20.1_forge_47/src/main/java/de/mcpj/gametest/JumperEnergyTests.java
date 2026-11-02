@@ -2,8 +2,8 @@ package de.mcpj.gametest;
 
 import de.mcpj.McpjMod;
 import de.mcpj.block.ChargingPadBlock;
-import de.mcpj.config.EnergyConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.EnergyConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import de.mcpj.registry.ModBlocks;
 import net.minecraft.core.BlockPos;

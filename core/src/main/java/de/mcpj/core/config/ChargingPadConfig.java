@@ -1,13 +1,11 @@
-package de.mcpj.config;
-
-import net.minecraftforge.common.ForgeConfigSpec;
+package de.mcpj.core.config;
 
 public final class ChargingPadConfig {
-    private final ForgeConfigSpec.IntValue chargeRate;
-    private final ForgeConfigSpec.IntValue inputRate;
-    private final ForgeConfigSpec.IntValue buffer;
+    private final IntSetting chargeRate;
+    private final IntSetting inputRate;
+    private final IntSetting buffer;
 
-    ChargingPadConfig(ForgeConfigSpec.Builder builder) {
+    ChargingPadConfig(ConfigBuilder builder) {
         builder.comment("Jumper charging pad").push("chargingPad");
         chargeRate = builder.comment("Charging power per pad below a landed jumper (FE/tick)")
                 .defineInRange("chargeRate", 10_000, 1, Integer.MAX_VALUE);

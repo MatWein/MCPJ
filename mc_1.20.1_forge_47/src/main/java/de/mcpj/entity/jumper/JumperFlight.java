@@ -1,7 +1,8 @@
 package de.mcpj.entity.jumper;
 
-import de.mcpj.config.FlightConfig;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.jumper.JumperMedium;
+import de.mcpj.core.config.FlightConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.network.JumperImpactPacket;
 import de.mcpj.network.ModNetwork;
 import net.minecraft.world.entity.Entity;

@@ -1,17 +1,16 @@
-package de.mcpj.config;
+package de.mcpj.core.config;
 
 import de.mcpj.core.util.Units;
-import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class LightConfig {
     private static final int MAX_LIGHT_LEVEL = 15;
 
-    private final ForgeConfigSpec.IntValue lightLevel;
-    private final ForgeConfigSpec.DoubleValue moveDistance;
-    private final ForgeConfigSpec.IntValue updateIntervalTicks;
-    private final ForgeConfigSpec.DoubleValue singleLightSpeed;
+    private final IntSetting lightLevel;
+    private final DoubleSetting moveDistance;
+    private final IntSetting updateIntervalTicks;
+    private final DoubleSetting singleLightSpeed;
 
-    LightConfig(ForgeConfigSpec.Builder builder) {
+    LightConfig(ConfigBuilder builder) {
         builder.comment("Headlights (invisible vanilla light blocks that follow the jumper)").push("lights");
         lightLevel = builder.comment("Light level of the headlights")
                 .defineInRange("lightLevel", MAX_LIGHT_LEVEL, 1, MAX_LIGHT_LEVEL);

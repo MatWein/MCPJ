@@ -3,7 +3,7 @@ package de.mcpj.client.hud;
 import de.mcpj.client.PilotContext;
 import de.mcpj.client.input.FireControl;
 import de.mcpj.client.targeting.TargetSelector;
-import de.mcpj.config.ClientConfig;
+import de.mcpj.core.config.ClientConfig;
 import de.mcpj.entity.jumper.JumperEnergy;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import de.mcpj.core.util.Units;

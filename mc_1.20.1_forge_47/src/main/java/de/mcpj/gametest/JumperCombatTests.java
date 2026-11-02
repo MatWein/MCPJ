@@ -1,7 +1,7 @@
 package de.mcpj.gametest;
 
 import de.mcpj.McpjMod;
-import de.mcpj.config.ServerConfig;
+import de.mcpj.core.config.ServerConfig;
 import de.mcpj.entity.drone.DroneEntity;
 import de.mcpj.entity.jumper.PuddleJumperEntity;
 import de.mcpj.registry.ModItems;
