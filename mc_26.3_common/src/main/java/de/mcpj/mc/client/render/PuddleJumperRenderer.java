@@ -104,7 +104,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
 
     private static ShipStyle style(boolean cloaked, boolean ownShip, int light) {
         boolean ghost = cloaked && ownShip;
-        if (ghost) return new ShipStyle(RenderTypes.eyes(TEXTURE), JumperLook.GHOST_BRIGHTNESS, LightCoordsUtil.FULL_BRIGHT, true, false);
+        if (ghost) return new ShipStyle(ModRenderTypes.glow(TEXTURE), JumperLook.GHOST_BRIGHTNESS, LightCoordsUtil.FULL_BRIGHT, true, false);
         return new ShipStyle(RenderTypes.entityCutout(TEXTURE), 1f, light, !cloaked, !cloaked);
     }
 
@@ -129,7 +129,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
             if (style.visible) renderPart(model, pod, poseStack, collector, style);
             if (style.effects && JumperLook.showsEngineGlow(glow)) {
                 renderGlow(model, pod + "_glow", poseStack, collector, glow);
-                collector.submitCustomGeometry(poseStack, RenderTypes.eyes(TEXTURE), (pose, buffer) ->
+                collector.submitCustomGeometry(poseStack, ModRenderTypes.glow(TEXTURE), (pose, buffer) ->
                         IonPlume.emitPod(RenderSinks.sink(pose, buffer, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY),
                                 PLUME_UV, podSide, glow, speed, time));
             }
@@ -145,7 +145,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
     }
 
     private static void renderGlow(ObjMesh model, String group, PoseStack poseStack, SubmitNodeCollector collector, float brightness) {
-        collector.submitCustomGeometry(poseStack, RenderTypes.eyes(TEXTURE), (pose, buffer) ->
+        collector.submitCustomGeometry(poseStack, ModRenderTypes.glow(TEXTURE), (pose, buffer) ->
                 model.emit(group, RenderSinks.sink(pose, buffer, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY),
                         brightness, brightness, brightness, 1f));
     }

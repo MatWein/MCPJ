@@ -20,8 +20,10 @@ public class FabricPuddleJumperEntity extends PuddleJumperEntity {
         segments = List.of(bow, stern);
         // the segments take the ids right after the ship (like NeoForge's part entities): the server reserves them
         // (its id counter counts up, so they follow the ship's id); the client gets the ship's id from the server
-        for (int i = 0; i < segments.size(); i++) level.getNextEntityId();
-        setId(getId());
+        if (!level.isClientSide()) {
+            for (int i = 0; i < segments.size(); i++) level.getNextEntityId();
+            setId(getId());
+        }
     }
 
     @Override

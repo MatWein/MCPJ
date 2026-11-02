@@ -64,7 +64,7 @@ public class DroneRenderer extends EntityRenderer<DroneEntity, DroneRenderer.Sta
         collector.submitCustomGeometry(poseStack, RenderTypes.entityCutout(TEXTURE), (pose, buffer) ->
                 model.emit("drone", RenderSinks.sink(pose, buffer, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY), 1, 1, 1, 1));
         float pulse = DroneLook.glowPulse(state.ageInTicks);
-        collector.submitCustomGeometry(poseStack, RenderTypes.eyes(TEXTURE), (pose, buffer) ->
+        collector.submitCustomGeometry(poseStack, ModRenderTypes.glow(TEXTURE), (pose, buffer) ->
                 model.emit("drone_glow", RenderSinks.sink(pose, buffer, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY), pulse, pulse, pulse, 1));
         poseStack.popPose();
         super.submit(state, poseStack, collector, camera);

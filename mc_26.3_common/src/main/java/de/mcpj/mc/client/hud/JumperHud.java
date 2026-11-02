@@ -13,6 +13,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.Entity;
 
 import java.util.Arrays;
@@ -44,7 +45,7 @@ public final class JumperHud {
         Font font = minecraft.font;
         for (int i = 0; i < lines.size(); i++) {
             HudLine line = lines.get(i);
-            graphics.text(font, component(line), MARGIN_LEFT, top + i * LINE_HEIGHT, line.color(), true);
+            graphics.text(font, component(line), MARGIN_LEFT, top + i * LINE_HEIGHT, ARGB.opaque(line.color()), true);
         }
     }
 

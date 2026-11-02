@@ -22,8 +22,10 @@ public class NeoForgePuddleJumperEntity extends PuddleJumperEntity {
         parts = new PuddleJumperPart[]{bow, stern};
         // part entities take the ids right after the ship: the server reserves them (its id counter counts up);
         // the client gets the ship's id from the server
-        for (int i = 0; i < parts.length; i++) level.getNextEntityId();
-        setId(getId());
+        if (!level.isClientSide()) {
+            for (int i = 0; i < parts.length; i++) level.getNextEntityId();
+            setId(getId());
+        }
     }
 
     @Override

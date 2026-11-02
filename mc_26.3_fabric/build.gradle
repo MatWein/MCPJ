@@ -28,6 +28,10 @@ loom {
     runs {
         client {
             runDir 'run'
+            // fixed name, so the test server can make it an operator (run-server/ops.json)
+            programArgs '--username', 'Dev'
+            // ./gradlew runClient -PjoinServer=localhost connects straight to a server
+            if (project.hasProperty('joinServer')) programArgs '--quickPlayMultiplayer', project.property('joinServer')
         }
         server {
             runDir 'run-server'
