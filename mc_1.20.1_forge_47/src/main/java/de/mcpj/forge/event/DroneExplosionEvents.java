@@ -1,7 +1,8 @@
 package de.mcpj.forge.event;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.mc.entity.drone.DroneEntity;
+import de.mcpj.mc.rules.JumperRules;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -12,8 +13,7 @@ public final class DroneExplosionEvents {
 
     @SubscribeEvent
     public static void onDetonate(ExplosionEvent.Detonate event) {
-        if (event.getExplosion().getDirectSourceEntity() instanceof DroneEntity drone) {
-            event.getAffectedEntities().removeIf(drone::isFriendly);
-        }
+        Entity source = event.getExplosion().getDirectSourceEntity();
+        event.getAffectedEntities().removeIf(affected -> JumperRules.sparedByExplosion(source, affected));
     }
 }

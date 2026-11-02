@@ -1,10 +1,7 @@
 package de.mcpj.forge.event;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
-import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
+import de.mcpj.mc.rules.JumperRules;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -20,11 +17,6 @@ public final class PassengerEvents {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onAttack(LivingAttackEvent event) {
-        if (isProtected(event.getEntity(), event.getSource())) event.setCanceled(true);
-    }
-
-    /** /kill and the void still apply, otherwise a passenger could never die. */
-    public static boolean isProtected(Entity entity, DamageSource source) {
-        return entity.getVehicle() instanceof PuddleJumperEntity && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY);
+        if (JumperRules.isProtectedPassenger(event.getEntity(), event.getSource())) event.setCanceled(true);
     }
 }

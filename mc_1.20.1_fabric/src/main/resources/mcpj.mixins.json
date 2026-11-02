@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "de.mcpj.fabric.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ExplosionMixin",
+    "LevelMixin",
+    "LivingEntityMixin",
+    "MobMixin",
+    "ServerLevelMixin"
+  ],
+  "client": [
+    "CameraMixin",
+    "EntityRenderDispatcherMixin",
+    "ItemInHandRendererMixin",
+    "KeyboardHandlerMixin",
+    "KeyMappingMixin",
+    "MinecraftMixin",
+    "PlayerTabOverlayMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

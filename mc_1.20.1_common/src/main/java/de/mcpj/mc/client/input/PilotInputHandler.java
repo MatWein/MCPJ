@@ -24,8 +24,7 @@ public final class PilotInputHandler {
     private static final Map<KeyMapping, JumperAction> TOGGLES = Map.of(
             KeyBindings.CLOAK, JumperAction.CLOAK,
             KeyBindings.SHIELD, JumperAction.SHIELD,
-            KeyBindings.PODS, JumperAction.PODS,
-            KeyBindings.LIGHTS, JumperAction.LIGHTS);
+            KeyBindings.PODS, JumperAction.PODS);
 
     private PilotInputHandler() {}
 
@@ -38,6 +37,7 @@ public final class PilotInputHandler {
     public static void onClientTickEnd() {
         KeyBindings.discardClicks(KeyBindings.TARGET);
         KeyBindings.discardClicks(KeyBindings.CARGO);
+        KeyBindings.discardClicks(KeyBindings.LIGHTS);
         KeyBindings.discardClicks(KeyBindings.STRAFE_LEFT);
         KeyBindings.discardClicks(KeyBindings.STRAFE_RIGHT);
         PuddleJumperEntity jumper = PilotContext.pilotedJumper();
@@ -68,8 +68,11 @@ public final class PilotInputHandler {
         if (action != GLFW.GLFW_PRESS || minecraft.screen != null || minecraft.player == null) return;
         PuddleJumperEntity jumper = PilotContext.pilotedJumper();
         if (jumper == null) return;
+        // keys that may share a key with vanilla are read as raw key presses, so they work the same on every loader
         if (KeyBindings.matches(KeyBindings.CARGO, key)) {
             minecraft.player.sendOpenInventory();
+        } else if (KeyBindings.matches(KeyBindings.LIGHTS, key)) {
+            send(JumperAction.LIGHTS, JumperActionPacket.NO_TARGET);
         } else if (KeyBindings.matches(KeyBindings.TARGET, key)) {
             TargetSelector.cycle(jumper);
             float pitch = TargetSelector.target() != null ? TARGET_SELECTED_PITCH : TARGET_CLEARED_PITCH;

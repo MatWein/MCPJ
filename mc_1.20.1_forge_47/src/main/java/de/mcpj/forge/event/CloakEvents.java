@@ -1,8 +1,7 @@
 package de.mcpj.forge.event;
 
 import de.mcpj.forge.McpjMod;
-import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
-import net.minecraft.world.entity.Entity;
+import de.mcpj.mc.rules.JumperRules;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -14,15 +13,11 @@ public final class CloakEvents {
 
     @SubscribeEvent
     public static void onVisibility(LivingEvent.LivingVisibilityEvent event) {
-        if (isCloakedPassenger(event.getEntity())) event.modifyVisibility(0.0);
+        if (JumperRules.isCloakedPassenger(event.getEntity())) event.modifyVisibility(0.0);
     }
 
     @SubscribeEvent
     public static void onChangeTarget(LivingChangeTargetEvent event) {
-        if (isCloakedPassenger(event.getNewTarget())) event.setCanceled(true);
-    }
-
-    private static boolean isCloakedPassenger(Entity entity) {
-        return entity != null && entity.getVehicle() instanceof PuddleJumperEntity jumper && jumper.isCloaked();
+        if (JumperRules.isCloakedPassenger(event.getNewTarget())) event.setCanceled(true);
     }
 }

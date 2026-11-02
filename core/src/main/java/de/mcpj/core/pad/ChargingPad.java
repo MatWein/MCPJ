@@ -65,6 +65,12 @@ public final class ChargingPad {
         return stored;
     }
 
+    /** Restores the stored energy (energy APIs with transactions roll back aborted inserts with it). */
+    public void restoreStored(int energy) {
+        stored = Math.max(0, energy);
+        host.markChanged();
+    }
+
     public int capacity() {
         return ServerConfig.CHARGING_PAD.buffer();
     }
