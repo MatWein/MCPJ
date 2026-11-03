@@ -32,6 +32,8 @@ public final class McpjGameTests {
             test("hovers_without_pilot", 100, JumperFlightTestCases::hoversWithoutPilot),
             test("solid_even_when_cloaked", 100, JumperFlightTestCases::solidEvenWhenCloaked),
             test("segments_follow_rotation", 100, JumperFlightTestCases::segmentsFollowRotation),
+            test("edge_guidance_slips_through_opening", 100, JumperFlightTestCases::edgeGuidanceSlipsThroughOpening),
+            test("edge_guidance_ignores_wide_miss", 100, JumperFlightTestCases::edgeGuidanceIgnoresWideMiss),
             test("ignores_knockback", 100, JumperFlightTestCases::ignoresKnockback),
             test("crashes_without_energy", 100, JumperFlightTestCases::crashesWithoutEnergy),
             test("impact_damage_curve", 100, JumperFlightTestCases::impactDamageCurve),

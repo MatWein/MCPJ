@@ -39,7 +39,9 @@ All jumper keys can be rebound under *Options → Controls → MCPJ*.
 
 **Flight.** The jumper is inert: it accelerates and turns gently and coasts. Without input it brakes and hovers in
 place, even after the pilot leaves it mid-air. Boarding switches to third person, leaving restores the previous view.
-The engine glows and trails ion plumes while airborne and is silent when landed.
+The engine glows and trails ion plumes while airborne and is silent when landed. Edge guidance slides the ship past an edge it
+barely touches (up to half a block sideways or up/down, `flight.edgeGuidance` in the server config), e.g. into a
+stargate.
 
 **Cloak.** Invisible to others apart from a very faint energy bubble, but still solid. The pilot sees the ship as a
 faint glowing outline. Mobs lose track of the pilot. Launching a drone decloaks.
@@ -150,7 +152,7 @@ Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for t
 
 ./gradlew :mc_1.20.1_fabric:runClient                            # Fabric development client
 ./gradlew :mc_1.20.1_fabric:runServer                            # Fabric development server
-./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 32 tests)
+./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 34 tests)
 
 ./gradlew :mc_26.3_neoforge:runClient                            # Minecraft 26.3: NeoForge client, server, game tests
 ./gradlew :mc_26.3_neoforge:runServer

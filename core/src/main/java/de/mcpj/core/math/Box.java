@@ -21,6 +21,10 @@ public record Box(double minX, double minY, double minZ, double maxX, double max
         return inflate(amount, amount);
     }
 
+    public Box move(Vec3d offset) {
+        return new Box(minX + offset.x(), minY + offset.y(), minZ + offset.z(), maxX + offset.x(), maxY + offset.y(), maxZ + offset.z());
+    }
+
     public Vec3d center() {
         return new Vec3d((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
     }

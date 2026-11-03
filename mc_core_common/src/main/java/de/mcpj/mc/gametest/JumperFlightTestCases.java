@@ -4,10 +4,12 @@ import net.minecraft.world.entity.Mob;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.core.jumper.JumperHull;
+import de.mcpj.core.math.Vec3d;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -99,5 +101,46 @@ public final class JumperFlightTestCases {
         helper.assertTrue(JumperHull.impactFraction(1.0, 0) == max, "Full speed impact is not maximal");
         helper.assertTrue(JumperHull.impactFraction(5, 5) == max, "Impact damage exceeds the maximum");
         helper.succeed();
+    }
+
+    // a wall at z = 11 with a 3 x 3 opening (x 11..13, y 4..6); the jumper (2.86 wide, 2.2 high) fits with 0.07 to spare
+    private static final int WALL_Z = 11;
+
+    private static void buildWallWithOpening(GameTestHelper helper) {
+        for (int x = 5; x <= 19; x++) {
+            for (int y = 2; y <= 8; y++) {
+                boolean opening = x >= 11 && x <= 13 && y >= 4 && y <= 6;
+                if (!opening) helper.setBlock(new BlockPos(x, y, WALL_Z), Blocks.STONE);
+            }
+        }
+    }
+
+    /** Flies the jumper towards the wall (+z) without a pilot: 0.5 blocks per tick, slowing down by drag. */
+    private static PuddleJumperEntity launchTowardsWall(GameTestHelper helper, double x) {
+        buildWallWithOpening(helper);
+        PuddleJumperEntity jumper = spawnJumper(helper, x, 4.2, 5, 0);
+        helper.runAfterDelay(1, () -> jumper.core().continueAfterTeleport(new Vec3d(0, 0, 0.5), jumper.getYRot()));
+        return jumper;
+    }
+
+    /** Slightly off the opening (0.33 blocks into the frame): edge guidance slides the ship through. */
+    public static void edgeGuidanceSlipsThroughOpening(GameTestHelper helper) {
+        PuddleJumperEntity jumper = launchTowardsWall(helper, 12.1);
+        double wallZ = helper.absoluteVec(new Vec3(0, 0, WALL_Z + 1)).z;
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(jumper.getZ() > wallZ, "Jumper did not pass the opening, stopped at z " + (jumper.getZ() - wallZ) + " behind the wall");
+            helper.assertTrue(jumper.hull().integrity() == 1f, "Guided pass damaged the hull");
+            helper.succeed();
+        });
+    }
+
+    /** Clearly off the opening (more than the guidance range into the frame): the ship stays in front of the wall. */
+    public static void edgeGuidanceIgnoresWideMiss(GameTestHelper helper) {
+        PuddleJumperEntity jumper = launchTowardsWall(helper, 13.3);
+        double wallZ = helper.absoluteVec(new Vec3(0, 0, WALL_Z)).z;
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(jumper.getZ() < wallZ, "Jumper passed although it missed the opening by a block");
+            helper.succeed();
+        });
     }
 }

@@ -27,6 +27,9 @@ public final class JumperFlight {
     private static final double GROUND_PROBE_DEPTH = 0.08;
     private static final double GROUND_PROBE_OVERLAP = 0.01;
     private static final int ARRIVAL_WINDOW_TICKS = 20;
+    private static final double GUIDANCE_STEP = 0.05;
+    private static final double GUIDANCE_MIN_SPEED_SQR = 1.0e-4;
+    private static final Vec3d UP = new Vec3d(0, 1, 0);
 
     private final Jumper jumper;
     private float yawVelocity;
@@ -129,18 +132,61 @@ public final class JumperFlight {
             host.moveBy(Vec3d.ZERO);
             return;
         }
+        Vec3d guidance = edgeGuidance(wanted);
+        if (guidance != null) host.moveBy(guidance);
         // the main body collides on its own when moving; bow and stern are checked here
-        Vec3d allowed = wanted;
-        for (double offset : new double[]{JumperGeometry.SEGMENT_OFFSET, -JumperGeometry.SEGMENT_OFFSET}) {
-            Vec3d collided = host.collide(allowed, jumper.segmentBox(offset));
-            allowed = new Vec3d(smallerMagnitude(allowed.x(), collided.x()), smallerMagnitude(allowed.y(), collided.y()),
-                    smallerMagnitude(allowed.z(), collided.z()));
-        }
+        Vec3d allowed = collide(wanted, Vec3d.ZERO, JumperGeometry.SEGMENT_OFFSET, -JumperGeometry.SEGMENT_OFFSET);
         Vec3d moved = host.moveBy(allowed);
         Vec3d velocity = host.velocity();
         host.setVelocity(new Vec3d(allowed.x() != wanted.x() ? 0 : velocity.x(), allowed.y() != wanted.y() ? 0 : velocity.y(),
                 allowed.z() != wanted.z() ? 0 : velocity.z()));
         detectImpact(wanted, moved);
+    }
+
+    /**
+     * Edge guidance: if the hull would hit an edge (e.g. the ring of a stargate) but a small shift sideways or up/down
+     * (at most {@link FlightConfig#edgeGuidance()}) frees the way, that shift; the smallest one wins. Null if the way
+     * is free anyway or no such shift exists (then the ship collides as usual).
+     */
+    @Nullable
+    private Vec3d edgeGuidance(Vec3d wanted) {
+        double range = ServerConfig.FLIGHT.edgeGuidance();
+        Vec3d horizontal = wanted.withY(0);
+        if (range <= 0 || horizontal.lengthSqr() < GUIDANCE_MIN_SPEED_SQR) return null;
+        double[] all = Jumper.segmentOffsets();
+        if (!blocksHorizontally(wanted, collide(wanted, Vec3d.ZERO, all))) return null;
+        Vec3d side = new Vec3d(-horizontal.z(), 0, horizontal.x()).normalize();
+        Vec3d[] directions = {side, side.scale(-1), UP, UP.scale(-1),
+                side.add(UP).normalize(), side.subtract(UP).normalize(), side.scale(-1).add(UP).normalize(), side.scale(-1).subtract(UP).normalize()};
+        for (double distance = GUIDANCE_STEP; distance <= range + 1.0e-9; distance += GUIDANCE_STEP) {
+            for (Vec3d direction : directions) {
+                Vec3d shift = direction.scale(distance);
+                if (isFree(shift, all) && !blocksHorizontally(wanted, collide(wanted, shift, all))) return shift;
+            }
+        }
+        return null;
+    }
+
+    /** Movement still possible for {@code wanted} for the given hull segments, shifted by {@code shift}. */
+    private Vec3d collide(Vec3d wanted, Vec3d shift, double... offsets) {
+        Vec3d allowed = wanted;
+        for (double offset : offsets) {
+            Vec3d collided = jumper.host().collide(allowed, jumper.segmentBox(offset).move(shift));
+            allowed = new Vec3d(smallerMagnitude(allowed.x(), collided.x()), smallerMagnitude(allowed.y(), collided.y()),
+                    smallerMagnitude(allowed.z(), collided.z()));
+        }
+        return allowed;
+    }
+
+    private boolean isFree(Vec3d shift, double... offsets) {
+        for (double offset : offsets) {
+            if (!jumper.host().isFree(jumper.segmentBox(offset).move(shift))) return false;
+        }
+        return true;
+    }
+
+    private static boolean blocksHorizontally(Vec3d wanted, Vec3d allowed) {
+        return isBlocked(wanted.x(), allowed.x()) || isBlocked(wanted.z(), allowed.z());
     }
 
     private void detectImpact(Vec3d wanted, Vec3d moved) {

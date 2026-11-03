@@ -21,6 +21,7 @@ public final class FlightConfig {
     private final DoubleSetting lavaTurnFactor;
     private final DoubleSetting lavaThrustDrag;
     private final DoubleSetting lavaIdleDrag;
+    private final DoubleSetting edgeGuidance;
 
     FlightConfig(ConfigBuilder builder) {
         builder.comment("Flight model of the Puddle Jumper").push("flight");
@@ -58,7 +59,15 @@ public final class FlightConfig {
                 .defineInRange("lavaThrustDrag", 0.92, 0.5, 1.0);
         lavaIdleDrag = builder.comment("Velocity kept per tick without input in lava")
                 .defineInRange("lavaIdleDrag", 0.85, 0.5, 1.0);
+        edgeGuidance = builder.comment("Edge guidance: the ship slides past an edge it would otherwise hit (e.g. a stargate ring)",
+                        "if a sideways or vertical shift of at most this many blocks frees the way; 0 = off")
+                .defineInRange("edgeGuidance", 0.5, 0.0, 1.0);
         builder.pop();
+    }
+
+    /** Largest sideways or vertical shift in blocks that guides the ship past an edge. */
+    public double edgeGuidance() {
+        return edgeGuidance.get();
     }
 
     public double maxSpeedPerTick() {

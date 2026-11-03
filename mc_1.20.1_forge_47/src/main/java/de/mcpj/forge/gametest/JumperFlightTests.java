@@ -40,4 +40,14 @@ public class JumperFlightTests {
     public static void impactDamageCurve(GameTestHelper helper) {
         JumperFlightTestCases.impactDamageCurve(helper);
     }
+
+    @GameTest(template = "platform", timeoutTicks = 100)
+    public static void edgeGuidanceSlipsThroughOpening(GameTestHelper helper) {
+        JumperFlightTestCases.edgeGuidanceSlipsThroughOpening(helper);
+    }
+
+    @GameTest(template = "platform", timeoutTicks = 100)
+    public static void edgeGuidanceIgnoresWideMiss(GameTestHelper helper) {
+        JumperFlightTestCases.edgeGuidanceIgnoresWideMiss(helper);
+    }
 }
