@@ -5,6 +5,8 @@ import de.mcpj.core.config.ServerConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChargingPadTest {
@@ -34,5 +36,23 @@ class ChargingPadTest {
         assertEquals(Math.round(0.5f * 15), pad.comparatorLevel());
         pad.serverTick(10);
         assertEquals(PadMode.CHARGING, host.mode);
+    }
+
+    @Test
+    void chargesOnItsOwnUnlessPowerIsRequired() {
+        Host host = new Host();
+        ChargingPad pad = new ChargingPad(host);
+        pad.serverTick(5);
+        assertEquals(PadMode.POWERED, host.mode);
+        assertEquals(ServerConfig.CHARGING_PAD.freeChargeRate() * 5, pad.supplyJumper(Integer.MAX_VALUE, 5, 0f));
+        assertEquals(100, pad.supplyJumper(100, 5, 0f));
+
+        DefaultConfigBuilder.useDefaultsExcept(Map.of("requirePower", true));
+        Host powered = new Host();
+        ChargingPad empty = new ChargingPad(powered);
+        powered.mode = PadMode.POWERED;
+        empty.serverTick(5);
+        assertEquals(PadMode.OFF, powered.mode);
+        assertEquals(0, empty.supplyJumper(Integer.MAX_VALUE, 5, 0f));
     }
 }

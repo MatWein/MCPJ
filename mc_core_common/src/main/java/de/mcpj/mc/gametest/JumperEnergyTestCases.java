@@ -135,4 +135,24 @@ public final class JumperEnergyTestCases {
                 + bolt.position());
         helper.succeed();
     }
+
+    /** Without energy from cables (and requirePower off, the default) pads charge on their own at the free rate. */
+    public static void chargingPadChargesWithoutPower(GameTestHelper helper) {
+        BlockPos[] pads = {new BlockPos(11, 1, 12), new BlockPos(12, 1, 12), new BlockPos(13, 1, 12)};
+        for (BlockPos pad : pads) helper.setBlock(pad, GameTestCompat.modBlock("charging_pad"));
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
+        jumper.setShielded(false);
+        int[] before = new int[1];
+        helper.runAfterDelay(2, () -> before[0] = jumper.energy().stored());
+        helper.runAfterDelay(22, () -> {
+            int gained = jumper.energy().stored() - before[0];
+            // measured over 20 ticks; the jumper charges in steps, so allow a few ticks either way
+            int perTick = pads.length * ServerConfig.CHARGING_PAD.freeChargeRate();
+            helper.assertTrue(gained >= perTick * 15 && gained <= perTick * 25,
+                    "Expected about " + perTick * 20 + " FE without power, charged " + gained);
+            BlockState state = helper.getBlockState(pads[1]);
+            helper.assertTrue(state.getValue(ChargingPadBlock.MODE) == ChargingPadBlock.Mode.CHARGING, "Pad does not show charging");
+            helper.succeed();
+        });
+    }
 }

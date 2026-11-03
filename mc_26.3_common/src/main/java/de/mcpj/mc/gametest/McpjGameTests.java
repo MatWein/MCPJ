@@ -29,6 +29,7 @@ public final class McpjGameTests {
             test("shield_blocks_water", 120, JumperCombatTestCases::shieldBlocksWater),
             test("start_charge_and_no_drive_drain_when_landed", 100, JumperEnergyTestCases::startChargeAndNoDriveDrainWhenLanded),
             test("lightning_charges_jumper", 60, JumperEnergyTestCases::lightningChargesJumper),
+            test("charging_pad_charges_without_power", 60, JumperEnergyTestCases::chargingPadChargesWithoutPower),
             test("jumper_attracts_lightning", 40, JumperEnergyTestCases::jumperAttractsLightning),
             test("systems_drain_energy", 100, JumperEnergyTestCases::systemsDrainEnergy),
             test("shield_collapses_without_energy", 100, JumperEnergyTestCases::shieldCollapsesWithoutEnergy),

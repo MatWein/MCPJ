@@ -1,10 +1,12 @@
 package de.mcpj.core.pad;
 
+import de.mcpj.core.config.ChargingPadConfig;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.core.util.SaveData;
 
 /**
  * Jumper charging pad: buffers energy from any energy mod (receive only) and hands it to a landed jumper.
+ * Unless the config requires power, it also charges on its own (slower) when its buffer is empty.
  * A comparator reads the charge of the jumper currently charging.
  */
 public final class ChargingPad {
@@ -31,14 +33,20 @@ public final class ChargingPad {
 
     private PadMode currentMode() {
         if (chargingTimer > 0) return PadMode.CHARGING;
-        return stored > 0 ? PadMode.POWERED : PadMode.OFF;
+        return stored > 0 || !ServerConfig.CHARGING_PAD.requirePower() ? PadMode.POWERED : PadMode.OFF;
     }
 
     /** A landed jumper asks for energy; returns what it gets (limited by the pad's charge rate). */
     public int supplyJumper(int requested, int ticks, float jumperChargeFraction) {
         chargingTimer = CHARGING_HOLD_TICKS;
         setComparatorLevel(Math.round(jumperChargeFraction * MAX_COMPARATOR_LEVEL));
-        return drain(Math.min(requested, ServerConfig.CHARGING_PAD.chargeRate() * ticks));
+        ChargingPadConfig config = ServerConfig.CHARGING_PAD;
+        if (!config.requirePower()) {
+            // without (enough) energy from cables the pad charges on its own; buffered energy goes first, at full rate
+            int free = Math.min(requested, config.freeChargeRate() * ticks);
+            if (stored < free) return free;
+        }
+        return drain(Math.min(requested, config.chargeRate() * ticks));
     }
 
     /** Energy from cables or machines; returns the amount accepted. */

@@ -116,6 +116,10 @@ A block that accepts Forge Energy from every side (Mekanism, Thermal, Immersive 
 are converted automatically). A **landed** jumper charges from all pads directly below its hull with
 10,000 FE/t per pad, so a larger landing field charges faster.
 
+By default a pad needs no power at all: without energy from cables it charges on its own with 2,500 FE/t per pad
+(an empty jumper is full after about 20 minutes on one pad). Energy from cables is used first, at the full rate.
+With `chargingPad.requirePower = true` in the server config, pads only charge with energy from cables.
+
 - off (dark) → powered (glowing runway lights) → charging (bright, light level 15)
 - the landing arrow points in the direction the player faced when placing it
 - a comparator reads the charge of the jumper currently charging
@@ -157,7 +161,7 @@ Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for t
 
 ./gradlew :mc_1.20.1_fabric:runClient                            # Fabric development client
 ./gradlew :mc_1.20.1_fabric:runServer                            # Fabric development server
-./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 38 tests)
+./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 39 tests)
 
 ./gradlew :mc_26.3_neoforge:runClient                            # Minecraft 26.3: NeoForge client, server, game tests
 ./gradlew :mc_26.3_neoforge:runServer

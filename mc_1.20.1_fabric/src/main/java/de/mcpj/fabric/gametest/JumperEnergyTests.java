@@ -35,4 +35,9 @@ public class JumperEnergyTests {
     public static void jumperAttractsLightning(GameTestHelper helper) {
         JumperEnergyTestCases.jumperAttractsLightning(helper);
     }
+
+    @GameTest(template = "mcpj:platform", timeoutTicks = 60)
+    public static void chargingPadChargesWithoutPower(GameTestHelper helper) {
+        JumperEnergyTestCases.chargingPadChargesWithoutPower(helper);
+    }
 }
