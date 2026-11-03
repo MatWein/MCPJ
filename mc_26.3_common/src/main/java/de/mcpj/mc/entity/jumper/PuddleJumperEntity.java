@@ -683,6 +683,8 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
         getPassengers().forEach(passenger -> {
             passenger.resetFallDistance();
             passenger.clearFire();
+            // the cabin has air: underwater the passengers would otherwise run out and drown right after leaving
+            passenger.setAirSupply(passenger.getMaxAirSupply());
         });
         core.serverTick();
         cargo.tick();

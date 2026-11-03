@@ -91,4 +91,17 @@ public final class JumperHazardTestCases {
         helper.succeed();
     }
 
-    /** The mock player is creative and invulnerable by default; make it a normal survival player. */}
+    /** The mock player is creative and invulnerable by default; make it a normal survival player. */
+
+    /** Passengers do not run out of air underwater, so they can breathe right after leaving the ship. */
+    public static void passengersKeepTheirAir(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
+        Player pilot = vulnerablePlayer(helper);
+        helper.assertTrue(McCompat.ride(pilot, jumper), "Pilot could not board");
+        pilot.setAirSupply(-20);
+        helper.runAfterDelay(3, () -> {
+            helper.assertTrue(pilot.getAirSupply() == pilot.getMaxAirSupply(), "Passenger has " + pilot.getAirSupply() + " air");
+            helper.succeed();
+        });
+    }
+}

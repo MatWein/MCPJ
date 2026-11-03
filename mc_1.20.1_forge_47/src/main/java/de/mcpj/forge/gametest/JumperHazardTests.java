@@ -35,4 +35,9 @@ public class JumperHazardTests {
     public static void destructionEjectsPilotAndExplodes(GameTestHelper helper) {
         JumperHazardTestCases.destructionEjectsPilotAndExplodes(helper);
     }
+
+    @GameTest(template = "platform")
+    public static void passengersKeepTheirAir(GameTestHelper helper) {
+        JumperHazardTestCases.passengersKeepTheirAir(helper);
+    }
 }

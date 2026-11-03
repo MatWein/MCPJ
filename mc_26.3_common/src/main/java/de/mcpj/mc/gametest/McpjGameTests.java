@@ -46,6 +46,7 @@ public final class McpjGameTests {
             test("crashes_without_energy", 100, JumperFlightTestCases::crashesWithoutEnergy),
             test("impact_damage_curve", 100, JumperFlightTestCases::impactDamageCurve),
             test("lava_damages_hull", 120, JumperHazardTestCases::lavaDamagesHull),
+            test("passengers_keep_their_air", 40, JumperHazardTestCases::passengersKeepTheirAir),
             test("flowing_lava_from_above_damages_hull", 300, JumperHazardTestCases::flowingLavaFromAboveDamagesHull),
             test("shield_absorbs_lava", 120, JumperHazardTestCases::shieldAbsorbsLava),
             test("passenger_is_invulnerable", 100, JumperHazardTestCases::passengerIsInvulnerable),
