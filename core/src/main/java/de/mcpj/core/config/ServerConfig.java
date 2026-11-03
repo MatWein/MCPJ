@@ -13,6 +13,7 @@ public final class ServerConfig {
     public static LightConfig LIGHTS;
     public static CargoConfig CARGO;
     public static ChargingPadConfig CHARGING_PAD;
+    public static ProjectorConfig PROJECTOR;
 
     private ServerConfig() {}
 
@@ -25,5 +26,6 @@ public final class ServerConfig {
         LIGHTS = new LightConfig(builder);
         CARGO = new CargoConfig(builder);
         CHARGING_PAD = new ChargingPadConfig(builder);
+        PROJECTOR = new ProjectorConfig(builder);
     }
 }

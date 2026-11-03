@@ -17,6 +17,8 @@ public final class ModItems {
 
     public static final RegistryObject<Item> CHARGING_PAD = ITEMS.register("charging_pad",
             () -> new BlockItem(ModBlocks.CHARGING_PAD.get(), new Item.Properties().rarity(Rarity.RARE)));
+    public static final RegistryObject<Item> JUMPER_PROJECTOR = ITEMS.register("jumper_projector",
+            () -> new BlockItem(ModBlocks.JUMPER_PROJECTOR.get(), new Item.Properties().rarity(Rarity.EPIC)));
 
     private ModItems() {}
 }

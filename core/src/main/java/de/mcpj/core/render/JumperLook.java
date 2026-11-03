@@ -15,6 +15,8 @@ public final class JumperLook {
     public static final float SHADOW_RADIUS = 2.2f * JumperGeometry.RENDER_SCALE;
     /** Brightness of the faint outline the pilot sees of their own cloaked ship. */
     public static final float GHOST_BRIGHTNESS = 0.22f;
+    private static final float CONSTRUCTION_START_BRIGHTNESS = 0.6f;
+    private static final float CONSTRUCTION_FINAL_BRIGHTNESS = 1.0f;
     private static final float CLOAKED_THRESHOLD = 0.5f;
     private static final float HOVER_BOB_SPEED = 0.08f;
     private static final float HOVER_BOB_AMPLITUDE = 0.04f;
@@ -46,6 +48,12 @@ public final class JumperLook {
     }
 
     /** Cloaked enough to be invisible to others (the pilot sees a ghost outline). */
+    /** Brightness of the glowing outline of a jumper under construction: clearly visible, brighter as the build goes on. */
+    public static float constructionBrightness(float progress) {
+        float clamped = Math.max(0f, Math.min(1f, progress));
+        return CONSTRUCTION_START_BRIGHTNESS + (CONSTRUCTION_FINAL_BRIGHTNESS - CONSTRUCTION_START_BRIGHTNESS) * clamped;
+    }
+
     public static boolean isCloaked(Jumper jumper, float partialTick) {
         return jumper.animation().cloak(partialTick) > CLOAKED_THRESHOLD;
     }

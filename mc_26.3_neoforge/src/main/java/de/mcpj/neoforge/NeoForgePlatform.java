@@ -1,5 +1,6 @@
 package de.mcpj.neoforge;
 
+import de.mcpj.mc.block.JumperProjectorBlockEntity;
 import com.mojang.blaze3d.platform.InputConstants;
 import de.mcpj.mc.block.ChargingPadBlockEntity;
 import de.mcpj.mc.client.input.KeyBindings;
@@ -38,6 +39,11 @@ final class NeoForgePlatform implements McpjPlatform {
     @Override
     public Item jumperItem() {
         return NeoForgeObjects.PUDDLE_JUMPER_ITEM.get();
+    }
+
+    @Override
+    public BlockEntityType<JumperProjectorBlockEntity> projectorType() {
+        return NeoForgeObjects.JUMPER_PROJECTOR_ENTITY.get();
     }
 
     @Override

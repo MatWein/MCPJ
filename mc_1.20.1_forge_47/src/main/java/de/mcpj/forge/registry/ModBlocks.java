@@ -1,5 +1,6 @@
 package de.mcpj.forge.registry;
 
+import de.mcpj.mc.block.JumperProjectorBlock;
 import de.mcpj.forge.McpjMod;
 import de.mcpj.mc.block.ChargingPadBlock;
 import net.minecraft.world.level.block.Block;
@@ -23,6 +24,13 @@ public final class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.METAL)
                     .lightLevel(ChargingPadBlock::lightLevel)));
+    public static final RegistryObject<Block> JUMPER_PROJECTOR = BLOCKS.register("jumper_projector",
+            () -> new JumperProjectorBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(PAD_HARDNESS, PAD_BLAST_RESISTANCE)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.METAL)
+                    .lightLevel(JumperProjectorBlock::lightLevel)));
 
     private ModBlocks() {}
 }

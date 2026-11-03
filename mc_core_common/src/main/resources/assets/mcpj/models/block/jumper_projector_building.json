@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "mcpj:block/jumper_projector_side_building",
+    "up": "mcpj:block/jumper_projector_top_building",
+    "down": "mcpj:block/charging_pad_bottom",
+    "north": "mcpj:block/jumper_projector_side_building",
+    "south": "mcpj:block/jumper_projector_side_building",
+    "east": "mcpj:block/jumper_projector_side_building",
+    "west": "mcpj:block/jumper_projector_side_building"
+  }
+}

@@ -1,5 +1,6 @@
 package de.mcpj.neoforge.registry;
 
+import de.mcpj.mc.block.JumperProjectorBlockEntity;
 import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.entity.drone.DroneEntity;
 import de.mcpj.mc.gametest.McpjGameTests;
@@ -31,9 +32,12 @@ public final class NeoForgeObjects {
     private static final DeferredRegister<Consumer<GameTestHelper>> TEST_FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, Mcpj.MOD_ID);
 
     public static final DeferredHolder<Block, Block> CHARGING_PAD = BLOCKS.register(McpjObjects.CHARGING_PAD, McpjObjects::chargingPad);
+    public static final DeferredHolder<Block, Block> JUMPER_PROJECTOR = BLOCKS.register(McpjObjects.JUMPER_PROJECTOR, McpjObjects::jumperProjector);
     public static final DeferredHolder<Item, Item> PUDDLE_JUMPER_ITEM = ITEMS.register(McpjObjects.PUDDLE_JUMPER, McpjObjects::jumperItem);
     public static final DeferredHolder<Item, Item> CHARGING_PAD_ITEM =
             ITEMS.register(McpjObjects.CHARGING_PAD, () -> McpjObjects.chargingPadItem(CHARGING_PAD.get()));
+    public static final DeferredHolder<Item, Item> JUMPER_PROJECTOR_ITEM =
+            ITEMS.register(McpjObjects.JUMPER_PROJECTOR, () -> McpjObjects.jumperProjectorItem(JUMPER_PROJECTOR.get()));
     public static final DeferredHolder<EntityType<?>, EntityType<NeoForgePuddleJumperEntity>> PUDDLE_JUMPER =
             ENTITY_TYPES.register(McpjObjects.PUDDLE_JUMPER, () -> McpjObjects.jumperType(NeoForgePuddleJumperEntity::new));
     public static final DeferredHolder<EntityType<?>, EntityType<DroneEntity>> DRONE =
@@ -41,6 +45,8 @@ public final class NeoForgeObjects {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NeoForgeChargingPadBlockEntity>> CHARGING_PAD_ENTITY =
             BLOCK_ENTITY_TYPES.register(McpjObjects.CHARGING_PAD,
                     () -> McpjObjects.chargingPadEntity(NeoForgeChargingPadBlockEntity::new, CHARGING_PAD.get()));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<JumperProjectorBlockEntity>> JUMPER_PROJECTOR_ENTITY =
+            BLOCK_ENTITY_TYPES.register(McpjObjects.JUMPER_PROJECTOR, () -> McpjObjects.jumperProjectorEntity(JUMPER_PROJECTOR.get()));
     public static final DeferredHolder<SoundEvent, SoundEvent> ENGINE = SOUND_EVENTS.register(McpjObjects.ENGINE, McpjObjects::engineSound);
 
     static {
@@ -63,6 +69,7 @@ public final class NeoForgeObjects {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(PUDDLE_JUMPER_ITEM.get());
             event.accept(CHARGING_PAD_ITEM.get());
+            event.accept(JUMPER_PROJECTOR_ITEM.get());
         }
     }
 }

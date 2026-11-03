@@ -1,6 +1,7 @@
 package de.mcpj.core.pad;
 
 import de.mcpj.core.config.ChargingPadConfig;
+import de.mcpj.core.energy.EnergyInput;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.core.util.SaveData;
 
@@ -9,7 +10,7 @@ import de.mcpj.core.util.SaveData;
  * Unless the config requires power, it also charges on its own (slower) when its buffer is empty.
  * A comparator reads the charge of the jumper currently charging.
  */
-public final class ChargingPad {
+public final class ChargingPad implements EnergyInput {
     private static final int CHARGING_HOLD_TICKS = 10;
     private static final int STATE_UPDATE_INTERVAL = 5;
     private static final int MAX_COMPARATOR_LEVEL = 15;
@@ -49,7 +50,7 @@ public final class ChargingPad {
         return drain(Math.min(requested, config.chargeRate() * ticks));
     }
 
-    /** Energy from cables or machines; returns the amount accepted. */
+    @Override
     public int receive(int amount, boolean simulate) {
         int accepted = Math.min(Math.min(amount, ServerConfig.CHARGING_PAD.inputRate()), capacity() - stored);
         if (accepted <= 0) return 0;
@@ -69,16 +70,18 @@ public final class ChargingPad {
         return drained;
     }
 
+    @Override
     public int stored() {
         return stored;
     }
 
-    /** Restores the stored energy (energy APIs with transactions roll back aborted inserts with it). */
+    @Override
     public void restoreStored(int energy) {
         stored = Math.max(0, energy);
         host.markChanged();
     }
 
+    @Override
     public int capacity() {
         return ServerConfig.CHARGING_PAD.buffer();
     }

@@ -1,5 +1,10 @@
 package de.mcpj.mc.compat;
 
+import net.minecraft.world.entity.EntitySpawnReason;
+import org.jspecify.annotations.Nullable;
+import net.minecraft.world.level.Level;
+import de.mcpj.mc.platform.McpjPlatform;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
@@ -60,5 +65,13 @@ public final class McCompat {
         if (!(mob.level() instanceof ServerLevel level)) return;
         mob.swingForAttack(InteractionHand.MAIN_HAND);
         mob.doHurtTarget(level, target);
+    }
+
+    /** A new jumper at that spot and heading (not yet in the world); null if it could not be created. */
+    @Nullable
+    public static PuddleJumperEntity newJumper(Level level, double x, double y, double z, float yaw) {
+        PuddleJumperEntity jumper = McpjPlatform.get().jumperType().create(level, EntitySpawnReason.TRIGGERED);
+        if (jumper != null) jumper.snapTo(x, y, z, yaw, 0f);
+        return jumper;
     }
 }

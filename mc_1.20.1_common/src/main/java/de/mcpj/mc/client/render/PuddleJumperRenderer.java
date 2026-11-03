@@ -48,8 +48,9 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         JumperAnimation animation = core.animation();
         boolean ownShip = minecraft.player != null && jumper.hasPassenger(minecraft.player);
         boolean cloaked = JumperLook.isCloaked(core, partialTick);
-        ShipStyle style = style(cloaked, ownShip, light);
-        shadowRadius = cloaked ? 0 : JumperLook.SHADOW_RADIUS;
+        float construction = jumper.constructionProgress();
+        ShipStyle style = style(cloaked, ownShip, construction, light);
+        shadowRadius = cloaked || construction >= 0 ? 0 : JumperLook.SHADOW_RADIUS;
         float time = jumper.tickCount + partialTick;
 
         poseStack.pushPose();
@@ -71,7 +72,11 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         super.render(jumper, entityYaw, partialTick, poseStack, buffers, light);
     }
 
-    private static ShipStyle style(boolean cloaked, boolean ownShip, int light) {
+    /** {@code construction}: build progress of a jumper under construction (shown like the own cloaked ship), else negative. */
+    private static ShipStyle style(boolean cloaked, boolean ownShip, float construction, int light) {
+        if (construction >= 0) {
+            return new ShipStyle(RenderType.eyes(TEXTURE), JumperLook.constructionBrightness(construction), LightTexture.FULL_BRIGHT, true, false);
+        }
         boolean ghost = cloaked && ownShip;
         if (ghost) return new ShipStyle(RenderType.eyes(TEXTURE), JumperLook.GHOST_BRIGHTNESS, LightTexture.FULL_BRIGHT, true, false);
         return new ShipStyle(RenderType.entityCutout(TEXTURE), 1f, light, !cloaked, !cloaked);

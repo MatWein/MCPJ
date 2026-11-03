@@ -1,6 +1,7 @@
 package de.mcpj.fabric.gametest;
 
 import de.mcpj.mc.gametest.JumperEnergyTestCases;
+import de.mcpj.mc.gametest.JumperProjectorTestCases;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 
@@ -39,5 +40,20 @@ public class JumperEnergyTests {
     @GameTest(template = "mcpj:platform", timeoutTicks = 60)
     public static void chargingPadChargesWithoutPower(GameTestHelper helper) {
         JumperEnergyTestCases.chargingPadChargesWithoutPower(helper);
+    }
+
+    @GameTest(template = "mcpj:platform", timeoutTicks = 60)
+    public static void projectorBuildsJumperAfterPulse(GameTestHelper helper) {
+        JumperProjectorTestCases.projectorBuildsJumperAfterPulse(helper);
+    }
+
+    @GameTest(template = "mcpj:platform", timeoutTicks = 40)
+    public static void projectorNeedsSpace(GameTestHelper helper) {
+        JumperProjectorTestCases.projectorNeedsSpace(helper);
+    }
+
+    @GameTest(template = "mcpj:platform", timeoutTicks = 60)
+    public static void unfinishedJumperVanishesWithProjector(GameTestHelper helper) {
+        JumperProjectorTestCases.unfinishedJumperVanishesWithProjector(helper);
     }
 }

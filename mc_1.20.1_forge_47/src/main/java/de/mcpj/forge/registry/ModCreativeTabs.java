@@ -10,6 +10,7 @@ public final class ModCreativeTabs {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ModItems.PUDDLE_JUMPER);
             event.accept(ModItems.CHARGING_PAD);
+            event.accept(ModItems.JUMPER_PROJECTOR);
         }
     }
 }

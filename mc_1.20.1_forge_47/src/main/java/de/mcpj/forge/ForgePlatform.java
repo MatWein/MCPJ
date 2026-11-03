@@ -1,5 +1,6 @@
 package de.mcpj.forge;
 
+import de.mcpj.mc.block.JumperProjectorBlockEntity;
 import com.mojang.blaze3d.platform.InputConstants;
 import de.mcpj.forge.block.ForgeChargingPadBlockEntity;
 import de.mcpj.forge.network.ModNetwork;
@@ -60,6 +61,11 @@ final class ForgePlatform implements McpjPlatform {
     @Override
     public BlockEntityType<? extends ChargingPadBlockEntity> chargingPadType() {
         return ModBlockEntities.CHARGING_PAD.get();
+    }
+
+    @Override
+    public BlockEntityType<JumperProjectorBlockEntity> projectorType() {
+        return ModBlockEntities.JUMPER_PROJECTOR.get();
     }
 
     @Override

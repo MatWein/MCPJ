@@ -90,6 +90,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
     private static final EntityDataAccessor<Integer> ENERGY_FLOW = define(EntityDataSerializers.INT);
     private static final EntityDataAccessor<Vector3f> ARRIVAL_VELOCITY = define(EntityDataSerializers.VECTOR3);
     private static final EntityDataAccessor<Integer> ARRIVALS = define(EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> CONSTRUCTION = define(EntityDataSerializers.FLOAT);
 
     private static final byte SHIELD_HIT_EVENT = 60;
     private static final float EYE_HEIGHT_FACTOR = 0.6f;
@@ -108,6 +109,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
     private final JumperTravel travel = new JumperTravel(this);
     private final JumperMeleeAttackers meleeAttackers = new JumperMeleeAttackers(this);
     private final JumperLightning lightning = new JumperLightning(this);
+    private final JumperConstruction construction = new JumperConstruction(this);
     private final RandomGenerator randomGenerator = () -> random.nextLong();
 
     public PuddleJumperEntity(EntityType<? extends PuddleJumperEntity> type, Level level) {
@@ -136,6 +138,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
         entityData.define(ENERGY_FLOW, 0);
         entityData.define(ARRIVAL_VELOCITY, new Vector3f());
         entityData.define(ARRIVALS, 0);
+        entityData.define(CONSTRUCTION, JumperConstruction.DONE);
     }
 
     @Override
@@ -148,6 +151,20 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
 
     public Jumper core() {
         return core;
+    }
+
+    /** Being built by a projector (see JumperConstruction). */
+    public JumperConstruction construction() {
+        return construction;
+    }
+
+    /** Synced build progress 0..1, or JumperConstruction.DONE for a finished ship. */
+    public float constructionProgress() {
+        return entityData.get(CONSTRUCTION);
+    }
+
+    void setConstructionProgress(float progress) {
+        entityData.set(CONSTRUCTION, progress);
     }
 
     public JumperLightning lightning() {
@@ -633,6 +650,13 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
 
     @Override
     public void tick() {
+        if (construction.isActive()) {
+            // under construction: frozen, no ship systems (see JumperConstruction)
+            super.tick();
+            updateParts();
+            construction.tick();
+            return;
+        }
         core.beforeTick();
         super.tick();
         interpolation.tick();
@@ -714,6 +738,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
 
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
+        if (construction.isActive()) return InteractionResult.PASS;
         if (player.isSecondaryUseActive()) {
             if (!level().isClientSide) openCustomInventoryScreen(player);
             return InteractionResult.sidedSuccess(level().isClientSide);
@@ -730,7 +755,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (isInvulnerableTo(source)) return false;
+        if (isInvulnerableTo(source) || construction.isActive()) return false;
         Entity attacker = source.getEntity();
         return core.hull().hurt(new JumperHull.Damage(amount, attacker, attacker != null && hasPassenger(attacker),
                 isFriendlyDrone(source), source.getDirectEntity() instanceof DroneEntity drone ? drone.getUUID() : null,
@@ -824,6 +849,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
     protected void readAdditionalSaveData(CompoundTag tag) {
         NbtSaveData data = new NbtSaveData(tag);
         core.systems().load(data);
+        construction.load(data);
         core.hull().load(data);
         core.energy().load(data);
         core.lights().load(data);
@@ -834,6 +860,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
     protected void addAdditionalSaveData(CompoundTag tag) {
         NbtSaveData data = new NbtSaveData(tag);
         core.systems().save(data);
+        construction.save(data);
         core.hull().save(data);
         core.energy().save(data);
         core.lights().save(data);

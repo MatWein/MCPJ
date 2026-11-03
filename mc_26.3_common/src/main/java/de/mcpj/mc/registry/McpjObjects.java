@@ -1,5 +1,7 @@
 package de.mcpj.mc.registry;
 
+import de.mcpj.mc.block.JumperProjectorBlock;
+import de.mcpj.mc.block.JumperProjectorBlockEntity;
 import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.block.ChargingPadBlock;
@@ -31,6 +33,7 @@ public final class McpjObjects {
     public static final String PUDDLE_JUMPER = "puddle_jumper";
     public static final String DRONE = "drone";
     public static final String CHARGING_PAD = "charging_pad";
+    public static final String JUMPER_PROJECTOR = "jumper_projector";
     public static final String ENGINE = "engine";
 
     private static final float PAD_HARDNESS = 3.5f;
@@ -50,6 +53,24 @@ public final class McpjObjects {
                 .requiresCorrectToolForDrops()
                 .sound(SoundType.METAL)
                 .lightLevel(ChargingPadBlock::lightLevel));
+    }
+
+    public static Block jumperProjector() {
+        return new JumperProjectorBlock(BlockBehaviour.Properties.of()
+                .setId(ResourceKey.create(Registries.BLOCK, Mcpj.id(JUMPER_PROJECTOR)))
+                .mapColor(MapColor.METAL)
+                .strength(PAD_HARDNESS, PAD_BLAST_RESISTANCE)
+                .requiresCorrectToolForDrops()
+                .sound(SoundType.METAL)
+                .lightLevel(JumperProjectorBlock::lightLevel));
+    }
+
+    public static Item jumperProjectorItem(Block projector) {
+        return new BlockItem(projector, new Item.Properties().setId(itemKey(JUMPER_PROJECTOR)).useBlockDescriptionPrefix().rarity(Rarity.EPIC));
+    }
+
+    public static BlockEntityType<JumperProjectorBlockEntity> jumperProjectorEntity(Block projector) {
+        return new BlockEntityType<>(JumperProjectorBlockEntity::new, Set.of(projector));
     }
 
     public static Item jumperItem() {

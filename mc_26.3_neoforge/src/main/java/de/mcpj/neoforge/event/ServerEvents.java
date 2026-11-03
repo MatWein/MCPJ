@@ -1,5 +1,6 @@
 package de.mcpj.neoforge.event;
 
+import de.mcpj.neoforge.block.InputEnergyHandler;
 import de.mcpj.mc.entity.jumper.JumperTravel;
 import de.mcpj.mc.rules.JumperRules;
 import de.mcpj.neoforge.registry.NeoForgeObjects;
@@ -42,5 +43,7 @@ public final class ServerEvents {
 
     private static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.Energy.BLOCK, NeoForgeObjects.CHARGING_PAD_ENTITY.get(), (pad, side) -> pad.energy());
+        event.registerBlockEntity(Capabilities.Energy.BLOCK, NeoForgeObjects.JUMPER_PROJECTOR_ENTITY.get(),
+                (projector, side) -> new InputEnergyHandler(projector.logic()));
     }
 }

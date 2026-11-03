@@ -7,8 +7,9 @@ headlights and an energy system that works with any Forge Energy mod.
 
 ## Getting started
 
-- Creative inventory, tab **Tools & Utilities**: *Puddle Jumper* and *Jumper Charging Pad*
-- There are no crafting recipes yet.
+- Creative inventory, tab **Tools & Utilities**: *Puddle Jumper*, *Jumper Charging Pad* and *Jumper Projector*
+- Survival: craft the **Jumper Charging Pad** (8 emeralds around a redstone dust) and the **Jumper Projector**
+  (the same with diamonds in the 4 corners); the projector builds jumpers (see below)
 
 Use the item on the ground and the jumper appears facing your view direction.
 New jumpers start with 20 % energy.
@@ -124,6 +125,18 @@ With `chargingPad.requirePower = true` in the server config, pads only charge wi
 - the landing arrow points in the direction the player faced when placing it
 - a comparator reads the charge of the jumper currently charging
 
+### Jumper Projector
+
+Builds a jumper on top of itself, nose in the direction the player faced when placing it. A **redstone pulse**
+starts one build (a pulse while building does nothing; keep the signal off between jumpers, e.g. a button). The
+space above must be free (about 9 long, 3 wide, 3 high); the build pauses while it is blocked.
+
+- The build takes 10 minutes. The unfinished jumper shows as a glowing outline that gets brighter, with sparks
+  scanning the hull; it cannot be boarded or damaged. Breaking the projector removes it.
+- By default it needs no power. With `projector.requirePower = true` it needs 120 M FE per jumper from cables
+  (10,000 FE/t over the build time; the build pauses without energy).
+- A finished jumper starts with 20 % energy.
+
 ## Configuration
 
 Gameplay values live in the server config `world/serverconfig/mcpj-server.toml` (synced to clients):
@@ -161,7 +174,7 @@ Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for t
 
 ./gradlew :mc_1.20.1_fabric:runClient                            # Fabric development client
 ./gradlew :mc_1.20.1_fabric:runServer                            # Fabric development server
-./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 39 tests)
+./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 42 tests)
 
 ./gradlew :mc_26.3_neoforge:runClient                            # Minecraft 26.3: NeoForge client, server, game tests
 ./gradlew :mc_26.3_neoforge:runServer

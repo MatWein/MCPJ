@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CEC",
+    "ERE",
+    "CEC"
+  ],
+  "key": {
+    "C": "minecraft:diamond",
+    "E": "minecraft:emerald",
+    "R": "minecraft:redstone"
+  },
+  "result": {
+    "id": "mcpj:jumper_projector",
+    "count": 1
+  }
+}

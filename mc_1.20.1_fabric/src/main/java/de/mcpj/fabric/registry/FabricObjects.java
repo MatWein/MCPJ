@@ -1,5 +1,7 @@
 package de.mcpj.fabric.registry;
 
+import de.mcpj.mc.block.JumperProjectorBlock;
+import de.mcpj.mc.block.JumperProjectorBlockEntity;
 import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.fabric.block.FabricChargingPadBlockEntity;
 import de.mcpj.fabric.entity.FabricPuddleJumperEntity;
@@ -38,8 +40,15 @@ public final class FabricObjects {
             .requiresCorrectToolForDrops()
             .sound(SoundType.METAL)
             .lightLevel(ChargingPadBlock::lightLevel));
+    public static final Block JUMPER_PROJECTOR = new JumperProjectorBlock(BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(PAD_HARDNESS, PAD_BLAST_RESISTANCE)
+            .requiresCorrectToolForDrops()
+            .sound(SoundType.METAL)
+            .lightLevel(JumperProjectorBlock::lightLevel));
     public static final Item PUDDLE_JUMPER_ITEM = new PuddleJumperItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant());
     public static final Item CHARGING_PAD_ITEM = new BlockItem(CHARGING_PAD, new Item.Properties().rarity(Rarity.RARE));
+    public static final Item JUMPER_PROJECTOR_ITEM = new BlockItem(JUMPER_PROJECTOR, new Item.Properties().rarity(Rarity.EPIC));
     public static final EntityType<FabricPuddleJumperEntity> PUDDLE_JUMPER = EntityType.Builder
             .<FabricPuddleJumperEntity>of(FabricPuddleJumperEntity::new, MobCategory.MISC)
             .sized(JumperGeometry.WIDTH, JumperGeometry.HEIGHT)
@@ -55,21 +64,27 @@ public final class FabricObjects {
             .build(Mcpj.id("drone").toString());
     public static final BlockEntityType<FabricChargingPadBlockEntity> CHARGING_PAD_ENTITY =
             BlockEntityType.Builder.of(FabricChargingPadBlockEntity::new, CHARGING_PAD).build(null);
+    public static final BlockEntityType<JumperProjectorBlockEntity> JUMPER_PROJECTOR_ENTITY =
+            BlockEntityType.Builder.of(JumperProjectorBlockEntity::new, JUMPER_PROJECTOR).build(null);
     public static final SoundEvent ENGINE = SoundEvent.createVariableRangeEvent(Mcpj.id("engine"));
 
     private FabricObjects() {}
 
     public static void register() {
         Registry.register(BuiltInRegistries.BLOCK, Mcpj.id("charging_pad"), CHARGING_PAD);
+        Registry.register(BuiltInRegistries.BLOCK, Mcpj.id("jumper_projector"), JUMPER_PROJECTOR);
         Registry.register(BuiltInRegistries.ITEM, Mcpj.id("puddle_jumper"), PUDDLE_JUMPER_ITEM);
         Registry.register(BuiltInRegistries.ITEM, Mcpj.id("charging_pad"), CHARGING_PAD_ITEM);
+        Registry.register(BuiltInRegistries.ITEM, Mcpj.id("jumper_projector"), JUMPER_PROJECTOR_ITEM);
         Registry.register(BuiltInRegistries.ENTITY_TYPE, Mcpj.id("puddle_jumper"), PUDDLE_JUMPER);
         Registry.register(BuiltInRegistries.ENTITY_TYPE, Mcpj.id("drone"), DRONE);
         Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Mcpj.id("charging_pad"), CHARGING_PAD_ENTITY);
+        Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Mcpj.id("jumper_projector"), JUMPER_PROJECTOR_ENTITY);
         Registry.register(BuiltInRegistries.SOUND_EVENT, Mcpj.id("engine"), ENGINE);
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(entries -> {
             entries.accept(PUDDLE_JUMPER_ITEM);
             entries.accept(CHARGING_PAD_ITEM);
+            entries.accept(JUMPER_PROJECTOR_ITEM);
         });
     }
 }

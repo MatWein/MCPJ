@@ -39,6 +39,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         boolean ownShip;
         boolean pilotView;
         boolean cloaked;
+        float construction;
     }
 
     private record ShipStyle(RenderType solid, float brightness, int lightmap, boolean visible, boolean effects) {}
@@ -62,6 +63,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         state.ownShip = minecraft.player != null && jumper.hasPassenger(minecraft.player);
         state.pilotView = state.ownShip && minecraft.options.getCameraType().isFirstPerson() && minecraft.getCameraEntity() == minecraft.player;
         state.cloaked = JumperLook.isCloaked(jumper.core(), partialTick);
+        state.construction = jumper.constructionProgress();
     }
 
     @Override
@@ -71,7 +73,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
 
     @Override
     protected float getShadowRadius(State state) {
-        return state.cloaked ? 0 : JumperLook.SHADOW_RADIUS;
+        return state.cloaked || state.construction >= 0 ? 0 : JumperLook.SHADOW_RADIUS;
     }
 
     @Override
@@ -81,7 +83,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         if (model == null || core == null) return;
         float partialTick = state.partialTick;
         JumperAnimation animation = core.animation();
-        ShipStyle style = style(state.cloaked, state.ownShip, state.lightCoords);
+        ShipStyle style = style(state.cloaked, state.ownShip, state.construction, state.lightCoords);
         float time = state.ageInTicks;
 
         poseStack.pushPose();
@@ -102,7 +104,11 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         super.submit(state, poseStack, collector, camera);
     }
 
-    private static ShipStyle style(boolean cloaked, boolean ownShip, int light) {
+    /** {@code construction}: build progress of a jumper under construction (shown like the own cloaked ship), else negative. */
+    private static ShipStyle style(boolean cloaked, boolean ownShip, float construction, int light) {
+        if (construction >= 0) {
+            return new ShipStyle(ModRenderTypes.glow(TEXTURE), JumperLook.constructionBrightness(construction), LightCoordsUtil.FULL_BRIGHT, true, false);
+        }
         boolean ghost = cloaked && ownShip;
         if (ghost) return new ShipStyle(ModRenderTypes.glow(TEXTURE), JumperLook.GHOST_BRIGHTNESS, LightCoordsUtil.FULL_BRIGHT, true, false);
         return new ShipStyle(RenderTypes.entityCutout(TEXTURE), 1f, light, !cloaked, !cloaked);

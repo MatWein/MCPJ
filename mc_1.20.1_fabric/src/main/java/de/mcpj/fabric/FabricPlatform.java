@@ -1,5 +1,6 @@
 package de.mcpj.fabric;
 
+import de.mcpj.mc.block.JumperProjectorBlockEntity;
 import com.mojang.blaze3d.platform.InputConstants;
 import de.mcpj.fabric.block.FabricChargingPadBlockEntity;
 import de.mcpj.fabric.client.FabricClientServices;
@@ -35,6 +36,11 @@ final class FabricPlatform implements McpjPlatform {
     @Override
     public Item jumperItem() {
         return FabricObjects.PUDDLE_JUMPER_ITEM;
+    }
+
+    @Override
+    public BlockEntityType<JumperProjectorBlockEntity> projectorType() {
+        return FabricObjects.JUMPER_PROJECTOR_ENTITY;
     }
 
     @Override

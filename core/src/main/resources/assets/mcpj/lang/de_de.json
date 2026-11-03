@@ -40,5 +40,6 @@
   "hud.mcpj.on.lights": "an",
   "hud.mcpj.off.lights": "aus",
   "block.mcpj.charging_pad": "Jumper-Ladestation",
+  "block.mcpj.jumper_projector": "Jumper-Projektor",
   "hud.mcpj.energy": "Energie: %s %%"
 }

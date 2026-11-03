@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "building=false,facing=north": {
+      "model": "mcpj:block/jumper_projector_idle"
+    },
+    "building=false,facing=east": {
+      "model": "mcpj:block/jumper_projector_idle",
+      "y": 90
+    },
+    "building=false,facing=south": {
+      "model": "mcpj:block/jumper_projector_idle",
+      "y": 180
+    },
+    "building=false,facing=west": {
+      "model": "mcpj:block/jumper_projector_idle",
+      "y": 270
+    },
+    "building=true,facing=north": {
+      "model": "mcpj:block/jumper_projector_building"
+    },
+    "building=true,facing=east": {
+      "model": "mcpj:block/jumper_projector_building",
+      "y": 90
+    },
+    "building=true,facing=south": {
+      "model": "mcpj:block/jumper_projector_building",
+      "y": 180
+    },
+    "building=true,facing=west": {
+      "model": "mcpj:block/jumper_projector_building",
+      "y": 270
+    }
+  }
+}

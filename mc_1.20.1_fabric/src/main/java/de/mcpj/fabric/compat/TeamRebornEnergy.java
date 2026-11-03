@@ -1,36 +1,37 @@
 package de.mcpj.fabric.compat;
 
-import de.mcpj.core.pad.ChargingPad;
+import de.mcpj.core.energy.EnergyInput;
 import de.mcpj.fabric.registry.FabricObjects;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import team.reborn.energy.api.EnergyStorage;
 
 /**
- * Team Reborn Energy (the energy API of Fabric's tech mods): charging pads accept energy from all sides.
+ * Team Reborn Energy (the energy API of Fabric's tech mods): charging pads and projectors accept energy from all sides.
  * Only loaded when the API is installed; one unit counts as one Forge Energy unit.
  */
 public final class TeamRebornEnergy {
     private TeamRebornEnergy() {}
 
     public static void register() {
-        EnergyStorage.SIDED.registerForBlockEntity((pad, side) -> new PadStorage(pad.logic()), FabricObjects.CHARGING_PAD_ENTITY);
+        EnergyStorage.SIDED.registerForBlockEntity((pad, side) -> new InputStorage(pad.logic()), FabricObjects.CHARGING_PAD_ENTITY);
+        EnergyStorage.SIDED.registerForBlockEntity((projector, side) -> new InputStorage(projector.logic()), FabricObjects.JUMPER_PROJECTOR_ENTITY);
     }
 
-    /** Insert-only view of a pad; aborted transactions restore the stored energy. */
-    private static final class PadStorage extends SnapshotParticipant<Integer> implements EnergyStorage {
-        private final ChargingPad pad;
+    /** Insert-only view of a pad or projector; aborted transactions restore the stored energy. */
+    private static final class InputStorage extends SnapshotParticipant<Integer> implements EnergyStorage {
+        private final EnergyInput input;
 
-        PadStorage(ChargingPad pad) {
-            this.pad = pad;
+        InputStorage(EnergyInput input) {
+            this.input = input;
         }
 
         @Override
         public long insert(long maxAmount, TransactionContext transaction) {
-            int accepted = pad.receive((int) Math.min(maxAmount, Integer.MAX_VALUE), true);
+            int accepted = input.receive((int) Math.min(maxAmount, Integer.MAX_VALUE), true);
             if (accepted <= 0) return 0;
             updateSnapshots(transaction);
-            return pad.receive(accepted, false);
+            return input.receive(accepted, false);
         }
 
         @Override
@@ -40,12 +41,12 @@ public final class TeamRebornEnergy {
 
         @Override
         public long getAmount() {
-            return pad.stored();
+            return input.stored();
         }
 
         @Override
         public long getCapacity() {
-            return pad.capacity();
+            return input.capacity();
         }
 
         @Override
@@ -55,12 +56,12 @@ public final class TeamRebornEnergy {
 
         @Override
         protected Integer createSnapshot() {
-            return pad.stored();
+            return input.stored();
         }
 
         @Override
         protected void readSnapshot(Integer snapshot) {
-            pad.restoreStored(snapshot);
+            input.restoreStored(snapshot);
         }
     }
 }

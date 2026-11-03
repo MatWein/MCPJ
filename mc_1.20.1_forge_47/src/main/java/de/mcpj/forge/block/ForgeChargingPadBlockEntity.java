@@ -14,7 +14,7 @@ import org.jspecify.annotations.Nullable;
 
 /** The charging pad on Forge: Forge Energy goes in from all sides (Mekanism, Thermal, ...). */
 public class ForgeChargingPadBlockEntity extends ChargingPadBlockEntity {
-    private final IEnergyStorage storage = new PadEnergyStorage(pad());
+    private final IEnergyStorage storage = new InputEnergyStorage(pad());
     private LazyOptional<IEnergyStorage> energyCapability = LazyOptional.of(() -> storage);
 
     public ForgeChargingPadBlockEntity(BlockPos pos, BlockState state) {

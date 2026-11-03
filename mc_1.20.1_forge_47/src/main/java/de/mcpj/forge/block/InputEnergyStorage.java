@@ -1,13 +1,13 @@
 package de.mcpj.forge.block;
 
-import de.mcpj.core.pad.ChargingPad;
+import de.mcpj.core.energy.EnergyInput;
 import net.minecraftforge.energy.IEnergyStorage;
 
-/** Forge Energy view of the core's charging pad: other mods can only insert energy. */
-public record PadEnergyStorage(ChargingPad pad) implements IEnergyStorage {
+/** Forge Energy view of a block that takes energy (charging pad, projector): other mods can only insert energy. */
+public record InputEnergyStorage(EnergyInput input) implements IEnergyStorage {
     @Override
     public int receiveEnergy(int amount, boolean simulate) {
-        return pad.receive(amount, simulate);
+        return input.receive(amount, simulate);
     }
 
     @Override
@@ -17,12 +17,12 @@ public record PadEnergyStorage(ChargingPad pad) implements IEnergyStorage {
 
     @Override
     public int getEnergyStored() {
-        return pad.stored();
+        return input.stored();
     }
 
     @Override
     public int getMaxEnergyStored() {
-        return pad.capacity();
+        return input.capacity();
     }
 
     @Override

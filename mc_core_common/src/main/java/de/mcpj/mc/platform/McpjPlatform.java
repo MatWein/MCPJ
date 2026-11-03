@@ -1,5 +1,6 @@
 package de.mcpj.mc.platform;
 
+import de.mcpj.mc.block.JumperProjectorBlockEntity;
 import de.mcpj.mc.block.ChargingPadBlockEntity;
 import de.mcpj.mc.entity.drone.DroneEntity;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
@@ -30,6 +31,8 @@ public interface McpjPlatform {
 
     /** The loader's charging pad block entity (it adds the loader's energy API). */
     ChargingPadBlockEntity newChargingPad(BlockPos pos, BlockState state);
+
+    BlockEntityType<JumperProjectorBlockEntity> projectorType();
 
     SoundEvent engineSound();
 
