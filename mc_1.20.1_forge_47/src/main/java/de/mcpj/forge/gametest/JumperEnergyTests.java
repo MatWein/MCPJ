@@ -30,4 +30,14 @@ public class JumperEnergyTests {
     public static void chargingPadCharges(GameTestHelper helper) {
         JumperEnergyTestCases.chargingPadCharges(helper);
     }
+
+    @GameTest(template = "platform", timeoutTicks = 60)
+    public static void lightningChargesJumper(GameTestHelper helper) {
+        JumperEnergyTestCases.lightningChargesJumper(helper);
+    }
+
+    @GameTest(template = "platform")
+    public static void jumperAttractsLightning(GameTestHelper helper) {
+        JumperEnergyTestCases.jumperAttractsLightning(helper);
+    }
 }

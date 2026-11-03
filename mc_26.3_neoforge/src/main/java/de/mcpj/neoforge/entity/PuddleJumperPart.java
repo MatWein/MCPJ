@@ -2,6 +2,7 @@ package de.mcpj.neoforge.entity;
 
 import de.mcpj.mc.entity.jumper.JumperSegment;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -103,5 +104,11 @@ public class PuddleJumperPart extends PartEntity<PuddleJumperEntity> implements 
     @Override
     public void remove(RemovalReason reason) {
         if (reason.shouldDestroy() && level() instanceof ServerLevel level) jumper.kill(level);
+    }
+
+    /** Lightning hitting a segment charges the jumper (once per bolt), like a hit on the jumper itself. */
+    @Override
+    public void thunderHit(ServerLevel level, LightningBolt bolt) {
+        jumper().lightning().struck(bolt);
     }
 }

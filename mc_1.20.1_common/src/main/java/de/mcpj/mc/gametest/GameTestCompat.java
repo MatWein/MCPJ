@@ -3,6 +3,7 @@ package de.mcpj.mc.gametest;
 import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import de.mcpj.mc.platform.McpjPlatform;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -41,5 +42,10 @@ final class GameTestCompat {
         PuddleJumperEntity copy = McpjPlatform.get().jumperType().create(helper.getLevel());
         if (copy != null) copy.load(tag);
         return copy;
+    }
+
+    /** A new lightning bolt, not yet in the world. */
+    static LightningBolt lightning(GameTestHelper helper) {
+        return EntityType.LIGHTNING_BOLT.create(helper.getLevel());
     }
 }

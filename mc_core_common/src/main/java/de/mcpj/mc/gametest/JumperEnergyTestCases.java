@@ -1,5 +1,8 @@
 package de.mcpj.mc.gametest;
 
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.LightningBolt;
+import de.mcpj.mc.entity.jumper.JumperLightning;
 import de.mcpj.mc.block.ChargingPadBlock;
 import de.mcpj.core.config.EnergyConfig;
 import de.mcpj.core.config.ServerConfig;
@@ -98,5 +101,38 @@ public final class JumperEnergyTestCases {
             helper.assertTrue(state.getLightEmission() == ChargingPadBlock.lightLevel(state) && state.getLightEmission() > 0, "Charging pad does not glow");
             helper.succeed();
         });
+    }
+
+    /** Lightning charges 20 % once per bolt (hull and segments are all hit) and does no damage. */
+    public static void lightningChargesJumper(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
+        jumper.setShielded(false);
+        int capacity = jumper.energy().capacity();
+        jumper.energy().set(capacity / 10);
+        LightningBolt bolt = GameTestCompat.lightning(helper);
+        bolt.setPos(jumper.getX(), jumper.getBoundingBox().maxY, jumper.getZ());
+        helper.getLevel().addFreshEntity(bolt);
+        helper.runAfterDelay(20, () -> {
+            float charge = jumper.energy().fraction();
+            helper.assertTrue(Math.abs(charge - 0.3f) < 0.01f, "Expected 30 % after the strike, got " + charge);
+            helper.assertTrue(jumper.hull().integrity() == 1f, "Lightning damaged the hull");
+            helper.assertTrue(jumper.isAlive(), "Jumper destroyed by lightning");
+            helper.succeed();
+        });
+    }
+
+    /** A lightning bolt near a jumper strikes the jumper instead, but only under open sky. */
+    public static void jumperAttractsLightning(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
+        LightningBolt bolt = GameTestCompat.lightning(helper);
+        Vec3 beside = helper.absoluteVec(new Vec3(17, 2, 16));
+        bolt.setPos(beside.x, beside.y, beside.z);
+        JumperLightning.strikeNearestJumper(bolt);
+        // Forge's game test server has no open sky above the tests: then the bolt must stay where it is
+        boolean openSky = helper.getLevel().canSeeSky(BlockPos.containing(jumper.getX(), jumper.getBoundingBox().maxY, jumper.getZ()));
+        boolean moved = Math.abs(bolt.getX() - jumper.getX()) < 0.01 && Math.abs(bolt.getZ() - jumper.getZ()) < 0.01;
+        helper.assertTrue(moved == openSky, (openSky ? "Bolt not moved onto the jumper: " : "Bolt moved onto a jumper without open sky: ")
+                + bolt.position());
+        helper.succeed();
     }
 }

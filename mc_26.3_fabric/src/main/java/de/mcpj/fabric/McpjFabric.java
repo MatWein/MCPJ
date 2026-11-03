@@ -1,5 +1,7 @@
 package de.mcpj.fabric;
 
+import de.mcpj.mc.entity.jumper.JumperLightning;
+import net.minecraft.world.entity.LightningBolt;
 import de.mcpj.fabric.config.FabricConfigs;
 import de.mcpj.fabric.entity.FabricPuddleJumperEntity;
 import de.mcpj.fabric.entity.SegmentIndex;
@@ -30,6 +32,10 @@ public final class McpjFabric implements ModInitializer {
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             if (entity instanceof FabricPuddleJumperEntity jumper) SegmentIndex.remove(jumper);
+        });
+        // jumpers attract natural lightning during thunderstorms
+        ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+            if (entity instanceof LightningBolt bolt) JumperLightning.attract(bolt);
         });
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !JumperRules.shieldPassenger(entity, source, amount));
     }

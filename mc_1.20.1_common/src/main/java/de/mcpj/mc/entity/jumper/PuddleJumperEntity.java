@@ -25,6 +25,7 @@ import de.mcpj.mc.entity.drone.DroneEntity;
 import de.mcpj.mc.network.JumperActionPacket;
 import de.mcpj.mc.network.JumperImpactPacket;
 import de.mcpj.mc.network.PilotSoundPacket;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -106,6 +107,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
     private final JumperCargo cargo = new JumperCargo(this);
     private final JumperTravel travel = new JumperTravel(this);
     private final JumperMeleeAttackers meleeAttackers = new JumperMeleeAttackers(this);
+    private final JumperLightning lightning = new JumperLightning(this);
     private final RandomGenerator randomGenerator = () -> random.nextLong();
 
     public PuddleJumperEntity(EntityType<? extends PuddleJumperEntity> type, Level level) {
@@ -146,6 +148,16 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
 
     public Jumper core() {
         return core;
+    }
+
+    public JumperLightning lightning() {
+        return lightning;
+    }
+
+    /** Lightning charges the ship instead of hurting or burning it (see JumperLightning). */
+    @Override
+    public void thunderHit(ServerLevel level, LightningBolt bolt) {
+        lightning.struck(bolt);
     }
 
     public JumperEnergy energy() {

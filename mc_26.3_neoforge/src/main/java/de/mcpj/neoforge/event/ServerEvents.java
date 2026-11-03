@@ -3,6 +3,9 @@ package de.mcpj.neoforge.event;
 import de.mcpj.mc.entity.jumper.JumperTravel;
 import de.mcpj.mc.rules.JumperRules;
 import de.mcpj.neoforge.registry.NeoForgeObjects;
+import de.mcpj.mc.entity.jumper.JumperLightning;
+import net.minecraft.world.entity.LightningBolt;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
@@ -26,6 +29,10 @@ public final class ServerEvents {
         gameBus.addListener(ExplosionEvent.Detonate.class, event -> {
             Entity source = event.getExplosion().getDirectSourceEntity();
             event.getAffectedEntities().removeIf(affected -> JumperRules.sparedByExplosion(source, affected));
+        });
+        // jumpers attract natural lightning during thunderstorms
+        gameBus.addListener(EntityJoinLevelEvent.class, event -> {
+            if (event.getEntity() instanceof LightningBolt bolt) JumperLightning.attract(bolt);
         });
         // seated passengers and hull segments never change dimension on their own; the jumper takes them along
         gameBus.addListener(EventPriority.HIGH, EntityTravelToDimensionEvent.class, event -> {

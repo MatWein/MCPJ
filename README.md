@@ -107,6 +107,9 @@ If the energy for an absorbed hit is missing, the shield collapses and the hit g
 every system fails (shield, cloak, lights, drive and controls) and the jumper **crashes**. The HUD shows charge,
 consumption or charging power and the remaining time; below 10 % it blinks and an alarm sounds.
 
+**Lightning** charges a jumper by 20 % of its capacity (once per bolt) and does no damage. During thunderstorms a
+jumper under open sky attracts natural lightning within 32 blocks, like a small lightning rod, airborne or landed.
+
 ### Jumper Charging Pad
 
 A block that accepts Forge Energy from every side (Mekanism, Thermal, Immersive Engineering, …; Mekanism joules
@@ -154,7 +157,7 @@ Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for t
 
 ./gradlew :mc_1.20.1_fabric:runClient                            # Fabric development client
 ./gradlew :mc_1.20.1_fabric:runServer                            # Fabric development server
-./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 36 tests)
+./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 38 tests)
 
 ./gradlew :mc_26.3_neoforge:runClient                            # Minecraft 26.3: NeoForge client, server, game tests
 ./gradlew :mc_26.3_neoforge:runServer
