@@ -1,5 +1,6 @@
 package de.mcpj.mc.entity.jumper;
 
+import de.mcpj.mc.compat.McCompat;
 import de.mcpj.core.jumper.JumperParticle;
 import de.mcpj.core.jumper.JumperSound;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -10,13 +11,13 @@ import net.minecraft.sounds.SoundEvents;
 
 /** Minecraft sounds and particles for the core's ship effects. */
 final class JumperEffects {
-    private static final DustParticleOptions ION = new DustParticleOptions(0x73BFFF, 0.6f);
+    private static final DustParticleOptions ION = McCompat.dust(0x73BFFF, 0.6f);
 
     private JumperEffects() {}
 
     static SoundEvent sound(JumperSound sound) {
         return switch (sound) {
-            case IMPACT_BLAST -> SoundEvents.GENERIC_EXPLODE.value();
+            case IMPACT_BLAST -> McCompat.explodeSound();
             case IMPACT_CLANG, HULL_HIT -> SoundEvents.ANVIL_LAND;
             case SHIELD_HIT -> SoundEvents.AMETHYST_BLOCK_RESONATE;
             case LAVA_BURN -> SoundEvents.LAVA_EXTINGUISH;

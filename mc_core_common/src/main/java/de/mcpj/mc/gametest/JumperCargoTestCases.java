@@ -1,10 +1,8 @@
 package de.mcpj.mc.gametest;
 
-import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.mc.entity.jumper.JumperCargo;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -23,11 +21,8 @@ public final class JumperCargoTestCases {
         jumper.cargo().setItem(0, new ItemStack(Items.DIAMOND, 17));
         jumper.cargo().setItem(JumperCargo.SLOTS - 1, new ItemStack(Items.ENDER_PEARL, 3));
         jumper.setCloaked(true);
-        CompoundTag tag = jumper.saveWithoutId(new CompoundTag());
-
-        PuddleJumperEntity copy = McpjPlatform.get().jumperType().create(helper.getLevel());
+        PuddleJumperEntity copy = GameTestCompat.saveAndLoad(helper, jumper);
         helper.assertTrue(copy != null, "Could not create jumper");
-        copy.load(tag);
         ItemStack first = copy.cargo().getItem(0);
         ItemStack last = copy.cargo().getItem(JumperCargo.SLOTS - 1);
         helper.assertTrue(first.is(Items.DIAMOND) && first.getCount() == 17, "First slot wrong");

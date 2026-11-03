@@ -1,5 +1,6 @@
 package de.mcpj.mc.client.camera;
 
+import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.mc.client.PilotContext;
 import de.mcpj.core.config.ClientConfig;
 import de.mcpj.core.jumper.JumperGeometry;
@@ -32,7 +33,7 @@ public final class JumperCamera {
 
     /** After the camera was set up: the chase camera sits above the pilot and further back. */
     public static void onCameraSetup(Camera camera, float partialTick) {
-        Entity viewer = camera.entity();
+        Entity viewer = ClientCompat.cameraEntity(camera);
         if (!camera.isDetached() || viewer == null || !(viewer.getVehicle() instanceof PuddleJumperEntity)) return;
         Vec3 eye = viewer.getEyePosition(partialTick);
         camera.setPosition(eye.x, eye.y + JumperGeometry.CAMERA_HEIGHT, eye.z);

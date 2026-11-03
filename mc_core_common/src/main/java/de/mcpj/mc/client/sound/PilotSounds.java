@@ -1,5 +1,6 @@
 package de.mcpj.mc.client.sound;
 
+import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.mc.network.PilotSoundPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -11,7 +12,7 @@ public final class PilotSounds {
     private PilotSounds() {}
 
     public static void play(PilotSoundPacket packet) {
-        Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(packet.sound().location(), SoundSource.NEUTRAL,
+        Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(ClientCompat.soundId(packet.sound()), SoundSource.NEUTRAL,
                 packet.volume(), packet.pitch(), SoundInstance.createUnseededRandom(), false, 0,
                 SoundInstance.Attenuation.NONE, 0, 0, 0, true));
     }

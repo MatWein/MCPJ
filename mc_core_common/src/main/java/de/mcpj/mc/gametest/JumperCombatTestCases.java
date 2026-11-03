@@ -1,17 +1,14 @@
 package de.mcpj.mc.gametest;
 
+import net.minecraft.world.entity.Mob;
 import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.mc.entity.drone.DroneEntity;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -28,7 +25,7 @@ public final class JumperCombatTestCases {
 
     public static void droneHitsZombie(GameTestHelper helper) {
         PuddleJumperEntity jumper = spawnJumper(helper, 4, 2, 12, -90f);
-        Zombie zombie = helper.spawn(EntityTypes.ZOMBIE, new BlockPos(20, 2, 6));
+        Mob zombie = GameTestCompat.spawnZombie(helper, new BlockPos(20, 2, 6));
         zombie.setNoAi(true);
         float startHealth = zombie.getHealth();
         helper.runAfterDelay(2, () -> launch(helper, jumper, zombie, jumper.position().add(0, 1.2, 0), new Vec3(0.3, 0.3, 0.6)));
@@ -56,7 +53,7 @@ public final class JumperCombatTestCases {
     }
 
     private static void launch(GameTestHelper helper, PuddleJumperEntity jumper, net.minecraft.world.entity.Entity target, Vec3 from, Vec3 velocity) {
-        DroneEntity drone = new DroneEntity(helper.getLevel(), helper.makeMockPlayer(GameType.SURVIVAL), jumper, target);
+        DroneEntity drone = new DroneEntity(helper.getLevel(), GameTestCompat.mockPlayer(helper), jumper, target);
         drone.setPos(from);
         drone.setDeltaMovement(velocity);
         helper.getLevel().addFreshEntity(drone);
@@ -64,10 +61,10 @@ public final class JumperCombatTestCases {
 
     public static void ownDroneExplosionSparesJumper(GameTestHelper helper) {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
-        Zombie zombie = helper.spawn(EntityTypes.ZOMBIE, new BlockPos(12, 2, 17));
+        Mob zombie = GameTestCompat.spawnZombie(helper, new BlockPos(12, 2, 17));
         zombie.setNoAi(true);
         float startHealth = zombie.getHealth();
-        DroneEntity drone = new DroneEntity(helper.getLevel(), helper.makeMockPlayer(GameType.SURVIVAL), jumper, null);
+        DroneEntity drone = new DroneEntity(helper.getLevel(), GameTestCompat.mockPlayer(helper), jumper, null);
         Vec3 at = jumper.position().add(0, 1, 4.2);
         drone.setPos(at);
         helper.getLevel().addFreshEntity(drone);
@@ -82,7 +79,7 @@ public final class JumperCombatTestCases {
         jumper.setShielded(true);
         DamageSource source = helper.getLevel().damageSources().generic();
         for (int i = 0; i < 50; i++) jumper.hurt(source, 20f);
-        jumper.hurt(helper.getLevel().damageSources().playerAttack(helper.makeMockPlayer(GameType.SURVIVAL)), 1000f);
+        jumper.hurt(helper.getLevel().damageSources().playerAttack(GameTestCompat.mockPlayer(helper)), 1000f);
         helper.assertTrue(jumper.isAlive(), "Jumper destroyed despite shield");
         helper.assertTrue(jumper.hull().integrity() == 1f, "Shield let damage through");
         helper.succeed();
@@ -91,7 +88,7 @@ public final class JumperCombatTestCases {
     public static void survivesOneDroneNotTwo(GameTestHelper helper) {
         PuddleJumperEntity target = spawnJumper(helper, 12, 2, 12, 0);
         PuddleJumperEntity attacker = spawnJumper(helper, 4, 2, 4, 0);
-        var owner = helper.makeMockPlayer(GameType.SURVIVAL);
+        var owner = GameTestCompat.mockPlayer(helper);
         DroneEntity first = new DroneEntity(helper.getLevel(), owner, attacker, target);
         target.hurt(helper.getLevel().damageSources().thrown(first, owner), 8f);
         target.hurt(helper.getLevel().damageSources().thrown(first, owner), 30f);

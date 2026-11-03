@@ -191,6 +191,7 @@ mc_1.20.1_common/src/main/java/de/mcpj/mc/
   network/  rules/  platform/          messages, gameplay rules, McpjPlatform (what a loader provides)
   gametest/                            the game test cases (registered by each loader)
 mc_core_common/src/main/java/de/mcpj/mc/  the part of the packages above that is identical in all Minecraft versions
+                                       (version differences via McCompat / ClientCompat / GameTestCompat)
 mc_26.3_common/src/main/java/de/mcpj/mc/  as mc_1.20.1_common, plus registry/McpjObjects (builds all objects) and mixin/
 mc_26.3_neoforge/src/main/java/de/mcpj/neoforge/  registry, entity (part entities), block (energy), network, config, event, client
 mc_26.3_fabric/src/main/java/de/mcpj/fabric/      registry, entity (segments), block, network, config, client, mixin

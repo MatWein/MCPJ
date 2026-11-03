@@ -1,14 +1,13 @@
 package de.mcpj.mc.entity.jumper;
 
+import de.mcpj.mc.compat.McCompat;
 import de.mcpj.core.math.Vec3d;
-import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Teleports through portals and stargates (e.g. Just Stargate Mod) as one unit: the passengers stay seated and
@@ -40,10 +39,10 @@ public final class JumperTravel {
     /** Called on the new jumper after a dimension change: bring the passengers over and keep flying. */
     void arriveFromOtherDimension(Departure departure) {
         for (Entity passenger : departure.passengers()) {
-            // Minecraft usually brings the passengers along itself; only seat those it lost on the way
+            // newer Minecraft versions usually bring the passengers along themselves; only seat those it lost on the way
             if (passenger instanceof ServerPlayer player && player.getVehicle() != jumper && jumper.level() instanceof ServerLevel level) {
-                player.teleportTo(level, jumper.getX(), jumper.getY(), jumper.getZ(), Set.of(), jumper.getYRot(), player.getXRot(), false);
-                player.startRiding(jumper, true, false);
+                McCompat.teleport(player, level, jumper.getX(), jumper.getY(), jumper.getZ(), jumper.getYRot(), player.getXRot());
+                McCompat.ride(player, jumper);
             }
         }
         // the portal may also have positioned the new ship via teleportTo; this arrival is the one that counts
@@ -55,7 +54,7 @@ public final class JumperTravel {
     void travelFailed(Departure departure) {
         if (jumper.isRemoved()) return;
         for (Entity passenger : departure.passengers()) {
-            if (passenger.getVehicle() == null && passenger.level() == jumper.level()) passenger.startRiding(jumper, true, false);
+            if (passenger.getVehicle() == null && passenger.level() == jumper.level()) McCompat.ride(passenger, jumper);
         }
     }
 
@@ -71,7 +70,7 @@ public final class JumperTravel {
         pendingTeleport = null;
         // the pilot's client controls the ship and ignores server teleports of it: move it explicitly
         if (jumper.getControllingPassenger() instanceof ServerPlayer pilot) {
-            pilot.connection.send(ClientboundMoveVehiclePacket.fromEntity(jumper));
+            pilot.connection.send(McCompat.vehicleMovePacket(jumper));
         }
     }
 

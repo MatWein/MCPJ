@@ -1,5 +1,6 @@
 package de.mcpj.mc.client.hud;
 
+import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.mc.client.PilotContext;
 import de.mcpj.mc.client.input.FireControl;
 import de.mcpj.mc.client.targeting.TargetSelector;
@@ -10,10 +11,8 @@ import de.mcpj.core.hud.JumperHudModel;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.Entity;
 
 import java.util.Arrays;
@@ -30,22 +29,22 @@ public final class JumperHud {
 
     private JumperHud() {}
 
-    public static void render(GuiGraphicsExtractor graphics, int width, int height) {
+    public static void render(HudCanvas canvas, int width, int height) {
         Minecraft minecraft = Minecraft.getInstance();
         PuddleJumperEntity jumper = PilotContext.pilotedJumper();
-        if (minecraft.gui.hud.isHidden() || jumper == null) return;
+        if (ClientCompat.hudHidden(minecraft) || jumper == null) return;
         Entity selected = TargetSelector.target();
         JumperHudModel.Target target = selected != null
                 ? new JumperHudModel.Target(selected.getDisplayName(), TargetSelector.kind(selected)) : null;
         List<HudLine> lines = JumperHudModel.lines(jumper.core(), jumper.tickCount, jumper.getY(), FireControl.isReady(jumper.level()), target);
         int top = height - MARGIN_BOTTOM - lines.size() * LINE_HEIGHT;
         int bottom = top + lines.size() * LINE_HEIGHT;
-        graphics.fill(MARGIN_LEFT - PANEL_PADDING, top - PANEL_PADDING, MARGIN_LEFT + PANEL_WIDTH, bottom, HudColors.PANEL_BACKGROUND);
-        graphics.fill(MARGIN_LEFT - PANEL_PADDING, top - PANEL_PADDING, MARGIN_LEFT - PANEL_PADDING + ACCENT_WIDTH, bottom, HudColors.PANEL_ACCENT);
+        canvas.fill(MARGIN_LEFT - PANEL_PADDING, top - PANEL_PADDING, MARGIN_LEFT + PANEL_WIDTH, bottom, HudColors.PANEL_BACKGROUND);
+        canvas.fill(MARGIN_LEFT - PANEL_PADDING, top - PANEL_PADDING, MARGIN_LEFT - PANEL_PADDING + ACCENT_WIDTH, bottom, HudColors.PANEL_ACCENT);
         Font font = minecraft.font;
         for (int i = 0; i < lines.size(); i++) {
             HudLine line = lines.get(i);
-            graphics.text(font, component(line), MARGIN_LEFT, top + i * LINE_HEIGHT, ARGB.opaque(line.color()), true);
+            canvas.text(font, component(line), MARGIN_LEFT, top + i * LINE_HEIGHT, line.color());
         }
     }
 

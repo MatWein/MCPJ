@@ -1,7 +1,5 @@
 package de.mcpj.mc.gametest;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.block.ChargingPadBlock;
 import de.mcpj.core.config.EnergyConfig;
 import de.mcpj.core.config.ServerConfig;
@@ -84,8 +82,8 @@ public final class JumperEnergyTestCases {
         BlockPos[] pads = {new BlockPos(11, 1, 12), new BlockPos(12, 1, 12), new BlockPos(13, 1, 12)};
         int buffer = ServerConfig.CHARGING_PAD.buffer();
         for (BlockPos pad : pads) {
-            helper.setBlock(pad, BuiltInRegistries.BLOCK.get(Mcpj.id("charging_pad")));
-            int accepted = GameTestHooks.get().fillChargingPad(helper.getBlockEntity(pad), buffer);
+            helper.setBlock(pad, GameTestCompat.modBlock("charging_pad"));
+            int accepted = GameTestHooks.get().fillChargingPad(GameTestCompat.blockEntity(helper, pad), buffer);
             helper.assertTrue(accepted == buffer, "Pad should buffer " + buffer + " FE, has " + accepted);
         }
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);

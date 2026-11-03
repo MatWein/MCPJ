@@ -1,5 +1,6 @@
 package de.mcpj.mc.gametest;
 
+import de.mcpj.mc.compat.McCompat;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
@@ -44,7 +45,7 @@ public final class JumperTravelTestCases {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         for (Entity part : jumper.segments()) {
-            helper.assertTrue(part.changeDimension(nether) == null, "A hull segment changed dimension");
+            helper.assertTrue(GameTestHooks.get().changeDimension(part, nether, NETHER_TARGET, 0f) == null, "A hull segment changed dimension");
             helper.assertTrue(!part.isRemoved(), "A hull segment was removed");
         }
         helper.assertTrue(!jumper.isRemoved(), "Jumper was removed");
@@ -53,8 +54,8 @@ public final class JumperTravelTestCases {
 
     public static void seatedPilotDoesNotTravelAlone(GameTestHelper helper) {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
-        Player pilot = helper.makeMockPlayer();
-        helper.assertTrue(pilot.startRiding(jumper, true), "Pilot could not board");
+        Player pilot = GameTestCompat.mockPlayer(helper);
+        helper.assertTrue(McCompat.ride(pilot, jumper), "Pilot could not board");
         helper.assertTrue(!GameTestHooks.get().mayTravelAlone(pilot, Level.NETHER), "Seated pilot may travel alone");
         pilot.stopRiding();
         helper.assertTrue(GameTestHooks.get().mayTravelAlone(pilot, Level.NETHER), "Player outside the jumper was blocked");
@@ -63,8 +64,8 @@ public final class JumperTravelTestCases {
 
     public static void teleportWithinDimensionKeepsPilot(GameTestHelper helper) {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
-        Player pilot = helper.makeMockPlayer();
-        helper.assertTrue(pilot.startRiding(jumper, true), "Pilot could not board");
+        Player pilot = GameTestCompat.mockPlayer(helper);
+        helper.assertTrue(McCompat.ride(pilot, jumper), "Pilot could not board");
         Vec3 target = jumper.position().add(0, 3, 0);
         jumper.teleportTo(target.x, target.y, target.z);
         helper.assertTrue(jumper.position().distanceTo(target) < 1.0e-6, "Jumper did not move");

@@ -126,7 +126,7 @@ tasks.withType(JavaCompile).configureEach {
 
 // copy the deobfuscated client-only mods to run/mods; only the client loads them
 def clientModsDir = file('run/mods')
-def clientModFiles = configurations.named('modClientMods')
+def clientModFiles = configurations.named('clientMods')
 tasks.register('copyClientMods') {
     inputs.files(clientModFiles)
     doLast {

@@ -1,15 +1,13 @@
 package de.mcpj.mc.gametest;
 
+import de.mcpj.mc.compat.McCompat;
+import net.minecraft.world.entity.Mob;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.core.jumper.JumperMedium;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -65,7 +63,7 @@ public final class JumperHazardTestCases {
     public static void passengerIsInvulnerable(GameTestHelper helper) {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
         Player pilot = vulnerablePlayer(helper);
-        helper.assertTrue(pilot.startRiding(jumper, true, false), "Pilot could not board");
+        helper.assertTrue(McCompat.ride(pilot, jumper), "Pilot could not board");
         float health = pilot.getHealth();
         DamageSource generic = helper.getLevel().damageSources().generic();
         pilot.hurt(generic, 10f);
@@ -80,8 +78,8 @@ public final class JumperHazardTestCases {
     public static void destructionEjectsPilotAndExplodes(GameTestHelper helper) {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
         Player pilot = vulnerablePlayer(helper);
-        helper.assertTrue(pilot.startRiding(jumper, true, false), "Pilot could not board");
-        Zombie bystander = helper.spawn(EntityTypes.ZOMBIE, new BlockPos(16, 2, 12));
+        helper.assertTrue(McCompat.ride(pilot, jumper), "Pilot could not board");
+        Mob bystander = GameTestCompat.spawnZombie(helper, new BlockPos(16, 2, 12));
         bystander.setNoAi(true);
         float bystanderHealth = bystander.getHealth();
         DamageSource source = helper.getLevel().damageSources().generic();
@@ -94,7 +92,7 @@ public final class JumperHazardTestCases {
 
     /** The mock player is creative and invulnerable by default; make it a normal survival player. */
     private static Player vulnerablePlayer(GameTestHelper helper) {
-        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        Player player = GameTestCompat.mockPlayer(helper);
         player.getAbilities().invulnerable = false;
         player.getAbilities().instabuild = false;
         player.setPos(helper.absoluteVec(new Vec3(12, 2, 12)));

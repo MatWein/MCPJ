@@ -1,5 +1,6 @@
 package de.mcpj.neoforge.client;
 
+import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.core.jumper.FlightInput;
 import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.client.camera.JumperCamera;
@@ -51,7 +52,7 @@ public final class McpjNeoForgeClient {
         modBus.addListener(AddClientReloadListenersEvent.class, event -> event.addListener(Mcpj.id("models"), ModelCache.INSTANCE));
         modBus.addListener(RegisterGuiLayersEvent.class, event -> event.registerAbove(VanillaGuiLayers.HOTBAR, Mcpj.id("cockpit"),
                 (graphics, deltaTracker) -> {
-                    JumperHud.render(graphics, graphics.guiWidth(), graphics.guiHeight());
+                    JumperHud.render(ClientCompat.hudCanvas(graphics), graphics.guiWidth(), graphics.guiHeight());
                     TargetMarkers.render(graphics);
                 }));
 

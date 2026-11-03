@@ -1,13 +1,12 @@
 package de.mcpj.mc.gametest;
 
+import net.minecraft.world.entity.Mob;
 import de.mcpj.core.config.ServerConfig;
 import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.core.jumper.JumperHull;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -34,7 +33,7 @@ public final class JumperFlightTestCases {
     public static void solidEvenWhenCloaked(GameTestHelper helper) {
         PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
         jumper.setCloaked(true);
-        Zombie zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 2, 2));
+        Mob zombie = GameTestCompat.spawnZombie(helper, new BlockPos(2, 2, 2));
         zombie.setNoAi(true);
         helper.runAfterDelay(2, () -> {
             for (double offset : new double[]{-JumperGeometry.SEGMENT_OFFSET, 0, JumperGeometry.SEGMENT_OFFSET}) {

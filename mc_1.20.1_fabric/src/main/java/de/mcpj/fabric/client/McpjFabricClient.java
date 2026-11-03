@@ -1,5 +1,6 @@
 package de.mcpj.fabric.client;
 
+import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.core.jumper.FlightInput;
 import de.mcpj.fabric.config.FabricConfigs;
 import de.mcpj.fabric.entity.FabricPuddleJumperEntity;
@@ -58,7 +59,7 @@ public final class McpjFabricClient implements ClientModInitializer {
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new ModelReloader());
 
         HudRenderCallback.EVENT.register((graphics, partialTick) -> {
-            JumperHud.render(graphics, graphics.guiWidth(), graphics.guiHeight());
+            JumperHud.render(ClientCompat.hudCanvas(graphics), graphics.guiWidth(), graphics.guiHeight());
             TargetMarkers.render(graphics);
         });
         ClientTickEvents.START_CLIENT_TICK.register(client -> PilotInputHandler.onClientTickStart());

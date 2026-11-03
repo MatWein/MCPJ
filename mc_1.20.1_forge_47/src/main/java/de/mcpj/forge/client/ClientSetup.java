@@ -1,5 +1,6 @@
 package de.mcpj.forge.client;
 
+import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.forge.McpjMod;
 import de.mcpj.mc.client.hud.JumperHud;
 import de.mcpj.mc.client.input.FlightInputReader;
@@ -54,7 +55,7 @@ public final class ClientSetup {
 
     @SubscribeEvent
     public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "jumper_hud", (gui, graphics, partialTick, width, height) -> JumperHud.render(graphics, width, height));
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "jumper_hud", (gui, graphics, partialTick, width, height) -> JumperHud.render(ClientCompat.hudCanvas(graphics), width, height));
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "jumper_targets", (gui, graphics, partialTick, width, height) -> TargetMarkers.render(graphics));
     }
 }

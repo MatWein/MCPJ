@@ -1,5 +1,6 @@
 package de.mcpj.mc.client.input;
 
+import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.mc.client.PilotContext;
 import de.mcpj.mc.client.targeting.TargetSelector;
@@ -12,7 +13,6 @@ import net.minecraft.client.Options;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Map;
 
@@ -59,10 +59,10 @@ public final class PilotInputHandler {
         if (KeyBindings.boundKey(ours).equals(KeyBindings.boundKey(vanilla))) KeyBindings.discardClicks(vanilla);
     }
 
-    /** A raw key event (GLFW key and action). */
+    /** A raw key event (key code and action, see ClientCompat.KEY_PRESS). */
     public static void onKey(int key, int action) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (action != GLFW.GLFW_PRESS || minecraft.screen != null || minecraft.player == null) return;
+        if (action != ClientCompat.KEY_PRESS || ClientCompat.screenOpen(minecraft) || minecraft.player == null) return;
         PuddleJumperEntity jumper = PilotContext.pilotedJumper();
         if (jumper == null) return;
         // all jumper keys are raw key presses, so they work the same on every loader (see TOGGLES)
