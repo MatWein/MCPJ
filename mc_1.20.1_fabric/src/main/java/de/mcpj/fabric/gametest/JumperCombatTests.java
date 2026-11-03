@@ -45,4 +45,14 @@ public class JumperCombatTests {
     public static void shieldBlocksWater(GameTestHelper helper) {
         JumperCombatTestCases.shieldBlocksWater(helper);
     }
+
+    @GameTest(template = "mcpj:platform")
+    public static void attackOnPilotHitsHull(GameTestHelper helper) {
+        JumperCombatTestCases.attackOnPilotHitsHull(helper);
+    }
+
+    @GameTest(template = "mcpj:platform", timeoutTicks = 100)
+    public static void zombieAttacksHullOfPilot(GameTestHelper helper) {
+        JumperCombatTestCases.zombieAttacksHullOfPilot(helper);
+    }
 }

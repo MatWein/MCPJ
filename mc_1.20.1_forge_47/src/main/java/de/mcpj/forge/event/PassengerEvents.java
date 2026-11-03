@@ -17,6 +17,6 @@ public final class PassengerEvents {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onAttack(LivingAttackEvent event) {
-        if (JumperRules.isProtectedPassenger(event.getEntity(), event.getSource())) event.setCanceled(true);
+        if (JumperRules.shieldPassenger(event.getEntity(), event.getSource(), event.getAmount())) event.setCanceled(true);
     }
 }

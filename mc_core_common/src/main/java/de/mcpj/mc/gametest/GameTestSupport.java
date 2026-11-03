@@ -4,7 +4,9 @@ import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 
 final class GameTestSupport {
     static final String PLATFORM = "platform";
@@ -24,5 +26,14 @@ final class GameTestSupport {
                 for (int z = 6; z <= 18; z++) helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
             }
         }
+    }
+
+    /** A survival player (not invulnerable, not creative) standing at the platform center. */
+    static Player vulnerablePlayer(GameTestHelper helper) {
+        Player player = GameTestCompat.mockPlayer(helper);
+        player.getAbilities().invulnerable = false;
+        player.getAbilities().instabuild = false;
+        player.setPos(helper.absoluteVec(new Vec3(12, 2, 12)));
+        return player;
     }
 }

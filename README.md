@@ -61,6 +61,8 @@ any of it touches the hull, flowing lava included (e.g. a bucket poured over the
 this as long as there is energy. The jumper ignores knockback from explosions, hits, mobs and water currents.
 
 **Passengers** cannot be hurt while seated; the hull takes the hits instead (only `/kill` and the void still apply).
+Mobs that go for the pilot therefore attack the ship: melee mobs hit the hull once they stand next to it, arrows and
+explosions hit it anyway (mobs never target players in creative mode, as usual).
 When the hull is destroyed, the passengers are thrown out first and the jumper explodes (about as strong as TNT,
 breaking blocks only with `mobGriefing`), which can still hit them. Its item and cargo drop afterwards (only the cargo
 in creative mode).
@@ -152,7 +154,7 @@ Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for t
 
 ./gradlew :mc_1.20.1_fabric:runClient                            # Fabric development client
 ./gradlew :mc_1.20.1_fabric:runServer                            # Fabric development server
-./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 34 tests)
+./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 36 tests)
 
 ./gradlew :mc_26.3_neoforge:runClient                            # Minecraft 26.3: NeoForge client, server, game tests
 ./gradlew :mc_26.3_neoforge:runServer

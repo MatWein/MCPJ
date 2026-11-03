@@ -1,14 +1,17 @@
 package de.mcpj.mc.gametest;
 
 import net.minecraft.world.entity.Mob;
+import de.mcpj.mc.compat.McCompat;
 import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.core.config.ServerConfig;
+import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.mc.entity.drone.DroneEntity;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -17,6 +20,7 @@ import net.minecraft.world.phys.Vec3;
 import static de.mcpj.mc.gametest.GameTestSupport.PLATFORM;
 import static de.mcpj.mc.gametest.GameTestSupport.fillWater;
 import static de.mcpj.mc.gametest.GameTestSupport.spawnJumper;
+import static de.mcpj.mc.gametest.GameTestSupport.vulnerablePlayer;
 
 /** Combat game tests, shared by the loaders (each registers them with its own annotations). */
 public final class JumperCombatTestCases {
@@ -139,6 +143,43 @@ public final class JumperCombatTestCases {
             helper.assertTrue(jumper.isSubmerged(), "Jumper should be submerged: " + submergedDiagnosis(helper, jumper));
             helper.assertTrue(jumper.hull().integrity() == 1f, "Damage despite shield");
             helper.succeed();
+        });
+    }
+
+    /** An attack on the seated pilot hits the hull instead; the pilot stays unhurt. */
+    public static void attackOnPilotHitsHull(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
+        jumper.setShielded(false);
+        Player pilot = vulnerablePlayer(helper);
+        helper.assertTrue(McCompat.ride(pilot, jumper), "Pilot could not board");
+        Mob zombie = GameTestCompat.spawnZombie(helper, new BlockPos(2, 2, 2));
+        zombie.setNoAi(true);
+        float health = pilot.getHealth();
+        pilot.hurt(helper.getLevel().damageSources().mobAttack(zombie), 6f);
+        helper.assertTrue(pilot.getHealth() == health, "Pilot was hurt: " + pilot.getHealth());
+        float afterHit = jumper.hull().integrity();
+        helper.assertTrue(afterHit < 1f, "The hull did not take the hit");
+        // like a player: no second hit right away (e.g. the ender dragon touching the pilot every tick)
+        pilot.hurt(helper.getLevel().damageSources().mobAttack(zombie), 6f);
+        helper.assertTrue(jumper.hull().integrity() == afterHit, "Second hit within the cooldown counted");
+        helper.succeed();
+    }
+
+    /** A zombie going for the pilot attacks the hull it stands next to (the pilot inside is out of its reach). */
+    public static void zombieAttacksHullOfPilot(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
+        jumper.setShielded(false);
+        Player pilot = vulnerablePlayer(helper);
+        helper.assertTrue(McCompat.ride(pilot, jumper), "Pilot could not board");
+        // hull side at x 13.43; the zombie stands 0.1 blocks beside it (measured from its edge: babies are narrower)
+        Mob zombie = GameTestCompat.spawnZombie(helper, new BlockPos(15, 2, 12));
+        zombie.setPos(helper.absoluteVec(new Vec3(12 + JumperGeometry.WIDTH / 2 + zombie.getBbWidth() / 2 + 0.1, 2, 12.5)));
+        zombie.setNoAi(true);
+        zombie.setTarget(pilot);
+        float health = pilot.getHealth();
+        helper.succeedWhen(() -> {
+            helper.assertTrue(jumper.hull().integrity() < 1f, "The zombie did not hit the hull");
+            helper.assertTrue(pilot.getHealth() == health, "Pilot was hurt");
         });
     }
 }

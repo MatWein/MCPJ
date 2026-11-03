@@ -20,7 +20,7 @@ public final class ServerEvents {
         modBus.addListener(ServerEvents::onRegisterCapabilities);
         // whoever sits in a jumper cannot be hurt: the hull takes the hits instead (see JumperHull#destroy)
         gameBus.addListener(EventPriority.HIGH, LivingIncomingDamageEvent.class, event -> {
-            if (JumperRules.isProtectedPassenger(event.getEntity(), event.getSource())) event.setCanceled(true);
+            if (JumperRules.shieldPassenger(event.getEntity(), event.getSource(), event.getAmount())) event.setCanceled(true);
         });
         // explosions spare what the rules protect (e.g. the own jumper from its drone's blast)
         gameBus.addListener(ExplosionEvent.Detonate.class, event -> {

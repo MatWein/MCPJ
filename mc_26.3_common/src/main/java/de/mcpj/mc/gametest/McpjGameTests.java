@@ -18,6 +18,8 @@ public final class McpjGameTests {
             test("cargo_survives_save", 100, JumperCargoTestCases::cargoSurvivesSave),
             test("picks_up_nearby_items", 60, JumperCargoTestCases::picksUpNearbyItems),
             test("drone_hits_zombie", 300, JumperCombatTestCases::droneHitsZombie),
+            test("attack_on_pilot_hits_hull", 100, JumperCombatTestCases::attackOnPilotHitsHull),
+            test("zombie_attacks_hull_of_pilot", 100, JumperCombatTestCases::zombieAttacksHullOfPilot),
             test("drone_hits_other_jumper", 300, JumperCombatTestCases::droneHitsOtherJumper),
             test("own_drone_explosion_spares_jumper", 100, JumperCombatTestCases::ownDroneExplosionSparesJumper),
             test("shield_makes_indestructible", 100, JumperCombatTestCases::shieldMakesIndestructible),

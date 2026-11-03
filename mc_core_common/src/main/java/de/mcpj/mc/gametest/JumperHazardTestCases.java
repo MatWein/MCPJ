@@ -15,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 
 import static de.mcpj.mc.gametest.GameTestSupport.PLATFORM;
 import static de.mcpj.mc.gametest.GameTestSupport.spawnJumper;
+import static de.mcpj.mc.gametest.GameTestSupport.vulnerablePlayer;
 
 /** Hazard game tests, shared by the loaders (each registers them with its own annotations). */
 public final class JumperHazardTestCases {
@@ -90,12 +91,4 @@ public final class JumperHazardTestCases {
         helper.succeed();
     }
 
-    /** The mock player is creative and invulnerable by default; make it a normal survival player. */
-    private static Player vulnerablePlayer(GameTestHelper helper) {
-        Player player = GameTestCompat.mockPlayer(helper);
-        player.getAbilities().invulnerable = false;
-        player.getAbilities().instabuild = false;
-        player.setPos(helper.absoluteVec(new Vec3(12, 2, 12)));
-        return player;
-    }
-}
+    /** The mock player is creative and invulnerable by default; make it a normal survival player. */}

@@ -31,6 +31,6 @@ public final class McpjFabric implements ModInitializer {
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             if (entity instanceof FabricPuddleJumperEntity jumper) SegmentIndex.remove(jumper);
         });
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !JumperRules.isProtectedPassenger(entity, source));
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !JumperRules.shieldPassenger(entity, source, amount));
     }
 }

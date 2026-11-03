@@ -111,6 +111,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
     private final Jumper core = new Jumper(this);
     private final JumperCargo cargo = new JumperCargo(this);
     private final JumperTravel travel = new JumperTravel(this);
+    private final JumperMeleeAttackers meleeAttackers = new JumperMeleeAttackers(this);
     private final RandomGenerator randomGenerator = () -> random.nextLong();
 
     public PuddleJumperEntity(EntityType<? extends PuddleJumperEntity> type, Level level) {
@@ -641,6 +642,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
     private void serverTick() {
         core.trackServerVelocity();
         travel.tick();
+        meleeAttackers.tick();
         // passengers are protected by the hull (see PassengerEvents); lava would keep setting them on fire
         getPassengers().forEach(passenger -> {
             passenger.resetFallDistance();

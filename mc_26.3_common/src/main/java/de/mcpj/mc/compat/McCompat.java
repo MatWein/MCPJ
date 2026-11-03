@@ -7,7 +7,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 
 import java.util.Set;
 
@@ -37,5 +40,25 @@ public final class McCompat {
 
     public static DustParticleOptions dust(int rgb, float scale) {
         return new DustParticleOptions(rgb, scale);
+    }
+
+    /** Hits the entity on the server (Minecraft's hurtServer). */
+    public static boolean hurt(Entity entity, DamageSource source, float amount) {
+        return entity.level() instanceof ServerLevel level && entity.hurtServer(level, source, amount);
+    }
+
+    public static int invulnerableTime(Entity entity) {
+        return entity.getInvulnerableTime();
+    }
+
+    public static void setInvulnerableTime(Entity entity, int ticks) {
+        entity.setInvulnerableTime(ticks);
+    }
+
+    /** A mob's melee attack on its target: swing and hit. */
+    public static void meleeAttack(Mob mob, Entity target) {
+        if (!(mob.level() instanceof ServerLevel level)) return;
+        mob.swingForAttack(InteractionHand.MAIN_HAND);
+        mob.doHurtTarget(level, target);
     }
 }
