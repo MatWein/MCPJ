@@ -1,12 +1,6 @@
-// Multi-project build: see settings.gradle. Each module has its own build.gradle.
-// All loader plugins are declared here (not applied) so Gradle loads them in one class loader.
-// The build runs on Java 25 (gradle/gradle-daemon-jvm.properties); modules pick their own toolchain.
+// Multi-project build: see settings.gradle. The modules below versions/ apply the convention plugins from
+// build-logic/ (which also bring the loader plugins); the build runs on Java 25 (gradle/gradle-daemon-jvm.properties)
+// and every module picks the toolchain of its Minecraft version.
 plugins {
-    // Forge up to 1.20.1 (obfuscated Minecraft, reobfuscated jar)
-    id 'net.neoforged.moddev.legacyforge' version '2.0.148' apply false
-    // NeoForge
-    id 'net.neoforged.moddev' version '2.0.148' apply false
-    // Fabric for obfuscated Minecraft (up to 1.21.x) and for unobfuscated Minecraft (26.x)
-    id 'net.fabricmc.fabric-loom-remap' version '1.19.3' apply false
-    id 'net.fabricmc.fabric-loom' version '1.19.3' apply false
+    id 'mcpj.root'
 }

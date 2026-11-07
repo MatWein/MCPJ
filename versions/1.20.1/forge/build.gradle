@@ -1,0 +1,57 @@
+// Minecraft 1.20.1 for Forge 47 (see build-logic/mcpj.forge.gradle). Besides that: the mods of the local test
+// server (JSG, Mekanism, CC:Tweaked, ...) and shader mods are loaded in the dev client.
+plugins {
+    id 'mcpj.forge'
+}
+
+repositories {
+    // mods of the local test server (run-server/mods), deobfuscated for the dev client
+    flatDir {
+        dir 'run-server/mods'
+    }
+    // Embeddium + Oculus (shaders) for the dev client
+    maven {
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
+    }
+}
+
+configurations {
+    // client-only mods: they crash a dedicated or game test server, so they are not on the shared runtime classpath
+    clientMods { transitive = false }
+}
+// remapped (deobfuscated) variant of clientMods: modClientMods
+obfuscation.createRemappingConfiguration(configurations.clientMods)
+
+dependencies {
+    // The mod must work on its own: -Pstandalone runs without any other mod (e.g. ./gradlew runGameTestServer -Pstandalone)
+    if (!project.hasProperty('standalone')) {
+        // load every mod jar of the test server in the dev environment as well
+        fileTree(dir: 'run-server/mods', include: '*.jar')
+                .filter { !it.name.startsWith(mod_id) }
+                .each {
+                    def m = (it.name - '.jar') =~ /^(.+?)-(\d.*)$/
+                    if (m.matches()) modRuntimeOnly "blank:${m.group(1)}:${m.group(2)}"
+                }
+
+        // client-only mods from Modrinth (shaders), deobfuscated like the server mods, loaded by runClient only
+        modClientMods "maven.modrinth:embeddium:${embeddium_version}"
+        modClientMods "maven.modrinth:oculus:${oculus_version}"
+    }
+}
+
+// copy the deobfuscated client-only mods to run/mods; only the client loads them
+def clientModsDir = file('run/mods')
+def clientModFiles = configurations.named('clientMods')
+tasks.register('copyClientMods') {
+    inputs.files(clientModFiles)
+    doLast {
+        clientModsDir.mkdirs()
+        // remove previous copies (prefix "dev-") so removed or updated mods do not linger
+        clientModsDir.listFiles().findAll { it.name.startsWith('dev-') }.each { it.delete() }
+        clientModFiles.get().files.each { f ->
+            java.nio.file.Files.copy(f.toPath(), new File(clientModsDir, 'dev-' + f.name).toPath())
+        }
+    }
+}
+tasks.matching { it.name == 'runClient' }.configureEach { dependsOn 'copyClientMods' }

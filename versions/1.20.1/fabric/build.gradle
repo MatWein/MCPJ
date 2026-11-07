@@ -1,0 +1,9 @@
+// Minecraft 1.20.1 for Fabric (see build-logic/mcpj.fabric.gradle)
+plugins {
+    id 'mcpj.fabric'
+}
+
+dependencies {
+    // optional energy API of the Fabric tech mods; only used when it is installed
+    modCompileOnly "teamreborn:energy:${team_reborn_energy_version}"
+}

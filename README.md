@@ -181,32 +181,37 @@ warning threshold.
 The project is split into modules so the game logic does not have to be rewritten for every Minecraft version
 or mod loader. Code is written once and placed as widely as it compiles:
 
-| Module | Contents |
+| Folder | Contents |
 |---|---|
 | `core/` | the game logic in plain Java 17, without any Minecraft or mod loader API; version-independent assets |
-| `shared/mc_all/` | Minecraft code that compiles unchanged against every supported version: the entities, blocks, item, cargo, rules, HUD, input, camera, sounds, game tests, `McpjObjects` (builds all objects); also shared resources (block states, block and item models) |
-| `shared/<range>/` | code shared by some versions or loaders only: `mc_1.20.1-1.21.1` (old rendering, interpolation, NBT saving, annotation game tests), `mc_1.21.1-26.3` (payload messages, some mixins), `fabric`, `fabric_1.20.1-1.21.1`, `fabric_1.21.1-26.3`, `neoforge` (see `shared/README.md`) |
-| `mc_<version>_common/` | what only that Minecraft version has: the compat classes (see below), its renderer where it differs, mixins, resources (recipes, structure); compiled into each loader module of that version, never shipped on its own |
-| `mc_<version>_<loader>/` | the loader's side: registration, network transport, config, events, energy API, mod metadata, plus the loader's own compat classes |
+| `shared/mc/all/` | Minecraft code that compiles unchanged against every supported version: the entities, blocks, item, cargo, rules, HUD, input, camera, sounds, game tests, `McpjObjects` (builds all objects); also shared resources (block states, block and item models) |
+| `shared/<area>/<range>/` | code shared by some versions or loaders only: `mc/1.20.1-1.21.1` (old rendering, interpolation, NBT saving, annotation game tests), `mc/1.21.1-26.3` (payload messages, some mixins), `fabric/all`, `fabric/1.20.1-1.21.1`, `fabric/1.21.1-26.3`, `neoforge/all` (see `shared/README.md`) |
+| `versions/<version>/` | one folder per Minecraft version; its `gradle.properties` holds everything that differs between versions (Minecraft, Java, loader and API versions, which `shared/` folders are compiled in) |
+| `versions/<version>/common/` | what only that Minecraft version has: the compat classes (see below), its renderer where it differs, mixins, resources (recipes, structure); compiled into each loader module of that version, never shipped on its own |
+| `versions/<version>/<loader>/` | the loader's side (`forge`, `neoforge`, `fabric`): registration, network transport, config, events, energy API, mod metadata, plus the loader's own compat classes |
+| `build-logic/` | the Gradle convention plugins all these modules apply: `mcpj.vanilla` (common), `mcpj.forge`, `mcpj.neoforge`, `mcpj.fabric` (both via `mcpj.loader`); module `build.gradle` files only hold what is special about them |
 
 Version differences live in small compat classes with the same methods in every version, so the shared code can
 call them: `McCompat` / `ClientCompat` / `GameTestCompat` for single calls, and per-version base classes for
 overridden Minecraft methods whose signatures differ (`JumperEntityCompat`, `DroneEntityCompat`,
 `SavedBlockEntity`, `ModEntityBlock`, `ModItem`; on the loader side `SegmentEntityCompat`, `PartEntityCompat`,
-`FabricCompat`, `NeoForgeEnergy`, `NeoForgeClientServices`). Each module lists the `shared/` folders it compiles in
-its `build.gradle`.
+`FabricCompat`, `NeoForgeEnergy`, `NeoForgeClientServices`).
 
-Each loader module builds its own jar: `mcpj-<version>+mc<minecraft version>-<loader>.jar` in `<module>/build/libs/`.
+Gradle names the modules after their folder: `versions/26.3/neoforge` is `:mc_26.3_neoforge`. A new Minecraft
+version is a copy of a `versions/<version>/` folder with adjusted `gradle.properties`, added to the list in
+`settings.gradle`.
+
+Each loader module builds its own jar: `mcpj-<version>+mc<minecraft version>-<loader>.jar` in `versions/<version>/<loader>/build/libs/`.
 Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for the 1.20.1 modules and Java 21 for the 1.21.1 modules). Build plugins: ModDevGradle (Forge 1.20.1 via `legacyforge`, NeoForge) and Fabric Loom.
 
 ```bash
 ./gradlew build                                                  # all modules and jars
 ./gradlew :core:test                                             # fast unit tests of the game logic (no Minecraft)
 
-./gradlew :mc_1.20.1_forge_47:runClient                          # Forge development client
-./gradlew :mc_1.20.1_forge_47:runClient -PjoinServer=localhost   # ... joining a server directly
-./gradlew :mc_1.20.1_forge_47:runGameTestServer                  # Forge game tests (headless, fresh world each run)
-./gradlew :mc_1.20.1_forge_47:runGameTestServer -Pstandalone     # the same without any other mod
+./gradlew :mc_1.20.1_forge:runClient                             # Forge development client
+./gradlew :mc_1.20.1_forge:runClient -PjoinServer=localhost      # ... joining a server directly
+./gradlew :mc_1.20.1_forge:runGameTestServer                     # Forge game tests (headless, fresh world each run)
+./gradlew :mc_1.20.1_forge:runGameTestServer -Pstandalone        # the same without any other mod
 
 ./gradlew :mc_1.20.1_fabric:runClient                            # Fabric development client
 ./gradlew :mc_1.20.1_fabric:runServer                            # Fabric development server
@@ -227,16 +232,16 @@ Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for t
 ./gradlew :mc_26.3_fabric:runGametest
 ```
 
-Minecraft 26.3 game tests use the vanilla registry: `McpjGameTests` (mc_26.3_common) lists all tests with their time
+Minecraft 26.3 game tests use the vanilla registry: `McpjGameTests` (`versions/26.3/common`) lists all tests with their time
 limits, both loaders register the functions and the build generates the test instances
 (`data/mcpj/test_instance/*.json`) from that list. Minecraft 1.21.1 still has annotation based game tests: its
 `McpjGameTests` turns the same kind of list into test functions (`@GameTestGenerator`), which both loaders register.
 
-`mc_1.20.1_forge_47/run-server/` is a regular Forge server for multiplayer tests (start with `run.sh` there after
+`versions/1.20.1/forge/run-server/` is a regular Forge server for multiplayer tests (start with `run.sh` there after
 copying the Forge jar into its `mods/`). The Forge build also loads every other jar in that `mods/` folder
 (deobfuscated) into its development runs. Its `runClient` additionally gets Embeddium and Oculus (shaders) from the
 Modrinth maven; they are client-only and therefore copied to `run/mods` instead of the shared classpath. Versions are
-set in `mc_1.20.1_forge_47/gradle.properties`. None of these mods is required: `-Pstandalone` leaves them all out.
+set in `versions/1.20.1/gradle.properties`. None of these mods is required: `-Pstandalone` leaves them all out.
 
 On Fabric the settings live in `config/mcpj-server.toml` and `config/mcpj-client.toml` (same keys as on Forge); a
 server sends its settings to joining players. The only required dependency is the Fabric API.
@@ -253,27 +258,28 @@ core/src/main/java/de/mcpj/core/       game logic without Minecraft or a mod loa
   render/                              OBJ mesh, shield bubble, ion plumes, attitude (VertexSink: drawn by the platform)
   math/  util/                         vectors, boxes, units, save data
 core/src/test/                         unit tests of the game logic (no Minecraft)
-shared/mc_all/java/de/mcpj/mc/
+shared/mc/all/java/de/mcpj/mc/
   entity/  block/  item/               entities and blocks hosting the core logic (loader hooks are abstract)
   client/                              HUD, input, camera, sounds, targeting
   network/  rules/  platform/          gameplay rules, McpjPlatform (what a loader provides)
   registry/  gametest/                 McpjObjects; the game test cases and their list (McpjGameTests)
-shared/<range>/java/                   the same packages, for some versions or loaders only (see Building)
-mc_<version>_common/src/main/java/de/mcpj/mc/
+shared/<area>/<range>/java/            the same packages, for some versions or loaders only (see Building)
+versions/<version>/common/src/main/java/de/mcpj/mc/
   compat/  */...Compat, Saved*, Mod*   the version's compat classes
   client/render/  mixin/  network/     renderer, mixins and messages where the version needs its own
-mc_1.21.1_neoforge/, mc_26.3_neoforge/src/main/java/de/mcpj/neoforge/
+versions/1.21.1/neoforge/, versions/26.3/neoforge/src/main/java/de/mcpj/neoforge/
                                        main class, client setup, energy and client services, compat
-mc_1.21.1_fabric/, mc_26.3_fabric/src/main/java/de/mcpj/fabric/
+versions/1.21.1/fabric/, versions/26.3/fabric/src/main/java/de/mcpj/fabric/
                                        client setup, client services, segment compat, FabricCompat
-mc_1.20.1_fabric/src/main/java/de/mcpj/fabric/
+versions/1.20.1/fabric/src/main/java/de/mcpj/fabric/
   registry/  entity/  block/  network/ config/  compat/  client/  gametest/
   mixin/                               hooks Fabric has no events for (segments, cloak, camera, keys, ...)
-mc_1.20.1_forge_47/src/main/java/de/mcpj/forge/
+versions/1.20.1/forge/src/main/java/de/mcpj/forge/
   registry/  entity/  block/           registration, part entity segments, Forge Energy
   network/  config/  client/           SimpleChannel, Forge config adapter, Forge client events
   event/  compat/                      Forge events (rules, travel, id migration), Just Stargate Mod
   gametest/                            game test hooks and registration
+build-logic/                           Gradle convention plugins of the modules
 tools/                                 texture, logo, test structure and preview scripts
 ```
 

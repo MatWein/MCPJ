@@ -1,0 +1,4 @@
+// Vanilla Minecraft 1.20.1 code shared by the Forge and Fabric modules (see build-logic/mcpj.vanilla.gradle)
+plugins {
+    id 'mcpj.vanilla'
+}

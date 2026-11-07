@@ -1,0 +1,4 @@
+// Minecraft 26.3 for NeoForge (see build-logic/mcpj.neoforge.gradle)
+plugins {
+    id 'mcpj.neoforge'
+}

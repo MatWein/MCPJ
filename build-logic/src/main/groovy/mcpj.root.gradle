@@ -1,0 +1,3 @@
+// Applied by the root project only: it puts build-logic's class path (with the loader plugins) into the root
+// project's class loader, so all modules share one copy of Loom and ModDevGradle (Loom also applies a companion
+// plugin to the root project).

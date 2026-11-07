@@ -1,0 +1,57 @@
+// A Fabric module: versions/<version>/fabric (see mcpj.loader for the parts shared by all loaders)
+def remap = (project.property('fabric_loom_remap') as String).toBoolean()
+// obfuscated Minecraft (up to 1.21.x): Mojang's names in dev, remapped jar; 26.x is unobfuscated
+pluginManager.apply(remap ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom')
+pluginManager.apply('mcpj.loader')
+
+def modId = project.property('mod_id')
+def common = project(":mc_${project.property('minecraft_version')}_common")
+// mods (loader, Fabric API) are remapped like Minecraft itself where it is obfuscated
+def modImplementation = remap ? 'modImplementation' : 'implementation'
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.property('minecraft_version')}"
+    // Mojang's names, as in the Forge/NeoForge modules
+    if (remap) mappings loom.officialMojangMappings()
+    add(modImplementation, "net.fabricmc:fabric-loader:${project.property('fabric_loader_version')}")
+    add(modImplementation, "net.fabricmc.fabric-api:fabric-api:${project.property('fabric_api_version')}")
+}
+
+loom {
+    accessWidenerPath = common.file("src/main/resources/${project.property('access_widener')}")
+    runs {
+        client {
+            // fixed name, so the test server can make it an operator (run-server/ops.json);
+            // ./gradlew runClient -PplayerName=Dev2 starts a further player (own name and game directory run-Dev2)
+            def playerName = project.findProperty('playerName') ?: 'Dev'
+            runDir playerName == 'Dev' ? 'run' : "run-${playerName}"
+            programArgs '--username', playerName
+            // ./gradlew runClient -PjoinServer=localhost connects straight to a server
+            if (project.hasProperty('joinServer')) programArgs '--quickPlayMultiplayer', project.property('joinServer')
+        }
+        server {
+            runDir 'run-server'
+            programArgs 'nogui'
+        }
+        // automated game tests: ./gradlew :mc_<version>_fabric:runGametest
+        gametest {
+            server()
+            name 'Game Test'
+            vmArg '-Dfabric-api.gametest'
+            vmArg "-Dfabric-api.gametest.report-file=${layout.buildDirectory.get().asFile}/gametest/report.xml"
+            runDir 'run-gametest'
+        }
+    }
+    mods {
+        create(modId) {
+            sourceSet sourceSets.main
+            // the core is part of the mod (its classes and shared assets), not a separate library
+            sourceSet 'main', project(':core')
+        }
+    }
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    // the core's assets (textures, models, sounds, translations): Fabric only finds the mod's own resources in dev runs
+    from(project(':core').sourceSets.main.resources)
+}

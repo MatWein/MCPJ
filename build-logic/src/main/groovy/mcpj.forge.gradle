@@ -1,0 +1,62 @@
+// A Forge module (Forge up to Minecraft 1.20.1: obfuscated Minecraft, Mojang's names in dev, the jar is
+// reobfuscated): versions/<version>/forge (see mcpj.loader for the parts shared by all loaders)
+plugins {
+    id 'net.neoforged.moddev.legacyforge'
+    id 'mcpj.loader'
+}
+
+def modId = project.property('mod_id')
+
+legacyForge {
+    version = "${project.property('minecraft_version')}-${project.property('forge_version')}"
+    accessTransformers = files('src/main/resources/META-INF/accesstransformer.cfg')
+
+    runs {
+        configureEach {
+            logLevel = org.slf4j.event.Level.INFO
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+        }
+        client {
+            client()
+            gameDirectory = file('run')
+            systemProperty 'forge.enabledGameTestNamespaces', modId
+            // ./gradlew runClient -PjoinServer=localhost connects straight to a server
+            if (project.hasProperty('joinServer')) {
+                programArguments.addAll '--quickPlayMultiplayer', project.property('joinServer')
+            }
+            // ./gradlew runClient -PplayerName=Dev2 starts a further player (own name and game directory run-Dev2)
+            if (project.hasProperty('playerName')) {
+                gameDirectory = file("run-${project.property('playerName')}")
+                programArguments.addAll '--username', project.property('playerName')
+            }
+        }
+        // runs all game tests, then exits
+        gameTestServer {
+            type = 'gameTestServer'
+            // separate directory so game tests always start from a fresh world
+            gameDirectory = file('run-gametest')
+            systemProperty 'forge.enabledGameTestNamespaces', modId
+        }
+    }
+
+    mods {
+        create(modId) {
+            sourceSet sourceSets.main
+            // the core is part of the mod (same module layer), not a separate library
+            sourceSet project(':core').sourceSets.main
+        }
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'   : modId,
+                'Specification-Vendor'  : project.property('mod_authors'),
+                'Specification-Version' : '1',
+                'Implementation-Title'  : project.name,
+                'Implementation-Version': project.version,
+                'Implementation-Vendor' : project.property('mod_authors'),
+        ])
+    }
+}

@@ -1,4 +1,6 @@
 pluginManagement {
+    // the convention plugins (mcpj.vanilla, mcpj.neoforge, mcpj.forge, mcpj.fabric); they also bring the loader plugins
+    includeBuild 'build-logic'
     repositories {
         gradlePluginPortal()
         maven {
@@ -20,16 +22,26 @@ rootProject.name = 'mcpj'
 
 // core: the game logic without any Minecraft or mod loader API (plain Java)
 include 'core'
-// one module per Minecraft version and mod loader, each builds its own mod jar
-// Minecraft 1.20.1: vanilla code shared by both loaders, then one module per loader
-include 'mc_1.20.1_common'
-include 'mc_1.20.1_forge_47'
-include 'mc_1.20.1_fabric'
-// Minecraft 1.21.1 (Java 21): vanilla code shared by both loaders, then one module per loader
-include 'mc_1.21.1_common'
-include 'mc_1.21.1_neoforge'
-include 'mc_1.21.1_fabric'
-// Minecraft 26.3 (unobfuscated, Java 25): vanilla code shared by both loaders, then one module per loader
-include 'mc_26.3_common'
-include 'mc_26.3_fabric'
-include 'mc_26.3_neoforge'
+
+// One folder per Minecraft version below versions/: its gradle.properties holds everything that differs between
+// versions, each subfolder with a build.gradle is a module. "common" is the vanilla code shared by the loaders of
+// that version, the others build one mod jar each. Module names: mc_<version>_<folder>, e.g. :mc_26.3_neoforge.
+def minecraftVersions = ['1.20.1', '1.21.1', '26.3']
+
+def versionProperties = [:]
+minecraftVersions.each { minecraftVersion ->
+    def versionDir = file("versions/${minecraftVersion}")
+    def properties = new Properties()
+    new File(versionDir, 'gradle.properties').withInputStream { properties.load(it) }
+    versionDir.listFiles().findAll { new File(it, 'build.gradle').isFile() }.sort().each { moduleDir ->
+        def name = "mc_${minecraftVersion}_${moduleDir.name}"
+        include name
+        project(":${name}").projectDir = moduleDir
+        versionProperties[name] = properties
+    }
+}
+
+// the version's properties are available in every module of that version like its own gradle.properties
+gradle.beforeProject { project ->
+    versionProperties[project.name]?.each { key, value -> project.ext.set(key, value) }
+}

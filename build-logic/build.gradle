@@ -1,0 +1,16 @@
+plugins {
+    // every src/main/groovy/<id>.gradle becomes a plugin with that id
+    id 'groovy-gradle-plugin'
+}
+
+// The loader plugins the convention plugins apply. They live here (one class loader for all of them) instead of the
+// root build.gradle.
+dependencies {
+    // Forge up to 1.20.1 (obfuscated Minecraft, reobfuscated jar)
+    implementation 'net.neoforged.moddev.legacyforge:net.neoforged.moddev.legacyforge.gradle.plugin:2.0.148'
+    // NeoForge
+    implementation 'net.neoforged.moddev:net.neoforged.moddev.gradle.plugin:2.0.148'
+    // Fabric for obfuscated Minecraft (up to 1.21.x) and for unobfuscated Minecraft (26.x)
+    implementation 'net.fabricmc.fabric-loom-remap:net.fabricmc.fabric-loom-remap.gradle.plugin:1.19.3'
+    implementation 'net.fabricmc.fabric-loom:net.fabricmc.fabric-loom.gradle.plugin:1.19.3'
+}

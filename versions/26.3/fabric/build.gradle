@@ -1,0 +1,4 @@
+// Minecraft 26.3 for Fabric (see build-logic/mcpj.fabric.gradle)
+plugins {
+    id 'mcpj.fabric'
+}

@@ -1,0 +1,29 @@
+// Vanilla Minecraft 26.3 code shared by the NeoForge and Fabric modules (see build-logic/mcpj.vanilla.gradle)
+plugins {
+    id 'mcpj.vanilla'
+}
+
+// One test instance per entry of McpjGameTests (test("name", maxTicks, ...)): data/mcpj/test_instance/<name>.json.
+// The list in Java is the only place for test names and time limits.
+def testInstances = layout.buildDirectory.dir('generated/testInstances')
+def testList = rootProject.file('shared/mc/all/java/de/mcpj/mc/gametest/McpjGameTests.java')
+def generateTestInstances = tasks.register('generateTestInstances') {
+    inputs.file(testList)
+    outputs.dir(testInstances)
+    doLast {
+        def dir = testInstances.get().dir('data/mcpj/test_instance').asFile
+        project.delete(dir)
+        dir.mkdirs()
+        (testList.text =~ /test\("([a-z0-9_]+)", (\d+),/).each { match, name, maxTicks ->
+            new File(dir, "${name}.json").text = """{
+  "type": "minecraft:function",
+  "function": "mcpj:${name}",
+  "environment": "minecraft:default",
+  "structure": "mcpj:platform",
+  "max_ticks": ${maxTicks}
+}
+"""
+        }
+    }
+}
+sourceSets.main.resources.srcDir(generateTestInstances)

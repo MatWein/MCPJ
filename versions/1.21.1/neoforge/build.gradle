@@ -1,0 +1,9 @@
+// Minecraft 1.21.1 for NeoForge (see build-logic/mcpj.neoforge.gradle)
+plugins {
+    id 'mcpj.neoforge'
+}
+
+neoForge.runs.configureEach {
+    // game tests of this mod only (annotation based up to Minecraft 1.21.4)
+    systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+}

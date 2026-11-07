@@ -1,0 +1,25 @@
+// The "common" module of a Minecraft version: vanilla Minecraft code shared by the loader modules of that version
+// (entities, blocks, rendering, HUD, input, network messages, compat classes). It only compiles against vanilla
+// Minecraft (Fabric Loom without any loader API), so loader code cannot slip in. The loader modules compile its
+// sources themselves (against their own Minecraft); it never ships as a jar of its own.
+plugins {
+    id 'mcpj.java'
+}
+
+def remap = (project.property('fabric_loom_remap') as String).toBoolean()
+// obfuscated Minecraft (up to 1.21.x): Mojang's names via mappings; 26.x is unobfuscated
+pluginManager.apply(remap ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom')
+
+loom {
+    accessWidenerPath = file("src/main/resources/${project.property('access_widener')}")
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.property('minecraft_version')}"
+    if (remap) mappings loom.officialMojangMappings()
+    // only for the annotation types Loom adds to Minecraft's classes; nothing of the loader is used here
+    compileOnly "net.fabricmc:fabric-loader:${project.property('fabric_loader_version')}"
+}
+
+// Minecraft code shared with other versions (shared/mc/all for every version, plus range folders)
+addSharedFolders('shared_mc')

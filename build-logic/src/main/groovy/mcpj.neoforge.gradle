@@ -1,0 +1,44 @@
+// A NeoForge module: versions/<version>/neoforge (see mcpj.loader for the parts shared by all loaders)
+plugins {
+    id 'net.neoforged.moddev'
+    id 'mcpj.loader'
+}
+
+def modId = project.property('mod_id')
+
+neoForge {
+    version = project.property('neo_version')
+    accessTransformers = files('src/main/resources/META-INF/accesstransformer.cfg')
+
+    runs {
+        configureEach {
+            logLevel = org.slf4j.event.Level.INFO
+        }
+        client {
+            client()
+            gameDirectory = file('run')
+            // ./gradlew runClient -PjoinServer=localhost connects straight to a server
+            if (project.hasProperty('joinServer')) {
+                programArguments.addAll '--quickPlayMultiplayer', project.property('joinServer')
+            }
+        }
+        server {
+            server()
+            gameDirectory = file('run-server')
+            programArgument '--nogui'
+        }
+        // runs all game tests, then exits
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = file('run-gametest')
+        }
+    }
+
+    mods {
+        create(modId) {
+            sourceSet sourceSets.main
+            // the core is part of the mod (same module layer), not a separate library
+            sourceSet project(':core').sourceSets.main
+        }
+    }
+}

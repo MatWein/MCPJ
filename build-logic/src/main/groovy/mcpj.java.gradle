@@ -1,0 +1,36 @@
+// Java settings of every Minecraft module (common and loaders): toolchain and bytecode level of the Minecraft
+// version (java_version in versions/<version>/gradle.properties), the core and the @Nullable annotations.
+plugins {
+    id 'java'
+}
+
+def javaVersion = (project.property('java_version') as String).toInteger()
+java.toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = javaVersion
+}
+tasks.named('compileJava', JavaCompile).configure { options.compilerArgs += ['-Xmaxerrs', '2000'] }
+
+evaluationDependsOn(':core')
+dependencies {
+    // @Nullable (type annotations, as Minecraft 26.x uses them); compile time only
+    compileOnly "org.jspecify:jspecify:${project.property('jspecify_version')}"
+    // the game logic (the loader modules pack its classes into their jar)
+    implementation project(':core')
+}
+
+/**
+ * Adds the shared/ folders listed in the property (comma separated, e.g. shared_fabric=fabric/all,fabric/1.21.1-26.3)
+ * to this module's sources: their java/ and, if present, resources/ folders.
+ */
+ext.addSharedFolders = { String propertyName ->
+    def folders = (project.findProperty(propertyName) ?: '') as String
+    folders.split(',').collect { it.trim() }.findAll { it }.each { folder ->
+        def base = rootProject.file("shared/${folder}")
+        if (!base.isDirectory()) throw new GradleException("${propertyName}: shared/${folder} does not exist")
+        sourceSets.main.java.srcDir(new File(base, 'java'))
+        if (new File(base, 'resources').isDirectory()) sourceSets.main.resources.srcDir(new File(base, 'resources'))
+    }
+}

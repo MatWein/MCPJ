@@ -32,7 +32,7 @@ root = compound([
     (9, 'entities', list_of(10, [])),
 ])
 data = tag_header(10, '') + root
-out = os.path.join(os.path.dirname(__file__), '..', 'mc_1.20.1_forge_47', 'src', 'main', 'resources', 'data', 'mcpj', 'structures', 'platform.nbt')
+out = os.path.join(os.path.dirname(__file__), '..', 'versions', '1.20.1', 'common', 'src', 'main', 'resources', 'data', 'mcpj', 'structures', 'platform.nbt')
 os.makedirs(os.path.dirname(out), exist_ok=True)
 with gzip.open(out, 'wb') as f:
     f.write(data)

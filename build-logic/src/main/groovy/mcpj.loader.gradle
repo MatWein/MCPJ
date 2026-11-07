@@ -1,0 +1,58 @@
+// What every loader module (forge, neoforge, fabric) of a Minecraft version has in common: the jar name, the
+// version's common module and shared/ folders compiled in, the core packed into the jar, mod metadata filled in,
+// game tests in a fresh world. Applied by mcpj.forge, mcpj.neoforge and mcpj.fabric after the loader plugin.
+plugins {
+    id 'mcpj.java'
+}
+
+// the module folder names the loader: versions/<version>/<loader>
+def loader = project.projectDir.name
+def minecraftVersion = project.property('minecraft_version')
+def modId = project.property('mod_id')
+
+// the jar name tells which Minecraft version and loader it is for: mcpj-<version>+mc<mc version>-<loader>.jar
+version = "${project.property('mod_version')}+mc${minecraftVersion}-${loader}"
+group = project.property('mod_group_id')
+base {
+    archivesName = modId
+}
+
+// vanilla code of this Minecraft version (common module), compiled here against this loader's Minecraft
+def common = project(":mc_${minecraftVersion}_common")
+evaluationDependsOn(common.path)
+tasks.named('compileJava', JavaCompile).configure {
+    source(common.sourceSets.main.allSource)
+}
+tasks.named('processResources', ProcessResources).configure {
+    from(common.sourceSets.main.resources) {
+        // Fabric's access widener / class tweaker; Forge and NeoForge use their access transformer
+        if (loader != 'fabric') exclude project.property('access_widener') as String
+    }
+}
+
+// code shared with other Minecraft versions using the same loader (see shared/README.md)
+addSharedFolders("shared_${loader}")
+
+// mod metadata: ${...} placeholders in the loader's files
+def placeholders = ['mod_id', 'mod_name', 'mod_license', 'mod_version', 'mod_authors', 'mod_description',
+                    'minecraft_version', 'minecraft_version_range', 'loader_version_range',
+                    'forge_version', 'forge_version_range', 'neo_version', 'neo_version_range', 'fabric_loader_version']
+def replaceProperties = placeholders.findAll { project.hasProperty(it) }.collectEntries { [(it): project.property(it)] }
+tasks.named('processResources', ProcessResources).configure {
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'META-INF/neoforge.mods.toml', 'pack.mcmeta', 'fabric.mod.json']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    // the core is part of the mod, not a separate library
+    from(project(':core').sourceSets.main.output)
+    // core resources may come in twice (core output and processResources)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// game tests always run in a fresh world, otherwise hovering jumpers of earlier runs get in the way
+tasks.matching { it.name in ['runGameTestServer', 'runGametest'] }.configureEach {
+    doFirst { project.delete(project.file('run-gametest/world')) }
+}
