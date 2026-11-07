@@ -27,9 +27,11 @@ loom {
     accessWidenerPath = common.file('src/main/resources/mcpj.classtweaker')
     runs {
         client {
-            runDir 'run'
-            // fixed name, so the test server can make it an operator (run-server/ops.json)
-            programArgs '--username', 'Dev'
+            // fixed name, so the test server can make it an operator (run-server/ops.json);
+            // ./gradlew runClient -PplayerName=Dev2 starts a further player (own name and game directory run-Dev2)
+            def playerName = project.findProperty('playerName') ?: 'Dev'
+            runDir playerName == 'Dev' ? 'run' : "run-${playerName}"
+            programArgs '--username', playerName
             // ./gradlew runClient -PjoinServer=localhost connects straight to a server
             if (project.hasProperty('joinServer')) programArgs '--quickPlayMultiplayer', project.property('joinServer')
         }
