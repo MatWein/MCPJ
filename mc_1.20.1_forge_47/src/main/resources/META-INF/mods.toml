@@ -10,7 +10,7 @@ displayName="${mod_name}"
 displayURL="https://github.com/MatWein/MCPJ"
 # in the root of the jar (core/src/main/resources)
 logoFile="mcpj_logo.png"
-credits="Developed entirely by AI (Claude by Anthropic)"
+credits="Developed entirely by AI"
 authors="${mod_authors}"
 description='''${mod_description}'''
 

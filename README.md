@@ -1,7 +1,6 @@
 # MCPJ - Puddle Jumper
 
-> **Developed entirely by AI.** All code of this mod, its tools and this documentation were written by an AI
-> (Claude by Anthropic); the human side was ideas, playtesting and feedback.
+> **Developed entirely by AI.** All code of this mod, its tools and this documentation were written by an AI. Its all about having fun while playing ;)
 
 MCPJ adds a flyable Puddle Jumper from *Stargate Atlantis* to Minecraft. It is an unofficial fan mod.
 

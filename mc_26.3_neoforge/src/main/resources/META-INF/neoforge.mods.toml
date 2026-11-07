@@ -11,7 +11,7 @@ authors="${mod_authors}"
 iconFile="mcpj_logo.png"
 logoFile="mcpj_logo.png"
 displayURL="https://github.com/MatWein/MCPJ"
-credits="Developed entirely by AI (Claude by Anthropic)"
+credits="Developed entirely by AI"
 description='''${mod_description}'''
 
 [[dependencies.${mod_id}]]
