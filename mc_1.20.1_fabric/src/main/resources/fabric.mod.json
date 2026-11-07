@@ -19,6 +19,7 @@
       "de.mcpj.fabric.gametest.JumperFlightTests",
       "de.mcpj.fabric.gametest.JumperHazardTests",
       "de.mcpj.fabric.gametest.JumperLightTests",
+      "de.mcpj.fabric.gametest.JumperSeatTests",
       "de.mcpj.fabric.gametest.JumperTravelTests"
     ]
   },

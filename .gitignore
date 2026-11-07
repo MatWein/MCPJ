@@ -26,6 +26,8 @@ forge*changelog.txt
 run-data
 run-gametest
 run-server
+# further dev players (runClient -PplayerName=...)
+run-Dev*
 
 # python
 __pycache__

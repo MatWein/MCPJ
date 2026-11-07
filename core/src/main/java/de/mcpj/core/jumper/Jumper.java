@@ -215,9 +215,9 @@ public final class Jumper {
         return host.location().add(left().scale(modelX * scale)).add(forward().scale(modelZ * scale)).add(0, modelY * scale, 0);
     }
 
-    /** Where the pilot sits. */
-    public Vec3d seatPosition() {
-        return host.location().add(forward().scale(JumperGeometry.PILOT_SEAT_Z * JumperGeometry.MODEL_SCALE));
+    /** Where the passenger on the given seat sits (0 is the pilot, see {@link JumperGeometry#SEAT_COUNT}). */
+    public Vec3d seatPosition(int seat) {
+        return modelToWorld(JumperGeometry.seatX(seat), 0, JumperGeometry.seatZ(seat));
     }
 
     /** One of the three hull segments (see {@link #segmentOffsets()}) as a box in the world. */

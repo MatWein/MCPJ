@@ -31,6 +31,11 @@ legacyForge {
             if (project.hasProperty('joinServer')) {
                 programArguments.addAll '--quickPlayMultiplayer', project.property('joinServer')
             }
+            // ./gradlew runClient -PplayerName=Dev2 starts a further player (own name and game directory run-Dev2)
+            if (project.hasProperty('playerName')) {
+                gameDirectory = file("run-${project.property('playerName')}")
+                programArguments.addAll '--username', project.property('playerName')
+            }
         }
         // runs all game tests, then exits
         gameTestServer {

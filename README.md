@@ -61,6 +61,10 @@ least half submerged loses 1 hull point per second without shield. Lava burns 8 
 any of it touches the hull, flowing lava included (e.g. a bucket poured over the ship); an active shield absorbs
 this as long as there is energy. The jumper ignores knockback from explosions, hits, mobs and water currents.
 
+**Seats.** The jumper seats seven players: the pilot in the bow, two seats behind and four in the rear compartment
+(right-click to board). The first one to board pilots; when the pilot leaves, the next passenger moves up and takes
+the controls. Only the pilot steers, fires and sees the HUD.
+
 **Passengers** cannot be hurt while seated; the hull takes the hits instead (only `/kill` and the void still apply).
 Mobs that go for the pilot therefore attack the ship: melee mobs hit the hull once they stand next to it, arrows and
 explosions hit it anyway (mobs never target players in creative mode, as usual).

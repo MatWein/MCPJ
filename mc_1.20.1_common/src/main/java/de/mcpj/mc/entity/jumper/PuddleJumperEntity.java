@@ -712,7 +712,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
 
     @Override
     protected boolean canAddPassenger(Entity passenger) {
-        return getPassengers().isEmpty() && passenger instanceof Player;
+        return getPassengers().size() < JumperGeometry.SEAT_COUNT && passenger instanceof Player;
     }
 
     @Override
@@ -722,8 +722,11 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
 
     @Override
     protected void positionRider(Entity passenger, MoveFunction move) {
-        if (!hasPassenger(passenger)) return;
-        Vec3d seat = core.seatPosition();
+        // the first passenger pilots; when the pilot leaves, everyone moves up one seat
+        int index = getPassengers().indexOf(passenger);
+        if (index < 0) return;
+        // forced boarding (e.g. /ride) ignores the seat count: extra passengers share the last seat
+        Vec3d seat = core.seatPosition(Math.min(index, JumperGeometry.SEAT_COUNT - 1));
         move.accept(passenger, seat.x(), seat.y() + getPassengersRidingOffset() + passenger.getMyRidingOffset(), seat.z());
     }
 
@@ -745,7 +748,7 @@ public abstract class PuddleJumperEntity extends Entity implements HasCustomInve
             if (!level().isClientSide) openCustomInventoryScreen(player);
             return InteractionResult.sidedSuccess(level().isClientSide);
         }
-        if (isVehicle()) return InteractionResult.PASS;
+        if (!canAddPassenger(player)) return InteractionResult.PASS;
         if (level().isClientSide) return InteractionResult.SUCCESS;
         return player.startRiding(this) ? InteractionResult.CONSUME : InteractionResult.PASS;
     }

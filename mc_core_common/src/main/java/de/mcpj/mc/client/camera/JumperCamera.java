@@ -1,7 +1,6 @@
 package de.mcpj.mc.client.camera;
 
 import de.mcpj.mc.client.ClientCompat;
-import de.mcpj.mc.client.PilotContext;
 import de.mcpj.core.config.ClientConfig;
 import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
@@ -17,15 +16,16 @@ public final class JumperCamera {
 
     private JumperCamera() {}
 
-    /** End of every client tick: third person while piloting, the previous view afterwards. */
+    /** End of every client tick: third person while aboard (pilot or passenger), the previous view afterwards. */
     public static void onClientTickEnd() {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null) return;
-        boolean piloting = PilotContext.isPiloting();
-        if (piloting && cameraBeforeBoarding == null) {
+        // the hull has no modelled cabin: passengers get the same chase camera as the pilot
+        boolean aboard = minecraft.player.getVehicle() instanceof PuddleJumperEntity;
+        if (aboard && cameraBeforeBoarding == null) {
             cameraBeforeBoarding = minecraft.options.getCameraType();
             minecraft.options.setCameraType(CameraType.THIRD_PERSON_BACK);
-        } else if (!piloting && cameraBeforeBoarding != null) {
+        } else if (!aboard && cameraBeforeBoarding != null) {
             minecraft.options.setCameraType(cameraBeforeBoarding);
             cameraBeforeBoarding = null;
         }

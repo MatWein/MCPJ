@@ -23,6 +23,14 @@ public final class JumperGeometry {
     public static final float NOZZLE_HALF_WIDTH = 0.26f;
     public static final float NOZZLE_HALF_HEIGHT = 0.8f;
     public static final double PILOT_SEAT_Z = 6.3;
+    /** Seats as {x, z} in model units: the pilot in the bow, two seats behind, four in the rear compartment. */
+    private static final double[][] SEATS = {
+            {0, PILOT_SEAT_Z},
+            {2.0, 3.0}, {-2.0, 3.0},
+            {2.4, -3.0}, {-2.4, -3.0},
+            {2.4, -7.0}, {-2.4, -7.0}};
+    /** Pilot included. */
+    public static final int SEAT_COUNT = SEATS.length;
     public static final double LAUNCHER_X = 4.2;
     public static final double LAUNCHER_Y = 4.3;
     public static final double LAUNCHER_Z = -1.0;
@@ -32,6 +40,14 @@ public final class JumperGeometry {
     public static final double DISMOUNT_LONGITUDINAL = 5.0 * RENDER_SCALE;
     public static final double DISMOUNT_LATERAL = 2.4 * RENDER_SCALE;
     public static final double CAMERA_HEIGHT = 1.2 * RENDER_SCALE;
+
+    public static double seatX(int seat) {
+        return SEATS[seat][0];
+    }
+
+    public static double seatZ(int seat) {
+        return SEATS[seat][1];
+    }
 
     private JumperGeometry() {}
 }
