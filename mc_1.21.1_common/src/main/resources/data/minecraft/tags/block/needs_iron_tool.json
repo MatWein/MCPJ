@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "mcpj:charging_pad",
+    "mcpj:jumper_projector"
+  ]
+}

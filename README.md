@@ -8,6 +8,7 @@ MCPJ adds a flyable Puddle Jumper from *Stargate Atlantis* to Minecraft. It is a
 | Minecraft | Loaders |
 |---|---|
 | 1.20.1 | Forge (47.4.16+), Fabric (with Fabric API) |
+| 1.21.1 | NeoForge, Fabric (with Fabric API) |
 | 26.3 | NeoForge, Fabric (with Fabric API) |
 
 It works on its own; other mods such as Just Stargate Mod or Mekanism are optional.
@@ -169,12 +170,15 @@ or mod loader:
 | `mc_1.20.1_forge_47/` | Forge 47: registration, network transport, config, events, part entities, Forge Energy, Just Stargate Mod |
 | `mc_1.20.1_fabric/` | Fabric: registration, network transport, TOML config with server sync, mixins, hull segments, Team Reborn Energy (optional) |
 | `mc_core_common/` | Minecraft code and resources that compile unchanged against every supported version; no build of its own, each `mc_<version>_common` compiles it in |
+| `mc_1.21.1_common/` | vanilla Minecraft 1.21.1 code shared by both loaders, including the vanilla mixins both loaders use (like 26.3) |
+| `mc_1.21.1_neoforge/` | NeoForge: registration, payloads, config, events, part entities, energy capability |
+| `mc_1.21.1_fabric/` | Fabric: registration, payloads, TOML config with server sync, hull segments, explosion and key mixins |
 | `mc_26.3_common/` | vanilla Minecraft 26.3 code shared by both loaders, including vanilla mixins both loaders use (camera, keys, attack, hiding the pilot, cloak) |
 | `mc_26.3_neoforge/` | NeoForge: registration, payloads, config, events, part entities, energy capability |
 | `mc_26.3_fabric/` | Fabric: registration, payloads, TOML config with server sync, hull segments, explosion mixin |
 
 Each loader module builds its own jar: `mcpj-<version>+mc<minecraft version>-<loader>.jar` in `<module>/build/libs/`.
-Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for the 1.20.1 modules). Build plugins: ModDevGradle (Forge 1.20.1 via `legacyforge`, NeoForge) and Fabric Loom.
+Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for the 1.20.1 modules and Java 21 for the 1.21.1 modules). Build plugins: ModDevGradle (Forge 1.20.1 via `legacyforge`, NeoForge) and Fabric Loom.
 
 ```bash
 ./gradlew build                                                  # all modules and jars
@@ -187,7 +191,14 @@ Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for t
 
 ./gradlew :mc_1.20.1_fabric:runClient                            # Fabric development client
 ./gradlew :mc_1.20.1_fabric:runServer                            # Fabric development server
-./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same 42 tests)
+./gradlew :mc_1.20.1_fabric:runGametest                          # Fabric game tests (the same tests)
+
+./gradlew :mc_1.21.1_neoforge:runClient                          # Minecraft 1.21.1: NeoForge client, server, game tests
+./gradlew :mc_1.21.1_neoforge:runServer
+./gradlew :mc_1.21.1_neoforge:runGameTestServer
+./gradlew :mc_1.21.1_fabric:runClient                            # Minecraft 1.21.1: Fabric client, server, game tests
+./gradlew :mc_1.21.1_fabric:runServer
+./gradlew :mc_1.21.1_fabric:runGametest
 
 ./gradlew :mc_26.3_neoforge:runClient                            # Minecraft 26.3: NeoForge client, server, game tests
 ./gradlew :mc_26.3_neoforge:runServer
@@ -199,7 +210,8 @@ Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for t
 
 Minecraft 26.3 game tests use the vanilla registry: `McpjGameTests` (mc_26.3_common) lists all tests with their time
 limits, both loaders register the functions and the build generates the test instances
-(`data/mcpj/test_instance/*.json`) from that list.
+(`data/mcpj/test_instance/*.json`) from that list. Minecraft 1.21.1 still has annotation based game tests: its
+`McpjGameTests` turns the same kind of list into test functions (`@GameTestGenerator`), which both loaders register.
 
 `mc_1.20.1_forge_47/run-server/` is a regular Forge server for multiplayer tests (start with `run.sh` there after
 copying the Forge jar into its `mods/`). The Forge build also loads every other jar in that `mods/` folder
@@ -229,7 +241,9 @@ mc_1.20.1_common/src/main/java/de/mcpj/mc/
   gametest/                            the game test cases (registered by each loader)
 mc_core_common/src/main/java/de/mcpj/mc/  the part of the packages above that is identical in all Minecraft versions
                                        (version differences via McCompat / ClientCompat / GameTestCompat)
-mc_26.3_common/src/main/java/de/mcpj/mc/  as mc_1.20.1_common, plus registry/McpjObjects (builds all objects) and mixin/
+mc_1.21.1_common/ and mc_26.3_common/src/main/java/de/mcpj/mc/
+                                       as mc_1.20.1_common, plus registry/McpjObjects (builds all objects) and mixin/
+mc_1.21.1_neoforge/, mc_1.21.1_fabric/  as their 26.3 counterparts
 mc_26.3_neoforge/src/main/java/de/mcpj/neoforge/  registry, entity (part entities), block (energy), network, config, event, client
 mc_26.3_fabric/src/main/java/de/mcpj/fabric/      registry, entity (segments), block, network, config, client, mixin
 mc_1.20.1_fabric/src/main/java/de/mcpj/fabric/

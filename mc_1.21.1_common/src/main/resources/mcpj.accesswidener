@@ -1,0 +1,15 @@
+accessWidener v2 named
+# Openings for the shared Minecraft 1.21.1 code and Fabric (the NeoForge module has the same as access transformer)
+# chase camera: further away from the ship than vanilla's third person view
+accessible method net/minecraft/client/Camera getMaxZoom (F)F
+accessible method net/minecraft/client/Camera move (FFF)V
+accessible method net/minecraft/client/Camera setPosition (DDD)V
+# the shield bubble's and glow render types
+accessible method net/minecraft/client/renderer/RenderType create (Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;IZZLnet/minecraft/client/renderer/RenderType$CompositeState;)Lnet/minecraft/client/renderer/RenderType$CompositeRenderType;
+accessible class net/minecraft/client/renderer/RenderType$CompositeRenderType
+# the loaders pass their block entity subclasses' constructors
+accessible class net/minecraft/world/level/block/entity/BlockEntityType$BlockEntitySupplier
+# the drone is a projectile with its own entity type
+accessible method net/minecraft/world/entity/projectile/Projectile <init> (Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V
+# Fabric: the hull segments take the entity ids right after the ship (like NeoForge's part entities)
+accessible field net/minecraft/world/entity/Entity ENTITY_COUNTER Ljava/util/concurrent/atomic/AtomicInteger;

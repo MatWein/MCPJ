@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CEC",
+    "ERE",
+    "CEC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:emerald"
+    },
+    "E": {
+      "item": "minecraft:emerald"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "id": "mcpj:charging_pad",
+    "count": 1
+  }
+}

@@ -1,0 +1,97 @@
+plugins {
+    // Minecraft 1.21.1 is obfuscated: Mojang's names in dev, remapped jar
+    id 'net.fabricmc.fabric-loom-remap'
+}
+
+version = "${mod_version}+mc${minecraft_version}-fabric"
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+def common = project(':mc_1.21.1_common')
+
+dependencies {
+    // @Nullable (type annotations, as Minecraft 26.x uses them); compile time only
+    compileOnly "org.jspecify:jspecify:${jspecify_version}"
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+
+    // the game logic; its classes are packed into this mod's jar (see jar task)
+    implementation project(':core')
+}
+
+loom {
+    accessWidenerPath = common.file('src/main/resources/mcpj.accesswidener')
+    runs {
+        client {
+            // fixed name, so the test server can make it an operator (run-server/ops.json);
+            // ./gradlew runClient -PplayerName=Dev2 starts a further player (own name and game directory run-Dev2)
+            def playerName = project.findProperty('playerName') ?: 'Dev'
+            runDir playerName == 'Dev' ? 'run' : "run-${playerName}"
+            programArgs '--username', playerName
+            // ./gradlew runClient -PjoinServer=localhost connects straight to a server
+            if (project.hasProperty('joinServer')) programArgs '--quickPlayMultiplayer', project.property('joinServer')
+        }
+        server {
+            runDir 'run-server'
+            programArgs 'nogui'
+        }
+        // automated game tests: ./gradlew :mc_1.21.1_fabric:runGametest
+        gametest {
+            server()
+            name 'Game Test'
+            vmArg '-Dfabric-api.gametest'
+            vmArg "-Dfabric-api.gametest.report-file=${layout.buildDirectory.get().asFile}/gametest/report.xml"
+            runDir 'run-gametest'
+        }
+    }
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+            // the core is part of the mod (its classes and shared assets), not a separate library
+            sourceSet 'main', project(':core')
+        }
+    }
+}
+
+processResources {
+    var replaceProperties = [mod_id: mod_id, mod_name: mod_name, mod_version: mod_version, mod_authors: mod_authors,
+                             mod_description: mod_description, minecraft_version: minecraft_version,
+                             fabric_loader_version: fabric_loader_version]
+    inputs.properties replaceProperties
+    filesMatching('fabric.mod.json') {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+jar {
+    from(project(':core').sourceSets.main.output)
+    // core resources come in twice (core output and processResources)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// vanilla Minecraft 1.21.1 code shared between the loader modules, compiled here against this loader's Minecraft
+tasks.named('compileJava', JavaCompile).configure {
+    source(common.sourceSets.main.allSource)
+}
+tasks.named('processResources', ProcessResources).configure {
+    from(common.sourceSets.main.resources)
+    // the core's assets (textures, models, sounds, translations): Fabric only finds the mod's own resources in dev runs
+    from(project(':core').sourceSets.main.resources)
+}
+
+// game tests always run in a fresh world
+tasks.matching { it.name == 'runGametest' }.configureEach {
+    doFirst { delete file('run-gametest/world') }
+}
