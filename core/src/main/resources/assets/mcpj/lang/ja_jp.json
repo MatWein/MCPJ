@@ -41,5 +41,8 @@
   "hud.mcpj.off.lights": "オフ",
   "block.mcpj.charging_pad": "ジャンパー充電パッド",
   "block.mcpj.jumper_projector": "ジャンパープロジェクター",
-  "hud.mcpj.energy": "エネルギー: %s %%"
+  "hud.mcpj.energy": "エネルギー: %s %%",
+  "message.mcpj.projector_confirm": "新しいパドルジャンパーの建造を開始しますか？",
+  "message.mcpj.projector_busy": "プロジェクターはすでにパドルジャンパーを建造中です",
+  "message.mcpj.projector_blocked": "プロジェクターの上の空間が空いていません"
 }

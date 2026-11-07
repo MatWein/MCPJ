@@ -41,5 +41,8 @@
   "hud.mcpj.off.lights": "éteints",
   "block.mcpj.charging_pad": "Station de recharge du Jumper",
   "block.mcpj.jumper_projector": "Projecteur de Jumper",
-  "hud.mcpj.energy": "Énergie : %s %%"
+  "hud.mcpj.energy": "Énergie : %s %%",
+  "message.mcpj.projector_confirm": "Commencer la construction d'un nouveau Puddle Jumper ?",
+  "message.mcpj.projector_busy": "Le projecteur construit déjà un Puddle Jumper",
+  "message.mcpj.projector_blocked": "L'espace au-dessus du projecteur n'est pas libre"
 }

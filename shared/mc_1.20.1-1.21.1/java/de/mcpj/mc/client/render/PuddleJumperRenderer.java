@@ -42,7 +42,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
     @Override
     public void render(T jumper, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource buffers, int light) {
         ObjMesh model = ModelCache.jumper();
-        if (model == null) return;
+        if (model == null || jumper.construction().isHidden()) return;
         Minecraft minecraft = Minecraft.getInstance();
         Jumper core = jumper.core();
         JumperAnimation animation = core.animation();

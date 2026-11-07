@@ -90,6 +90,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
     private static final EntityDataAccessor<Float> ARRIVAL_VELOCITY_Z = define(EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Integer> ARRIVALS = define(EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> CONSTRUCTION = define(EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Boolean> CONSTRUCTION_HIDDEN = define(EntityDataSerializers.BOOLEAN);
 
     private static final byte SHIELD_HIT_EVENT = 60;
     /** Eye height relative to the ship's height (entity type builder, or JumperEntityCompat in Minecraft 1.20.1). */
@@ -140,6 +141,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         entityData.define(ARRIVAL_VELOCITY_Z, 0f);
         entityData.define(ARRIVALS, 0);
         entityData.define(CONSTRUCTION, JumperConstruction.DONE);
+        entityData.define(CONSTRUCTION_HIDDEN, false);
     }
 
     @Override
@@ -166,6 +168,15 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
 
     void setConstructionProgress(float progress) {
         entityData.set(CONSTRUCTION, progress);
+    }
+
+    /** Synced: under construction, but hidden because the projector lacks energy. */
+    boolean constructionHidden() {
+        return entityData.get(CONSTRUCTION_HIDDEN);
+    }
+
+    void setConstructionHidden(boolean hidden) {
+        entityData.set(CONSTRUCTION_HIDDEN, hidden);
     }
 
     public JumperLightning lightning() {

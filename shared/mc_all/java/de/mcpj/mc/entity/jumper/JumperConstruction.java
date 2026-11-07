@@ -17,6 +17,7 @@ import java.util.List;
 /**
  * A jumper while a projector builds it: shown like the pilot sees a cloaked ship (glowing outline, brighter as the
  * build goes on) with scanning sparks; frozen, invulnerable and closed. Removes itself if its projector is gone.
+ * Hidden (no outline, no sparks) while the projector lacks energy for the build.
  */
 public final class JumperConstruction {
     /** Synced progress value of a finished (normal) jumper. */
@@ -53,12 +54,19 @@ public final class JumperConstruction {
         jumper.setConstructionProgress(0f);
     }
 
-    public void update(float progress) {
+    /** Under construction but not shown: the projector has no energy for the build. */
+    public boolean isHidden() {
+        return isActive() && jumper.constructionHidden();
+    }
+
+    public void update(float progress, boolean powered) {
         jumper.setConstructionProgress(Math.max(0f, Math.min(1f, progress)));
+        jumper.setConstructionHidden(!powered);
     }
 
     public void finish() {
         projector = null;
+        jumper.setConstructionHidden(false);
         jumper.setConstructionProgress(DONE);
     }
 
@@ -69,7 +77,7 @@ public final class JumperConstruction {
             if (jumper.tickCount % PROJECTOR_CHECK_INTERVAL == 0 && !hasProjector(level)) jumper.discard();
             return;
         }
-        spawnEffects(level);
+        if (!isHidden()) spawnEffects(level);
     }
 
     private boolean hasProjector(Level level) {

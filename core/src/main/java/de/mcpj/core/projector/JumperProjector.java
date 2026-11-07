@@ -6,8 +6,8 @@ import de.mcpj.core.energy.EnergyInput;
 import de.mcpj.core.util.SaveData;
 
 /**
- * Jumper projector: a redstone pulse starts building a jumper above it (one pulse, one jumper; pulses while building
- * do nothing). The build pauses while the space is blocked or, if the config requires power, energy is missing.
+ * Jumper projector: a redstone pulse (or a player via {@link #start()}) starts building a jumper above it (one pulse,
+ * one jumper; pulses while building do nothing). The build pauses while the space is blocked or, if the config requires power, energy is missing.
  */
 public final class JumperProjector implements EnergyInput {
     private static final int IDLE = -1;
@@ -34,12 +34,7 @@ public final class JumperProjector implements EnergyInput {
             host.markChanged();
         }
         if (!isBuilding()) {
-            if (pulse && host.isSpaceFree() && host.startJumper()) {
-                progress = 0;
-                missingJumperTicks = 0;
-                host.setBuilding(true);
-                host.markChanged();
-            }
+            if (pulse) start();
             return;
         }
         if (!host.hasJumper()) {
@@ -47,6 +42,7 @@ public final class JumperProjector implements EnergyInput {
             return;
         }
         missingJumperTicks = 0;
+        boolean powered = hasPower();
         if (host.isSpaceFree() && consumeEnergy()) {
             progress++;
             host.markChanged();
@@ -55,8 +51,23 @@ public final class JumperProjector implements EnergyInput {
             host.finishJumper();
             stop();
         } else {
-            host.updateJumper(progressFraction());
+            host.updateJumper(progressFraction(), powered);
         }
+    }
+
+    /** Energy for the next build step is available (or the config does not require power). */
+    /** Starts building a jumper if idle and the space is free; returns whether a build started. */
+    public boolean start() {
+        if (isBuilding() || !host.isSpaceFree() || !host.startJumper()) return false;
+        progress = 0;
+        missingJumperTicks = 0;
+        host.setBuilding(true);
+        host.markChanged();
+        return true;
+    }
+
+    private boolean hasPower() {
+        return !ServerConfig.PROJECTOR.requirePower() || stored >= energyPerTick();
     }
 
     private boolean consumeEnergy() {

@@ -3,6 +3,7 @@ package de.mcpj.neoforge.network;
 import de.mcpj.mc.network.JumperActionPacket;
 import de.mcpj.mc.network.JumperImpactPacket;
 import de.mcpj.mc.network.PilotSoundPacket;
+import de.mcpj.mc.network.ProjectorStartPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -18,6 +19,8 @@ public final class NeoForgeNetwork {
         registrar.playToServer(JumperActionPacket.TYPE, JumperActionPacket.STREAM_CODEC,
                 (packet, context) -> packet.handle((ServerPlayer) context.player()));
         registrar.playToServer(JumperImpactPacket.TYPE, JumperImpactPacket.STREAM_CODEC,
+                (packet, context) -> packet.handle((ServerPlayer) context.player()));
+        registrar.playToServer(ProjectorStartPacket.TYPE, ProjectorStartPacket.STREAM_CODEC,
                 (packet, context) -> packet.handle((ServerPlayer) context.player()));
         registrar.playToClient(PilotSoundPacket.TYPE, PilotSoundPacket.STREAM_CODEC, (packet, context) -> packet.handle());
     }

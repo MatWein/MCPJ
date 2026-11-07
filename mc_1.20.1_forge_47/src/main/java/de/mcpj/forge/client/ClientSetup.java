@@ -1,5 +1,7 @@
 package de.mcpj.forge.client;
 
+import de.mcpj.mc.block.JumperProjectorBlock;
+import de.mcpj.mc.client.projector.ProjectorStartDialog;
 import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.forge.McpjMod;
 import de.mcpj.mc.client.hud.JumperHud;
@@ -34,6 +36,7 @@ public final class ClientSetup {
     public static void onClientSetup(FMLClientSetupEvent event) {
         FlightInput.source = FlightInputReader::read;
         PuddleJumperEntity.clientTicker = EngineSounds::tick;
+        JumperProjectorBlock.startDialog = ProjectorStartDialog::open;
         PilotSoundPacket.player = PilotSounds::play;
     }
 

@@ -41,5 +41,8 @@
   "hud.mcpj.off.lights": "꺼짐",
   "block.mcpj.charging_pad": "점퍼 충전 패드",
   "block.mcpj.jumper_projector": "점퍼 프로젝터",
-  "hud.mcpj.energy": "에너지: %s %%"
+  "hud.mcpj.energy": "에너지: %s %%",
+  "message.mcpj.projector_confirm": "새 퍼들 점퍼 건조를 시작할까요?",
+  "message.mcpj.projector_busy": "프로젝터가 이미 퍼들 점퍼를 건조하고 있습니다",
+  "message.mcpj.projector_blocked": "프로젝터 위의 공간이 비어 있지 않습니다"
 }

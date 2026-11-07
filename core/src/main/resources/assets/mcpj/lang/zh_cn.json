@@ -41,5 +41,8 @@
   "hud.mcpj.off.lights": "关",
   "block.mcpj.charging_pad": "跳跃者充电台",
   "block.mcpj.jumper_projector": "跳跃者投影仪",
-  "hud.mcpj.energy": "能量：%s %%"
+  "hud.mcpj.energy": "能量：%s %%",
+  "message.mcpj.projector_confirm": "开始建造一艘新的跳跃者飞船吗？",
+  "message.mcpj.projector_busy": "投影仪已在建造跳跃者飞船",
+  "message.mcpj.projector_blocked": "投影仪上方的空间未空出"
 }

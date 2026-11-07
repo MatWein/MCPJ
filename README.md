@@ -156,15 +156,17 @@ repairing off).
 ### Jumper Projector
 
 Builds a jumper on top of itself, nose in the direction the player faced when placing it. A **redstone pulse**
-starts one build (a pulse while building does nothing; keep the signal off between jumpers, e.g. a button). The
-space above must be free (about 9 long, 3 wide, 3 high); the build pauses while it is blocked.
+starts one build (a pulse while building does nothing; keep the signal off between jumpers, e.g. a button).
+Alternatively **right-click the top** of the projector and confirm the question. The space above must be free
+(about 9 long, 3 wide, 3 high); the build pauses while it is blocked.
 
 - The build takes 10 minutes. The unfinished jumper shows as a glowing outline that gets brighter, with sparks
   scanning the hull; it cannot be boarded or damaged. Breaking the projector removes it.
 - The eight lights on top of the projector turn yellow one after another (clockwise, starting at the nose) and show
   the build progress.
 - By default it needs no power. With `projector.requirePower = true` it needs 120 M FE per jumper from cables
-  (10,000 FE/t over the build time; the build pauses without energy).
+  (10,000 FE/t over the build time; the build pauses without energy and the outline disappears until energy
+  arrives again).
 - A finished jumper starts with 20 % energy.
 
 ## Configuration

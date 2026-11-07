@@ -1,5 +1,7 @@
 package de.mcpj.neoforge.client;
 
+import de.mcpj.mc.block.JumperProjectorBlock;
+import de.mcpj.mc.client.projector.ProjectorStartDialog;
 import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.core.jumper.FlightInput;
 import de.mcpj.mc.Mcpj;
@@ -39,6 +41,7 @@ public final class McpjNeoForgeClient {
     public McpjNeoForgeClient(IEventBus modBus) {
         FlightInput.source = FlightInputReader::read;
         PuddleJumperEntity.clientTicker = EngineSounds::tick;
+        JumperProjectorBlock.startDialog = ProjectorStartDialog::open;
         PilotSoundPacket.player = PilotSounds::play;
 
         modBus.addListener(EntityRenderersEvent.RegisterRenderers.class, event -> {

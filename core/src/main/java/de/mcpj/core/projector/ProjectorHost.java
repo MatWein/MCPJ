@@ -11,8 +11,11 @@ public interface ProjectorHost {
     /** The jumper under construction exists (loaded and alive). */
     boolean hasJumper();
 
-    /** Shows the build progress (0..1) on the jumper. */
-    void updateJumper(float progress);
+    /**
+     * Shows the build progress (0..1) on the jumper. {@code powered}: energy for the build is available (always true
+     * unless the config requires power); without it the jumper is not shown.
+     */
+    void updateJumper(float progress, boolean powered);
 
     /** The build is complete: the jumper becomes a normal ship. */
     void finishJumper();

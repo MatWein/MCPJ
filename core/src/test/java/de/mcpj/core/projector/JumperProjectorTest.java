@@ -19,11 +19,12 @@ class JumperProjectorTest {
         boolean finished;
         boolean building;
         float shownProgress;
+        boolean shownPowered;
 
         @Override public boolean isSpaceFree() { return spaceFree; }
         @Override public boolean startJumper() { started++; jumper = true; return true; }
         @Override public boolean hasJumper() { return jumper; }
-        @Override public void updateJumper(float progress) { shownProgress = progress; }
+        @Override public void updateJumper(float progress, boolean powered) { shownProgress = progress; shownPowered = powered; }
         @Override public void finishJumper() { finished = true; }
         @Override public void setBuilding(boolean building) { this.building = building; }
         @Override public void markChanged() {}
@@ -49,6 +50,7 @@ class JumperProjectorTest {
         run(true, 5);
         assertEquals(1, host.started);
         assertTrue(host.building);
+        assertTrue(host.shownPowered, "Jumper hidden although no energy is required");
         run(false, 2);
         run(true, 2);
         assertEquals(1, host.started, "A pulse while building started another jumper");
@@ -83,9 +85,29 @@ class JumperProjectorTest {
         projector.serverTick(true);
         run(false, 5);
         assertEquals(0f, projector.progressFraction(), "Built without energy");
+        assertFalse(host.shownPowered, "Jumper shown without energy");
         projector.receive(JumperProjector.energyPerTick() * 3, false);
-        run(false, 5);
+        projector.serverTick(false);
+        assertTrue(host.shownPowered, "Jumper hidden although energy is available");
+        run(false, 4);
         assertEquals(3f / ServerConfig.PROJECTOR.buildTicks(), projector.progressFraction(), 1e-6);
+        assertFalse(host.shownPowered, "Jumper still shown after the energy ran out");
+    }
+
+    @Test
+    void playerStartsWithoutRedstone() {
+        assertTrue(projector.start());
+        assertEquals(1, host.started);
+        assertTrue(projector.isBuilding());
+        assertFalse(projector.start(), "Started a second build while building");
+        assertEquals(1, host.started);
+    }
+
+    @Test
+    void playerStartNeedsSpace() {
+        host.spaceFree = false;
+        assertFalse(projector.start());
+        assertEquals(0, host.started);
     }
 
     @Test

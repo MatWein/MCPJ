@@ -5,6 +5,7 @@ import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.network.JumperActionPacket;
 import de.mcpj.mc.network.JumperImpactPacket;
 import de.mcpj.mc.network.PilotSoundPacket;
+import de.mcpj.mc.network.ProjectorStartPacket;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -18,6 +19,7 @@ import java.util.Map;
 public final class FabricNetwork {
     public static final ResourceLocation ACTION = Mcpj.id("action");
     public static final ResourceLocation IMPACT = Mcpj.id("impact");
+    public static final ResourceLocation PROJECTOR_START = Mcpj.id("projector_start");
     public static final ResourceLocation PILOT_SOUND = Mcpj.id("pilot_sound");
     public static final ResourceLocation SERVER_CONFIG = Mcpj.id("server_config");
 
@@ -30,6 +32,10 @@ public final class FabricNetwork {
         });
         ServerPlayNetworking.registerGlobalReceiver(IMPACT, (server, player, handler, buf, sender) -> {
             JumperImpactPacket packet = JumperImpactPacket.decode(buf);
+            server.execute(() -> packet.handle(player));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(PROJECTOR_START, (server, player, handler, buf, sender) -> {
+            ProjectorStartPacket packet = ProjectorStartPacket.decode(buf);
             server.execute(() -> packet.handle(player));
         });
         // the flight model runs on the pilot's client: it needs the server's settings (Forge syncs them itself)
@@ -51,6 +57,10 @@ public final class FabricNetwork {
         if (message instanceof JumperImpactPacket impact) {
             JumperImpactPacket.encode(impact, buffer);
             return IMPACT;
+        }
+        if (message instanceof ProjectorStartPacket start) {
+            ProjectorStartPacket.encode(start, buffer);
+            return PROJECTOR_START;
         }
         if (message instanceof PilotSoundPacket sound) {
             PilotSoundPacket.encode(sound, buffer);

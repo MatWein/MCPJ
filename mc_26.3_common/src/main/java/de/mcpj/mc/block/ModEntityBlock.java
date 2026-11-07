@@ -1,6 +1,9 @@
 package de.mcpj.mc.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -34,5 +37,15 @@ public abstract class ModEntityBlock extends BaseEntityBlock {
     @Override
     protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
         return comparatorOutput(level, pos);
+    }
+
+    /** Right-click on the block (not sneaking); PASS lets the held item do its own thing. */
+    protected InteractionResult onUse(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        return onUse(state, level, pos, player, hit);
     }
 }

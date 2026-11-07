@@ -41,5 +41,8 @@
   "hud.mcpj.off.lights": "вимк.",
   "block.mcpj.charging_pad": "Зарядна станція Джампера",
   "block.mcpj.jumper_projector": "Проєктор Джампера",
-  "hud.mcpj.energy": "Енергія: %s %%"
+  "hud.mcpj.energy": "Енергія: %s %%",
+  "message.mcpj.projector_confirm": "Почати будівництво нового Паддл Джампера?",
+  "message.mcpj.projector_busy": "Проєктор уже будує Паддл Джампер",
+  "message.mcpj.projector_blocked": "Простір над проєктором не вільний"
 }

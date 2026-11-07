@@ -40,6 +40,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         boolean pilotView;
         boolean cloaked;
         float construction;
+        boolean hidden;
     }
 
     private record ShipStyle(RenderType solid, float brightness, int lightmap, boolean visible, boolean effects) {}
@@ -64,6 +65,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         state.pilotView = state.ownShip && minecraft.options.getCameraType().isFirstPerson() && minecraft.getCameraEntity() == minecraft.player;
         state.cloaked = JumperLook.isCloaked(jumper.core(), partialTick);
         state.construction = jumper.constructionProgress();
+        state.hidden = jumper.construction().isHidden();
     }
 
     @Override
@@ -80,7 +82,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
     public void submit(State state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
         ObjMesh model = ModelCache.jumper();
         Jumper core = state.core;
-        if (model == null || core == null) return;
+        if (model == null || core == null || state.hidden) return;
         float partialTick = state.partialTick;
         JumperAnimation animation = core.animation();
         ShipStyle style = style(state.cloaked, state.ownShip, state.construction, state.lightCoords);

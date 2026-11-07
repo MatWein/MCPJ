@@ -1,5 +1,7 @@
 package de.mcpj.fabric.client;
 
+import de.mcpj.mc.block.JumperProjectorBlock;
+import de.mcpj.mc.client.projector.ProjectorStartDialog;
 import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.core.jumper.FlightInput;
 import de.mcpj.fabric.config.FabricConfigs;
@@ -51,6 +53,7 @@ public final class McpjFabricClient implements ClientModInitializer {
         FabricConfigs.CLIENT.load();
         FlightInput.source = FlightInputReader::read;
         PuddleJumperEntity.clientTicker = EngineSounds::tick;
+        JumperProjectorBlock.startDialog = ProjectorStartDialog::open;
         PilotSoundPacket.player = PilotSounds::play;
 
         EntityRendererRegistry.register(FabricObjects.PUDDLE_JUMPER, PuddleJumperRenderer<FabricPuddleJumperEntity>::new);

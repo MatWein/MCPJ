@@ -4,6 +4,7 @@ import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.network.JumperActionPacket;
 import de.mcpj.mc.network.JumperImpactPacket;
 import de.mcpj.mc.network.PilotSoundPacket;
+import de.mcpj.mc.network.ProjectorStartPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
@@ -15,7 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "4";
+    private static final String PROTOCOL_VERSION = "5";
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             Mcpj.id("main"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
 
@@ -32,6 +33,11 @@ public final class ModNetwork {
                 .encoder(JumperImpactPacket::encode)
                 .decoder(JumperImpactPacket::decode)
                 .consumerMainThread(fromPlayer(JumperImpactPacket::handle))
+                .add();
+        CHANNEL.messageBuilder(ProjectorStartPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ProjectorStartPacket::encode)
+                .decoder(ProjectorStartPacket::decode)
+                .consumerMainThread(fromPlayer(ProjectorStartPacket::handle))
                 .add();
         CHANNEL.messageBuilder(PilotSoundPacket.class, id, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(PilotSoundPacket::encode)

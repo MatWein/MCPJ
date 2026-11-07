@@ -5,6 +5,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -57,5 +58,10 @@ public final class ClientCompat {
                 graphics.drawString(font, text, x, y, rgb, true);
             }
         };
+    }
+
+    /** Opens the screen (null closes the current one). */
+    public static void setScreen(@Nullable Screen screen) {
+        Minecraft.getInstance().setScreen(screen);
     }
 }

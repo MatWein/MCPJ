@@ -2,16 +2,19 @@ package de.mcpj.mc.block;
 
 import de.mcpj.core.projector.JumperProjector;
 import de.mcpj.core.projector.ProjectorHost;
+import de.mcpj.mc.compat.McCompat;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.core.util.SaveData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,6 +40,15 @@ public class JumperProjectorBlockEntity extends SavedBlockEntity implements Proj
     public static void serverTick(Level level, BlockPos pos, BlockState state, JumperProjectorBlockEntity entity) {
         entity.projector.serverTick(level.hasNeighborSignal(pos));
         if (entity.projector.isBuilding() && level.getGameTime() % AMBIENT_SOUND_INTERVAL == 0) entity.playSound(SoundEvents.BEACON_AMBIENT);
+    }
+
+    /** Server: a player confirmed the start dialog; tells them if the build cannot start. */
+    public void startByPlayer(Player player) {
+        if (projector.isBuilding()) {
+            McCompat.overlayMessage(player, Component.translatable("message.mcpj.projector_busy"));
+        } else if (!projector.start()) {
+            McCompat.overlayMessage(player, Component.translatable("message.mcpj.projector_blocked"));
+        }
     }
 
     public JumperProjector logic() {
@@ -85,9 +97,9 @@ public class JumperProjectorBlockEntity extends SavedBlockEntity implements Proj
     }
 
     @Override
-    public void updateJumper(float progress) {
+    public void updateJumper(float progress, boolean powered) {
         PuddleJumperEntity jumper = jumper();
-        if (jumper != null) jumper.construction().update(progress);
+        if (jumper != null) jumper.construction().update(progress, powered);
         showProgress(Math.min(JumperProjectorBlock.PROGRESS_STEPS, (int) (progress * JumperProjectorBlock.PROGRESS_STEPS)));
     }
 
