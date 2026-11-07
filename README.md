@@ -4,6 +4,8 @@
 
 MCPJ adds a flyable Puddle Jumper from *Stargate Atlantis* to Minecraft. It is an unofficial fan mod.
 
+**Download:** [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcpj-puddle-jumper/preview)
+
 | Minecraft | Loaders |
 |---|---|
 | 1.20.1 | Forge (47.4.16+), Fabric (with Fabric API) |
@@ -13,6 +15,15 @@ MCPJ adds a flyable Puddle Jumper from *Stargate Atlantis* to Minecraft. It is a
 It works on its own; other mods such as Just Stargate Mod or Mekanism are optional.
 About 10 blocks long, with seats for seven players, cloak, shield, cargo hold, retractable drive pods, homing
 drones, headlights and an energy system that works with any Forge Energy mod.
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Jumper landed in the snow](docs/screenshots/landed-snow.jpg) | ![Jumper flying over a snowy coast](docs/screenshots/flight-snow.jpg) |
+| ![Shielded jumper under water, rear view](docs/screenshots/underwater-shield-rear.jpg) | ![Shielded jumper in an underwater ravine](docs/screenshots/underwater-shield.jpg) |
+| ![Drones fired at night](docs/screenshots/night-drones.jpg) | ![Cloaked jumper over the coast](docs/screenshots/cloaked.jpg) |
+| ![Jumper landed on a meadow](docs/screenshots/landed-meadow.jpg) | ![Drive pods extended](docs/screenshots/drive-pods.jpg) |
 
 ## Getting started
 
@@ -134,6 +145,10 @@ By default a pad needs no power at all: without energy from cables it charges on
 (an empty jumper is full after about 20 minutes on one pad). Energy from cables is used first, at the full rate.
 With `chargingPad.requirePower = true` in the server config, pads only charge with energy from cables.
 
+Once the battery is full, the pads **repair the hull** with the same energy, but that costs much more: a hull
+repaired from zero to full takes 120 M FE (`chargingPad.fullRepairEnergy`, twice a full battery; 0 turns
+repairing off).
+
 - off (dark) → powered (glowing runway lights) → charging (bright, light level 15)
 - the landing arrow points in the direction the player faced when placing it
 - a comparator reads the charge of the jumper currently charging
@@ -146,6 +161,8 @@ space above must be free (about 9 long, 3 wide, 3 high); the build pauses while 
 
 - The build takes 10 minutes. The unfinished jumper shows as a glowing outline that gets brighter, with sparks
   scanning the hull; it cannot be boarded or damaged. Breaking the projector removes it.
+- The eight lights on top of the projector turn yellow one after another (clockwise, starting at the nose) and show
+  the build progress.
 - By default it needs no power. With `projector.requirePower = true` it needs 120 M FE per jumper from cables
   (10,000 FE/t over the build time; the build pauses without energy).
 - A finished jumper starts with 20 % energy.

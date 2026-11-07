@@ -14,17 +14,21 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import org.jspecify.annotations.Nullable;
 
 /** Builds a jumper above itself after a redstone pulse (see JumperProjectorBlockEntity); its nose points in FACING. */
 public class JumperProjectorBlock extends ModEntityBlock {
     public static final BooleanProperty BUILDING = BooleanProperty.create("building");
     public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;
+    /** Build progress shown on top: how many of the eight ring lights have turned yellow. */
+    public static final int PROGRESS_STEPS = 8;
+    public static final IntegerProperty PROGRESS = IntegerProperty.create("progress", 0, PROGRESS_STEPS);
     private static final int BUILDING_LIGHT = 12;
 
     public JumperProjectorBlock(Properties properties) {
         super(properties, JumperProjectorBlock::new);
-        registerDefaultState(stateDefinition.any().setValue(BUILDING, false).setValue(FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any().setValue(BUILDING, false).setValue(FACING, Direction.NORTH).setValue(PROGRESS, 0));
     }
 
     public static int lightLevel(BlockState state) {
@@ -33,7 +37,7 @@ public class JumperProjectorBlock extends ModEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(BUILDING, FACING);
+        builder.add(BUILDING, FACING, PROGRESS);
     }
 
     @Override

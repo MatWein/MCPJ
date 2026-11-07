@@ -1,0 +1,6 @@
+{
+  "parent": "mcpj:block/jumper_projector_building",
+  "textures": {
+    "up": "mcpj:block/jumper_projector_top_building_8"
+  }
+}

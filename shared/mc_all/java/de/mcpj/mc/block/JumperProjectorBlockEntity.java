@@ -88,6 +88,15 @@ public class JumperProjectorBlockEntity extends SavedBlockEntity implements Proj
     public void updateJumper(float progress) {
         PuddleJumperEntity jumper = jumper();
         if (jumper != null) jumper.construction().update(progress);
+        showProgress(Math.min(JumperProjectorBlock.PROGRESS_STEPS, (int) (progress * JumperProjectorBlock.PROGRESS_STEPS)));
+    }
+
+    /** Lights that many ring lights on top of the block (the block state changes only once per step). */
+    private void showProgress(int lights) {
+        BlockState state = getBlockState();
+        if (level != null && state.getValue(JumperProjectorBlock.PROGRESS) != lights) {
+            level.setBlock(worldPosition, state.setValue(JumperProjectorBlock.PROGRESS, lights), Block.UPDATE_CLIENTS);
+        }
     }
 
     @Override
@@ -100,7 +109,8 @@ public class JumperProjectorBlockEntity extends SavedBlockEntity implements Proj
 
     @Override
     public void setBuilding(boolean building) {
-        if (level != null) level.setBlock(worldPosition, getBlockState().setValue(JumperProjectorBlock.BUILDING, building), Block.UPDATE_ALL);
+        if (level != null) level.setBlock(worldPosition, getBlockState().setValue(JumperProjectorBlock.BUILDING, building)
+                .setValue(JumperProjectorBlock.PROGRESS, 0), Block.UPDATE_ALL);
         if (!building) jumperId = null;
     }
 

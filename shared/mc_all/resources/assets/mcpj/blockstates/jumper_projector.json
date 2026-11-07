@@ -3,31 +3,151 @@
     "building=false,facing=north": {
       "model": "mcpj:block/jumper_projector_idle"
     },
+    "building=true,facing=north,progress=0": {
+      "model": "mcpj:block/jumper_projector_building"
+    },
+    "building=true,facing=north,progress=1": {
+      "model": "mcpj:block/jumper_projector_building_1"
+    },
+    "building=true,facing=north,progress=2": {
+      "model": "mcpj:block/jumper_projector_building_2"
+    },
+    "building=true,facing=north,progress=3": {
+      "model": "mcpj:block/jumper_projector_building_3"
+    },
+    "building=true,facing=north,progress=4": {
+      "model": "mcpj:block/jumper_projector_building_4"
+    },
+    "building=true,facing=north,progress=5": {
+      "model": "mcpj:block/jumper_projector_building_5"
+    },
+    "building=true,facing=north,progress=6": {
+      "model": "mcpj:block/jumper_projector_building_6"
+    },
+    "building=true,facing=north,progress=7": {
+      "model": "mcpj:block/jumper_projector_building_7"
+    },
+    "building=true,facing=north,progress=8": {
+      "model": "mcpj:block/jumper_projector_building_8"
+    },
     "building=false,facing=east": {
       "model": "mcpj:block/jumper_projector_idle",
+      "y": 90
+    },
+    "building=true,facing=east,progress=0": {
+      "model": "mcpj:block/jumper_projector_building",
+      "y": 90
+    },
+    "building=true,facing=east,progress=1": {
+      "model": "mcpj:block/jumper_projector_building_1",
+      "y": 90
+    },
+    "building=true,facing=east,progress=2": {
+      "model": "mcpj:block/jumper_projector_building_2",
+      "y": 90
+    },
+    "building=true,facing=east,progress=3": {
+      "model": "mcpj:block/jumper_projector_building_3",
+      "y": 90
+    },
+    "building=true,facing=east,progress=4": {
+      "model": "mcpj:block/jumper_projector_building_4",
+      "y": 90
+    },
+    "building=true,facing=east,progress=5": {
+      "model": "mcpj:block/jumper_projector_building_5",
+      "y": 90
+    },
+    "building=true,facing=east,progress=6": {
+      "model": "mcpj:block/jumper_projector_building_6",
+      "y": 90
+    },
+    "building=true,facing=east,progress=7": {
+      "model": "mcpj:block/jumper_projector_building_7",
+      "y": 90
+    },
+    "building=true,facing=east,progress=8": {
+      "model": "mcpj:block/jumper_projector_building_8",
       "y": 90
     },
     "building=false,facing=south": {
       "model": "mcpj:block/jumper_projector_idle",
       "y": 180
     },
+    "building=true,facing=south,progress=0": {
+      "model": "mcpj:block/jumper_projector_building",
+      "y": 180
+    },
+    "building=true,facing=south,progress=1": {
+      "model": "mcpj:block/jumper_projector_building_1",
+      "y": 180
+    },
+    "building=true,facing=south,progress=2": {
+      "model": "mcpj:block/jumper_projector_building_2",
+      "y": 180
+    },
+    "building=true,facing=south,progress=3": {
+      "model": "mcpj:block/jumper_projector_building_3",
+      "y": 180
+    },
+    "building=true,facing=south,progress=4": {
+      "model": "mcpj:block/jumper_projector_building_4",
+      "y": 180
+    },
+    "building=true,facing=south,progress=5": {
+      "model": "mcpj:block/jumper_projector_building_5",
+      "y": 180
+    },
+    "building=true,facing=south,progress=6": {
+      "model": "mcpj:block/jumper_projector_building_6",
+      "y": 180
+    },
+    "building=true,facing=south,progress=7": {
+      "model": "mcpj:block/jumper_projector_building_7",
+      "y": 180
+    },
+    "building=true,facing=south,progress=8": {
+      "model": "mcpj:block/jumper_projector_building_8",
+      "y": 180
+    },
     "building=false,facing=west": {
       "model": "mcpj:block/jumper_projector_idle",
       "y": 270
     },
-    "building=true,facing=north": {
-      "model": "mcpj:block/jumper_projector_building"
-    },
-    "building=true,facing=east": {
+    "building=true,facing=west,progress=0": {
       "model": "mcpj:block/jumper_projector_building",
-      "y": 90
+      "y": 270
     },
-    "building=true,facing=south": {
-      "model": "mcpj:block/jumper_projector_building",
-      "y": 180
+    "building=true,facing=west,progress=1": {
+      "model": "mcpj:block/jumper_projector_building_1",
+      "y": 270
     },
-    "building=true,facing=west": {
-      "model": "mcpj:block/jumper_projector_building",
+    "building=true,facing=west,progress=2": {
+      "model": "mcpj:block/jumper_projector_building_2",
+      "y": 270
+    },
+    "building=true,facing=west,progress=3": {
+      "model": "mcpj:block/jumper_projector_building_3",
+      "y": 270
+    },
+    "building=true,facing=west,progress=4": {
+      "model": "mcpj:block/jumper_projector_building_4",
+      "y": 270
+    },
+    "building=true,facing=west,progress=5": {
+      "model": "mcpj:block/jumper_projector_building_5",
+      "y": 270
+    },
+    "building=true,facing=west,progress=6": {
+      "model": "mcpj:block/jumper_projector_building_6",
+      "y": 270
+    },
+    "building=true,facing=west,progress=7": {
+      "model": "mcpj:block/jumper_projector_building_7",
+      "y": 270
+    },
+    "building=true,facing=west,progress=8": {
+      "model": "mcpj:block/jumper_projector_building_8",
       "y": 270
     }
   }

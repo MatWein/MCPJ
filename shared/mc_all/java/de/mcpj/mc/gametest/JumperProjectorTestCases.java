@@ -55,15 +55,21 @@ public final class JumperProjectorTestCases {
             helper.assertTrue(jumper.construction().isActive(), "Jumper is not under construction");
             helper.assertTrue(!McCompat.hurt(jumper, helper.getLevel().damageSources().generic(), 10f), "Jumper under construction took damage");
             helper.assertTrue(helper.getBlockState(projector(helper)).getValue(JumperProjectorBlock.BUILDING), "Projector does not show building");
-            projector.logic().skipTo(1f);
-            helper.runAfterDelay(5, () -> {
-                helper.assertTrue(!jumper.construction().isActive() && jumper.isAlive(), "Jumper not finished");
-                helper.assertTrue(!projector.logic().isBuilding(), "Projector still building");
-                helper.assertTrue(!helper.getBlockState(projector(helper)).getValue(JumperProjectorBlock.BUILDING), "Projector still shows building");
-                // the redstone signal is still on: no new pulse, no second jumper
-                helper.runAfterDelay(10, () -> {
-                    helper.assertTrue(jumpers(helper).size() == 1, "A second jumper was started without a new pulse");
-                    helper.succeed();
+            projector.logic().skipTo(0.5f);
+            helper.runAfterDelay(2, () -> {
+                int lights = helper.getBlockState(projector(helper)).getValue(JumperProjectorBlock.PROGRESS);
+                helper.assertTrue(lights == JumperProjectorBlock.PROGRESS_STEPS / 2, "Projector shows " + lights + " progress lights at half build");
+                projector.logic().skipTo(1f);
+                helper.runAfterDelay(5, () -> {
+                    helper.assertTrue(!jumper.construction().isActive() && jumper.isAlive(), "Jumper not finished");
+                    helper.assertTrue(!projector.logic().isBuilding(), "Projector still building");
+                    helper.assertTrue(!helper.getBlockState(projector(helper)).getValue(JumperProjectorBlock.BUILDING), "Projector still shows building");
+                    helper.assertTrue(helper.getBlockState(projector(helper)).getValue(JumperProjectorBlock.PROGRESS) == 0, "Progress lights not reset");
+                    // the redstone signal is still on: no new pulse, no second jumper
+                    helper.runAfterDelay(10, () -> {
+                        helper.assertTrue(jumpers(helper).size() == 1, "A second jumper was started without a new pulse");
+                        helper.succeed();
+                    });
                 });
             });
         });

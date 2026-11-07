@@ -26,6 +26,8 @@ class FakeJumperHost implements JumperHost, JumperSync {
     int tickCount;
     long gameTime;
     double waterHeight;
+    /** Energy every pad block below the hull hands over per call (0 = no pads). */
+    int padSupply;
     final Set<BlockPosition> lava = new HashSet<>();
     final List<String> events = new ArrayList<>();
     final List<JumperSound> sounds = new ArrayList<>();
@@ -71,7 +73,7 @@ class FakeJumperHost implements JumperHost, JumperSync {
     @Override public boolean isFree(Box box) { return !onGround; }
     @Override public double waterHeight() { return waterHeight; }
     @Override public double lavaHeight(BlockPosition pos) { return lava.contains(pos) ? 1.0 : -1; }
-    @Override public int chargeFromPad(BlockPosition pos, int room, int intervalTicks, float chargeFraction) { return 0; }
+    @Override public int chargeFromPad(BlockPosition pos, int room, int intervalTicks, float chargeFraction) { return Math.min(room, padSupply); }
     @Override public boolean placeLight(BlockPosition pos, int level) { events.add("light+" + pos); return true; }
     @Override public void removeLight(BlockPosition pos) { events.add("light-" + pos); }
 

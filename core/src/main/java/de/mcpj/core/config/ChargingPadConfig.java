@@ -6,6 +6,7 @@ public final class ChargingPadConfig {
     private final IntSetting buffer;
     private final BooleanSetting requirePower;
     private final IntSetting freeChargeRate;
+    private final IntSetting fullRepairEnergy;
 
     ChargingPadConfig(ConfigBuilder builder) {
         builder.comment("Jumper charging pad").push("chargingPad");
@@ -20,6 +21,9 @@ public final class ChargingPadConfig {
                 .define("requirePower", false);
         freeChargeRate = builder.comment("Charging power per pad without energy from cables, if requirePower is false (FE/tick)")
                 .defineInRange("freeChargeRate", 2_500, 1, Integer.MAX_VALUE);
+        fullRepairEnergy = builder.comment("Energy to repair a jumper's hull from zero to full (FE). Once its battery is full, a landed",
+                        "jumper uses the pads' energy to repair its hull. 0 = pads do not repair")
+                .defineInRange("fullRepairEnergy", 120_000_000, 0, Integer.MAX_VALUE);
         builder.pop();
     }
 
@@ -41,5 +45,9 @@ public final class ChargingPadConfig {
 
     public int freeChargeRate() {
         return freeChargeRate.get();
+    }
+
+    public int fullRepairEnergy() {
+        return fullRepairEnergy.get();
     }
 }

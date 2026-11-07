@@ -4,6 +4,7 @@
 Output: core/src/main/resources/assets/mcpj/textures/block/
   jumper_projector_top_{idle,building}.png    emitter lens with a ring of lights, arrow (points north = up)
   jumper_projector_side_{idle,building}.png   steel panel with a glowing band of Ancient-style lines
+  jumper_projector_top_building_{1..8}.png    build progress: that many ring lights turn yellow, clockwise from north
 The bottom uses charging_pad_bottom.png.
 """
 import math
@@ -16,9 +17,12 @@ MODES = {
     'idle': ((60, 90, 110), (50, 60, 70), (70, 80, 90), (45, 70, 85)),
     'building': ((210, 250, 255), (90, 200, 240), (150, 230, 255), (110, 220, 255)),
 }
+# ring lights that already show build progress
+PROGRESS_LIGHT = (255, 205, 50)
+PROGRESS_STEPS = 8
 
 
-def top(mode):
+def top(mode, progress=0):
     core, ring, light, _ = MODES[mode]
     img = steel(4, base=(46, 50, 54), var=4)
     px = img.load()
@@ -35,9 +39,11 @@ def top(mode):
             elif d < 7.5:
                 px[x, y] = (30, 33, 36)
     # ring of lights around the lens
-    for k in range(8):
-        a = k * math.pi / 4
-        glow(px, int(round(cx + 10 * math.cos(a))), int(round(cy + 10 * math.sin(a))), light)
+    # (clockwise from north, so build progress can light them one after another)
+    for k in range(PROGRESS_STEPS):
+        a = -math.pi / 2 + k * 2 * math.pi / PROGRESS_STEPS
+        col = PROGRESS_LIGHT if k < progress else light
+        glow(px, int(round(cx + 10 * math.cos(a))), int(round(cy + 10 * math.sin(a))), col)
     # arrow pointing north at the top edge
     for k in range(4):
         for x in (15 - k, 16 + k):
@@ -75,6 +81,8 @@ def main():
     for mode in MODES:
         top(mode).save(os.path.join(OUT, f'jumper_projector_top_{mode}.png'))
         side(mode).save(os.path.join(OUT, f'jumper_projector_side_{mode}.png'))
+    for progress in range(1, PROGRESS_STEPS + 1):
+        top('building', progress).save(os.path.join(OUT, f'jumper_projector_top_building_{progress}.png'))
     print('Textures written to', OUT)
 
 

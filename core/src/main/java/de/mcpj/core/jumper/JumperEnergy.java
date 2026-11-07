@@ -10,7 +10,10 @@ import de.mcpj.core.math.MathUtil;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Energy storage (Forge Energy units): drive, shield, cloak and lights drain it, landed ships charge from pads. */
+/**
+ * Energy storage (Forge Energy units): drive, shield, cloak and lights drain it, landed ships charge from pads.
+ * Pad energy beyond a full battery repairs the hull (much more expensive than charging).
+ */
 public final class JumperEnergy {
     private static final int CHARGE_INTERVAL = 5;
     private static final float FLOW_SMOOTHING = 0.1f;
@@ -106,15 +109,22 @@ public final class JumperEnergy {
         return power;
     }
 
+    /** Takes energy from the pads below: first into the battery, the rest repairs the hull. Returns the charged part. */
     private int chargeFromPads() {
         int room = capacity() - stored();
+        int repairEnergy = ServerConfig.CHARGING_PAD.fullRepairEnergy();
+        int repairRoom = (int) Math.min(Integer.MAX_VALUE - (long) room, (long) Math.ceil((1.0 - jumper.hull().integrity()) * repairEnergy));
+        int wanted = room + repairRoom;
+        if (wanted <= 0) return 0;
         float chargeFraction = fraction();
         int gained = 0;
         for (BlockPosition pos : blocksBelowHull()) {
-            gained += jumper.host().chargeFromPad(pos, room - gained, CHARGE_INTERVAL, chargeFraction);
+            gained += jumper.host().chargeFromPad(pos, wanted - gained, CHARGE_INTERVAL, chargeFraction);
         }
-        if (gained > 0) set(stored() + gained);
-        return gained;
+        int charged = Math.min(gained, room);
+        if (charged > 0) set(stored() + charged);
+        if (gained > charged) jumper.hull().repair((gained - charged) / (float) repairEnergy);
+        return charged;
     }
 
     private Set<BlockPosition> blocksBelowHull() {

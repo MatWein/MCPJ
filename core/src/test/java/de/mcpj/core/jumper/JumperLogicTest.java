@@ -41,6 +41,23 @@ class JumperLogicTest {
     }
 
     @Test
+    void padsChargeTheBatteryBeforeRepairingTheHull() {
+        host.onGround = true;
+        host.padSupply = 50_000;
+        host.hullIntegrity = 0.5f;
+        runSeconds(1);
+        assertTrue(jumper.energy().stored() > Math.round(ServerConfig.ENERGY.capacity() * ServerConfig.ENERGY.startCharge()), "battery not charged");
+        assertTrue(jumper.energy().stored() < jumper.energy().capacity(), "battery already full");
+        assertEquals(0.5f, jumper.hull().integrity(), "hull repaired before the battery is full");
+
+        jumper.energy().set(jumper.energy().capacity());
+        runSeconds(5);
+        assertEquals(jumper.energy().capacity(), jumper.energy().stored());
+        assertTrue(jumper.hull().integrity() > 0.5f, "hull not repaired");
+        assertTrue(jumper.hull().integrity() < 1f, "repair should cost much more than charging");
+    }
+
+    @Test
     void lavaBurnsTheHullWithoutShield() {
         putLavaIntoHull();
         runSeconds(2);

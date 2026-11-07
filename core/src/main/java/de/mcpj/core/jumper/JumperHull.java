@@ -62,6 +62,11 @@ public final class JumperHull {
         jumper.sync().setHullIntegrity(MathUtil.clamp(integrity, 0f, 1f));
     }
 
+    /** Server: restores that share of the hull (charging pads repair a landed jumper). */
+    void repair(float fraction) {
+        if (fraction > 0) setIntegrity(integrity() + fraction);
+    }
+
     public boolean isUnderFire() {
         return underFireTimer > 0;
     }
