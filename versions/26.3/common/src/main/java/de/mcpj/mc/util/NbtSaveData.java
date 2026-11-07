@@ -72,6 +72,16 @@ public final class NbtSaveData implements SaveData {
     }
 
     @Override
+    public String getString(String key) {
+        return in().getStringOr(key, "");
+    }
+
+    @Override
+    public void putString(String key, String value) {
+        out().putString(key, value);
+    }
+
+    @Override
     public boolean getBoolean(String key) {
         return in().getBooleanOr(key, false);
     }

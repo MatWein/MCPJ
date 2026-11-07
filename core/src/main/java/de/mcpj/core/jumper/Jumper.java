@@ -4,6 +4,7 @@ import de.mcpj.core.math.BlockPosition;
 import de.mcpj.core.math.Box;
 import de.mcpj.core.math.MathUtil;
 import de.mcpj.core.math.Vec3d;
+import de.mcpj.core.navigation.JumperNavigation;
 
 /**
  * The Puddle Jumper's game logic, independent of Minecraft version and mod loader. The platform creates one per
@@ -23,6 +24,7 @@ public final class Jumper {
     private final JumperWeapons weapons;
     private final JumperLights lights;
     private final JumperAnimation animation;
+    private final JumperNavigation navigation;
 
     private Vec3d lastServerPosition = Vec3d.ZERO;
     private Vec3d serverVelocity = Vec3d.ZERO;
@@ -39,6 +41,7 @@ public final class Jumper {
         this.weapons = new JumperWeapons(this);
         this.lights = new JumperLights(this);
         this.animation = new JumperAnimation(this);
+        this.navigation = new JumperNavigation(host.sync());
     }
 
     public JumperHost host() {
@@ -79,6 +82,10 @@ public final class Jumper {
 
     public JumperAnimation animation() {
         return animation;
+    }
+
+    public JumperNavigation navigation() {
+        return navigation;
     }
 
     // ------------------------------------------------------------------ ticking

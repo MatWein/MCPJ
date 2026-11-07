@@ -1,5 +1,8 @@
 package de.mcpj.mc.gametest;
 
+import de.mcpj.core.math.BlockPosition;
+import de.mcpj.core.navigation.JumperNavigation;
+import de.mcpj.core.navigation.NavigationAction;
 import de.mcpj.mc.compat.McCompat;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -25,6 +28,7 @@ public final class JumperTravelTestCases {
         jumper.cargo().setItem(3, new ItemStack(Items.DIAMOND, 5));
         jumper.hurt(helper.getLevel().damageSources().generic(), 24f);
         float hull = jumper.hull().integrity();
+        jumper.core().navigation().apply(NavigationAction.ADD, JumperNavigation.NONE, "Base", new BlockPosition(5, 64, 5), "minecraft:overworld");
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         Entity arrived = GameTestHooks.get().changeDimension(jumper, nether, NETHER_TARGET, 90f);
         helper.assertTrue(arrived instanceof PuddleJumperEntity, "Jumper did not arrive");
@@ -34,6 +38,7 @@ public final class JumperTravelTestCases {
             helper.assertTrue(jumper.isRemoved(), "Old jumper still exists");
             helper.assertTrue(moved.hull().integrity() == hull, "Hull not kept: " + moved.hull().integrity());
             helper.assertTrue(moved.cargo().getItem(3).is(Items.DIAMOND), "Cargo not kept");
+            helper.assertTrue(moved.core().navigation().waypoints().size() == 1, "Navigation not kept");
         } finally {
             moved.discard();
         }

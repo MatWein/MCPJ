@@ -91,6 +91,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
     private static final EntityDataAccessor<Integer> ARRIVALS = define(EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> CONSTRUCTION = define(EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> CONSTRUCTION_HIDDEN = define(EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<String> NAVIGATION = define(EntityDataSerializers.STRING);
 
     private static final byte SHIELD_HIT_EVENT = 60;
     /** Eye height relative to the ship's height (entity type builder, or JumperEntityCompat in Minecraft 1.20.1). */
@@ -142,6 +143,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         entityData.define(ARRIVALS, 0);
         entityData.define(CONSTRUCTION, JumperConstruction.DONE);
         entityData.define(CONSTRUCTION_HIDDEN, false);
+        entityData.define(NAVIGATION, "");
     }
 
     @Override
@@ -275,6 +277,16 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
     }
 
     // ------------------------------------------------------------------ JumperSync (entity data)
+
+    @Override
+    public String navigation() {
+        return entityData.get(NAVIGATION);
+    }
+
+    @Override
+    public void setNavigation(String navigation) {
+        entityData.set(NAVIGATION, navigation);
+    }
 
     @Override
     public boolean cloaked() {
@@ -836,6 +848,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         core.hull().load(data);
         core.energy().load(data);
         core.lights().load(data);
+        core.navigation().load(data);
     }
 
     @Override
@@ -845,5 +858,6 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         core.hull().save(data);
         core.energy().save(data);
         core.lights().save(data);
+        core.navigation().save(data);
     }
 }

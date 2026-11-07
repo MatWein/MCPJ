@@ -16,8 +16,9 @@ public final class KeyBindings {
     public static final KeyMapping STRAFE_RIGHT = key("strafe_right", InputConstants.KEY_E, true);
     public static final KeyMapping CARGO = key("cargo", InputConstants.KEY_I, true);
     public static final KeyMapping LIGHTS = key("lights", InputConstants.KEY_L, true);
+    public static final KeyMapping NAVIGATION = key("navigation", InputConstants.KEY_N, false);
 
-    public static final List<KeyMapping> ALL = List.of(CLOAK, SHIELD, PODS, TARGET, STRAFE_LEFT, STRAFE_RIGHT, CARGO, LIGHTS);
+    public static final List<KeyMapping> ALL = List.of(CLOAK, SHIELD, PODS, TARGET, STRAFE_LEFT, STRAFE_RIGHT, CARGO, LIGHTS, NAVIGATION);
 
     private KeyBindings() {}
 

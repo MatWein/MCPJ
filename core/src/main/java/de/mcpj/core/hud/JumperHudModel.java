@@ -3,6 +3,8 @@ package de.mcpj.core.hud;
 import de.mcpj.core.config.ClientConfig;
 import de.mcpj.core.jumper.Jumper;
 import de.mcpj.core.jumper.JumperEnergy;
+import de.mcpj.core.math.Vec3d;
+import de.mcpj.core.navigation.Waypoint;
 import de.mcpj.core.targeting.TargetKind;
 import de.mcpj.core.util.Units;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +20,10 @@ public final class JumperHudModel {
     private static final int PERCENT = 100;
     private static final int LOW_ENERGY_ALARM_INTERVAL = 40;
     private static final String KEY = "hud.mcpj.";
+    /** Below this speed (blocks per tick, 1 block/s) no arrival time is shown. */
+    private static final double MIN_ETA_SPEED = 0.05;
+    /** Height differences up to this are shown as level. */
+    private static final int LEVEL_TOLERANCE = 1;
 
     /** The selected target as the HUD shows it. */
     public record Target(Object displayName, TargetKind kind) {}
@@ -38,6 +44,34 @@ public final class JumperHudModel {
         lines.add(droneLine(dronesReady));
         lines.add(targetLine(target));
         return lines;
+    }
+
+    /**
+     * The line below the compass band: destination name, horizontal distance, height difference and arrival time at
+     * the current speed (blocks per tick); only the name if the destination is in another dimension.
+     */
+    public static HudLine navigationLine(Waypoint destination, Vec3d position, boolean sameDimension, double speed) {
+        List<HudText> parts = new ArrayList<>();
+        parts.add(HudText.literal(destination.name()));
+        if (!sameDimension) {
+            parts.add(HudText.literal(" · "));
+            parts.add(text("other_dimension"));
+            return new HudLine(parts, HudColors.GREY);
+        }
+        Vec3d target = destination.center();
+        double dx = target.x() - position.x();
+        double dz = target.z() - position.z();
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        int height = (int) Math.floor(target.y() - position.y());
+        StringBuilder info = new StringBuilder(" · ").append(HudFormat.distance(horizontal));
+        if (height > LEVEL_TOLERANCE) info.append(" · ↑").append(height).append(" m");
+        else if (height < -LEVEL_TOLERANCE) info.append(" · ↓").append(-height).append(" m");
+        if (speed >= MIN_ETA_SPEED) {
+            double distance = Math.sqrt(horizontal * horizontal + height * (double) height);
+            info.append(" · ~").append(HudFormat.duration((long) (distance / speed)));
+        }
+        parts.add(HudText.literal(info.toString()));
+        return new HudLine(parts, HudColors.GOLD);
     }
 
     /** Whether the low energy alarm beeps in this tick. */

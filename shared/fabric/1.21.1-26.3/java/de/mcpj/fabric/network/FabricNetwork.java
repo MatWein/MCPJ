@@ -5,6 +5,7 @@ import de.mcpj.fabric.config.FabricConfigs;
 import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.network.JumperActionPacket;
 import de.mcpj.mc.network.JumperImpactPacket;
+import de.mcpj.mc.network.NavigationPacket;
 import de.mcpj.mc.network.PilotSoundPacket;
 import de.mcpj.mc.network.ProjectorStartPacket;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -39,6 +40,7 @@ public final class FabricNetwork {
         FabricCompat.registerServerbound(JumperActionPacket.TYPE, JumperActionPacket.STREAM_CODEC);
         FabricCompat.registerServerbound(JumperImpactPacket.TYPE, JumperImpactPacket.STREAM_CODEC);
         FabricCompat.registerServerbound(ProjectorStartPacket.TYPE, ProjectorStartPacket.STREAM_CODEC);
+        FabricCompat.registerServerbound(NavigationPacket.TYPE, NavigationPacket.STREAM_CODEC);
         FabricCompat.registerClientbound(PilotSoundPacket.TYPE, PilotSoundPacket.STREAM_CODEC);
         FabricCompat.registerClientbound(ServerConfigPacket.TYPE, ServerConfigPacket.STREAM_CODEC);
 
@@ -46,6 +48,7 @@ public final class FabricNetwork {
         ServerPlayNetworking.registerGlobalReceiver(JumperActionPacket.TYPE, (packet, context) -> packet.handle(context.player()));
         ServerPlayNetworking.registerGlobalReceiver(JumperImpactPacket.TYPE, (packet, context) -> packet.handle(context.player()));
         ServerPlayNetworking.registerGlobalReceiver(ProjectorStartPacket.TYPE, (packet, context) -> packet.handle(context.player()));
+        ServerPlayNetworking.registerGlobalReceiver(NavigationPacket.TYPE, (packet, context) -> packet.handle(context.player()));
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 sender.sendPacket(new ServerConfigPacket(FabricConfigs.SERVER.values())));
     }

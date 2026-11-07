@@ -46,6 +46,16 @@ public record NbtSaveData(CompoundTag tag) implements SaveData {
     }
 
     @Override
+    public String getString(String key) {
+        return tag.getString(key);
+    }
+
+    @Override
+    public void putString(String key, String value) {
+        tag.putString(key, value);
+    }
+
+    @Override
     public boolean getBoolean(String key) {
         return tag.getBoolean(key);
     }

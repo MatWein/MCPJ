@@ -37,6 +37,7 @@ class FakeJumperHost implements JumperHost, JumperSync {
     int hurtTime, hurtDirection = 1, energy, capacity = 1, energyFlow, arrivals;
     float hurtWobble, hullIntegrity = 1f;
     Vec3d arrivalVelocity = Vec3d.ZERO;
+    String navigation = "";
 
     /** Advances the world by one server tick in the same order as the platform does. */
     void serverTick(Jumper jumper) {
@@ -108,6 +109,8 @@ class FakeJumperHost implements JumperHost, JumperSync {
     @Override public void setHurtDirection(int direction) { hurtDirection = direction; }
     @Override public float hurtWobble() { return hurtWobble; }
     @Override public void setHurtWobble(float wobble) { hurtWobble = wobble; }
+    @Override public String navigation() { return navigation; }
+    @Override public void setNavigation(String navigation) { this.navigation = navigation; }
     @Override public float hullIntegrity() { return hullIntegrity; }
     @Override public void setHullIntegrity(float integrity) { hullIntegrity = integrity; }
     @Override public int storedEnergy() { return energy; }

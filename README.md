@@ -52,6 +52,7 @@ New jumpers start with 20 % energy.
 | Toggle shield | `V` |
 | Toggle headlights | `L` (replaces advancements while piloting) |
 | Extend / retract drive pods | `G` (otherwise automatic: retracted when landed, extended in the air, always extended when firing) |
+| Navigation console (everyone on board) | `N` |
 | Leave | `Shift` |
 
 All jumper keys can be rebound under *Options → Controls → MCPJ*.
@@ -70,16 +71,23 @@ faint glowing outline. Mobs lose track of the pilot. Launching a drone decloaks.
 **Shield.** A gently wobbling energy bubble with a water look that absorbs all damage as long as there is energy;
 hits make it flash.
 
+**Navigation.** The jumper has a navigation memory of up to 64 named waypoints. It is saved with the ship and
+shared by everyone on board. In the navigation console (`N`) anyone on board can save the current position, choose
+the destination, and rename or delete waypoints. A compass band at the top of the pilot's HUD shows the heading and
+a marker for the destination (an arrow at the edge if it is behind), and below it the name, distance, height
+difference and arrival time at the current speed.
+
 **Targeting and drones.** Living entities and uncloaked jumpers within 64 blocks are marked (hostiles red,
 jumpers cyan, others white; the selected target bold with name and distance). Drones home in on their target and
 explode on impact (slightly weaker than a creeper, breaking blocks only with `mobGriefing`); the own jumper and its
 passengers are never harmed.
 
 **Hull.** 240 hull points (a diamond sword needs about 35 hits). A hostile drone destroys 60 % of the hull, so the
-second one is fatal. There is no self-repair, and the hull takes damage in creative mode too. A jumper that is at
-least half submerged loses 1 hull point per second without shield. Lava burns 8 hull points per second as soon as
-any of it touches the hull, flowing lava included (e.g. a bucket poured over the ship); an active shield absorbs
-this as long as there is energy. The jumper ignores knockback from explosions, hits, mobs and water currents.
+second one is fatal. The hull does not repair itself (charging pads repair a landed jumper, see below), and it takes
+damage in creative mode too. A jumper that is at least half submerged loses 1 hull point per second without shield.
+Lava burns 8 hull points per second as soon as any of it touches the hull, flowing lava included (e.g. a bucket
+poured over the ship); an active shield absorbs this as long as there is energy. The jumper ignores knockback from
+explosions, hits, mobs and water currents.
 
 **Seats.** The jumper seats seven players: the pilot in the bow, two seats behind and four in the rear compartment
 (right-click to board). The first one to board pilots; when the pilot leaves, the next passenger moves up and takes

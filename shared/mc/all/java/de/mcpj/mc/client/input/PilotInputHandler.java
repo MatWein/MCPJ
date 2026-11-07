@@ -3,6 +3,7 @@ package de.mcpj.mc.client.input;
 import de.mcpj.mc.client.ClientCompat;
 import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.mc.client.PilotContext;
+import de.mcpj.mc.client.navigation.NavigationScreen;
 import de.mcpj.mc.client.targeting.TargetSelector;
 import de.mcpj.core.jumper.JumperAction;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
@@ -63,6 +64,11 @@ public final class PilotInputHandler {
     public static void onKey(int key, int action) {
         Minecraft minecraft = Minecraft.getInstance();
         if (action != ClientCompat.KEY_PRESS || ClientCompat.screenOpen(minecraft) || minecraft.player == null) return;
+        // the navigation console is open to everyone on board, not only the pilot
+        if (KeyBindings.matches(KeyBindings.NAVIGATION, key) && minecraft.player.getVehicle() instanceof PuddleJumperEntity ridden) {
+            NavigationScreen.open(ridden);
+            return;
+        }
         PuddleJumperEntity jumper = PilotContext.pilotedJumper();
         if (jumper == null) return;
         // all jumper keys are raw key presses, so they work the same on every loader (see TOGGLES)

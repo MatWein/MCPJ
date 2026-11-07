@@ -17,6 +17,11 @@ public interface SaveData {
 
     void putFloat(String key, float value);
 
+    /** The text, or an empty one if it is missing. */
+    String getString(String key);
+
+    void putString(String key, String value);
+
     boolean getBoolean(String key);
 
     void putBoolean(String key, boolean value);

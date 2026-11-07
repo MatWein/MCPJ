@@ -26,6 +26,12 @@ final class HudFormat {
         return seconds + " s";
     }
 
+    /** Meters below 1 km, else kilometers with one decimal. */
+    static String distance(double blocks) {
+        if (blocks >= THOUSAND) return String.format("%.1f km", blocks / THOUSAND);
+        return Math.round(blocks) + " m";
+    }
+
     static String oneDecimal(double value) {
         return String.format("%.1f", value);
     }

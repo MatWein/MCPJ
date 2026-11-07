@@ -154,4 +154,9 @@ public final class McCompat {
         for (int i = 0; i < segments; i++) entity.level().getNextEntityId();
         entity.setId(entity.getId());
     }
+
+    /** The dimension's id, e.g. "minecraft:overworld" (the same on client and server). */
+    public static String dimensionId(Level level) {
+        return level.dimension().identifier().toString();
+    }
 }

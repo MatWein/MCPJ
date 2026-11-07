@@ -48,6 +48,11 @@ public interface JumperSync {
 
     void setEnergyFlow(int flow);
 
+    /** The navigation memory in its text form (see JumperNavigation); empty if there are no waypoints. */
+    String navigation();
+
+    void setNavigation(String navigation);
+
     Vec3d arrivalVelocity();
 
     int arrivals();

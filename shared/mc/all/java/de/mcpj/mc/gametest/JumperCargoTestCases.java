@@ -1,5 +1,9 @@
 package de.mcpj.mc.gametest;
 
+import de.mcpj.core.math.BlockPosition;
+import de.mcpj.core.navigation.JumperNavigation;
+import de.mcpj.core.navigation.NavigationAction;
+import de.mcpj.core.navigation.Waypoint;
 import de.mcpj.mc.entity.jumper.JumperCargo;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -20,6 +24,8 @@ public final class JumperCargoTestCases {
         jumper.cargo().setItem(0, new ItemStack(Items.DIAMOND, 17));
         jumper.cargo().setItem(JumperCargo.SLOTS - 1, new ItemStack(Items.ENDER_PEARL, 3));
         jumper.setCloaked(true);
+        jumper.core().navigation().apply(NavigationAction.ADD, JumperNavigation.NONE, "Home", new BlockPosition(1, 70, -2), "minecraft:overworld");
+        jumper.core().navigation().apply(NavigationAction.SELECT, 0, "", new BlockPosition(0, 0, 0), "");
         PuddleJumperEntity copy = GameTestCompat.saveAndLoad(helper, jumper);
         helper.assertTrue(copy != null, "Could not create jumper");
         ItemStack first = copy.cargo().getItem(0);
@@ -27,6 +33,8 @@ public final class JumperCargoTestCases {
         helper.assertTrue(first.is(Items.DIAMOND) && first.getCount() == 17, "First slot wrong");
         helper.assertTrue(last.is(Items.ENDER_PEARL) && last.getCount() == 3, "Last slot wrong");
         helper.assertTrue(copy.isCloaked(), "Cloak state not saved");
+        Waypoint destination = copy.core().navigation().destination();
+        helper.assertTrue(destination != null && destination.name().equals("Home") && destination.y() == 70, "Navigation not saved");
         helper.succeed();
     }
 
