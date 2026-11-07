@@ -1,6 +1,5 @@
 package de.mcpj.mc.client.targeting;
 
-import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.client.PilotContext;
 import de.mcpj.core.hud.HudColors;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;

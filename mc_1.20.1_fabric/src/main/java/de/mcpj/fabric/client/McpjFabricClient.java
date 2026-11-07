@@ -70,7 +70,7 @@ public final class McpjFabricClient implements ClientModInitializer {
         });
         WorldRenderEvents.START.register(context -> DeferredBubbles.clear());
         WorldRenderEvents.AFTER_TRANSLUCENT.register(context ->
-                TargetMarkers.collect(context.matrixStack(), context.projectionMatrix(), context.camera(), context.tickDelta()));
+                TargetMarkers.collect(context.matrixStack().last().pose(), context.projectionMatrix(), context.camera(), context.tickDelta()));
         // LAST comes after clouds and weather, when the camera rotation is already off the model-view stack
         WorldRenderEvents.LAST.register(context -> DeferredBubbles.renderPending(null));
 

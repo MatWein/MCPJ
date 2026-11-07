@@ -59,7 +59,7 @@ public final class ForgeClientEvents {
         if (stage == RenderLevelStageEvent.Stage.AFTER_SKY) {
             DeferredBubbles.clear();
         } else if (stage == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
-            TargetMarkers.collect(event.getPoseStack(), event.getProjectionMatrix(), event.getCamera(), event.getPartialTick());
+            TargetMarkers.collect(event.getPoseStack().last().pose(), event.getProjectionMatrix(), event.getCamera(), event.getPartialTick());
         } else if (stage == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
             DeferredBubbles.renderPending(event.getPoseStack().last());
         }

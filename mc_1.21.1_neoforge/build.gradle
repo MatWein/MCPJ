@@ -98,3 +98,8 @@ tasks.named('processResources', ProcessResources).configure {
         exclude 'mcpj.accesswidener'
     }
 }
+
+// code shared with other Minecraft versions or loaders (see shared/ and the README); compiled as part of this module
+sourceSets.main.java {
+    srcDir(rootProject.file('shared/neoforge/java'))
+}

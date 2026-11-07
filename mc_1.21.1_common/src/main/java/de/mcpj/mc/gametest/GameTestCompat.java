@@ -1,5 +1,9 @@
 package de.mcpj.mc.gametest;
 
+import net.minecraft.world.level.portal.DimensionTransition;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
 import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import de.mcpj.mc.platform.McpjPlatform;
@@ -48,5 +52,11 @@ final class GameTestCompat {
     /** A new lightning bolt, not yet in the world. */
     static LightningBolt lightning(GameTestHelper helper) {
         return EntityType.LIGHTNING_BOLT.create(helper.getLevel());
+    }
+
+    /** Changes the entity's dimension to exactly that spot (no portal search), the way portal mods do. */
+    @Nullable
+    static Entity changeDimension(Entity entity, ServerLevel destination, Vec3 position, float yaw) {
+        return entity.changeDimension(new DimensionTransition(destination, position, Vec3.ZERO, yaw, 0f, DimensionTransition.DO_NOTHING));
     }
 }

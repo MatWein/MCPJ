@@ -1,5 +1,6 @@
 package de.mcpj.forge.registry;
 
+import de.mcpj.mc.registry.McpjObjects;
 import de.mcpj.mc.block.JumperProjectorBlockEntity;
 import de.mcpj.forge.McpjMod;
 import de.mcpj.forge.block.ForgeChargingPadBlockEntity;
@@ -12,12 +13,10 @@ public final class ModBlockEntities {
     static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, McpjMod.MOD_ID);
 
-    @SuppressWarnings("DataFlowIssue")
-    public static final RegistryObject<BlockEntityType<ForgeChargingPadBlockEntity>> CHARGING_PAD = BLOCK_ENTITIES.register("charging_pad",
-            () -> BlockEntityType.Builder.of(ForgeChargingPadBlockEntity::new, ModBlocks.CHARGING_PAD.get()).build(null));
-    @SuppressWarnings("DataFlowIssue")
-    public static final RegistryObject<BlockEntityType<JumperProjectorBlockEntity>> JUMPER_PROJECTOR = BLOCK_ENTITIES.register("jumper_projector",
-            () -> BlockEntityType.Builder.of(JumperProjectorBlockEntity::new, ModBlocks.JUMPER_PROJECTOR.get()).build(null));
+    public static final RegistryObject<BlockEntityType<ForgeChargingPadBlockEntity>> CHARGING_PAD = BLOCK_ENTITIES.register(McpjObjects.CHARGING_PAD,
+            () -> McpjObjects.chargingPadEntity(ForgeChargingPadBlockEntity::new, ModBlocks.CHARGING_PAD.get()));
+    public static final RegistryObject<BlockEntityType<JumperProjectorBlockEntity>> JUMPER_PROJECTOR = BLOCK_ENTITIES.register(McpjObjects.JUMPER_PROJECTOR,
+            () -> McpjObjects.jumperProjectorEntity(ModBlocks.JUMPER_PROJECTOR.get()));
 
     private ModBlockEntities() {}
 }

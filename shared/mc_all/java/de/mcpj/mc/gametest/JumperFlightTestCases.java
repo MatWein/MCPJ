@@ -1,0 +1,145 @@
+package de.mcpj.mc.gametest;
+
+import net.minecraft.world.entity.Mob;
+import de.mcpj.core.config.ServerConfig;
+import de.mcpj.core.jumper.JumperGeometry;
+import de.mcpj.core.jumper.JumperHull;
+import de.mcpj.core.math.Vec3d;
+import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
+import static de.mcpj.mc.gametest.GameTestSupport.spawnJumper;
+
+/** Flight game tests, shared by the loaders (each registers them with its own annotations). */
+public final class JumperFlightTestCases {
+    private JumperFlightTestCases() {}
+
+
+    public static void hoversWithoutPilot(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 7, 12, 0);
+        double startY = jumper.getY();
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(!jumper.onGround(), "Jumper landed instead of hovering");
+            helper.assertTrue(Math.abs(jumper.getY() - startY) < 0.01, "Jumper sank to " + jumper.getY());
+            helper.assertTrue(jumper.isPodsOut(), "Pods should be out while airborne");
+            helper.succeed();
+        });
+    }
+
+    public static void solidEvenWhenCloaked(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 0);
+        jumper.setCloaked(true);
+        Mob zombie = GameTestCompat.spawnZombie(helper, new BlockPos(2, 2, 2));
+        zombie.setNoAi(true);
+        helper.runAfterDelay(2, () -> {
+            for (double offset : new double[]{-JumperGeometry.SEGMENT_OFFSET, 0, JumperGeometry.SEGMENT_OFFSET}) {
+                AABB box = zombie.getBoundingBox().move(jumper.getX() - zombie.getX(), jumper.getY() - zombie.getY(),
+                        jumper.getZ() + offset - zombie.getZ());
+                helper.assertTrue(!helper.getLevel().noCollision(zombie, box), "No resistance at offset " + offset);
+            }
+            for (var part : jumper.segments()) {
+                helper.assertTrue(!jumper.canCollideWith(part), "Jumper collides with its own segment");
+            }
+            helper.succeed();
+        });
+    }
+
+    public static void segmentsFollowRotation(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 2, 12, 90f);
+        helper.runAfterDelay(2, () -> {
+            var parts = jumper.segments();
+            helper.assertTrue(parts.size() == 2, "Expected 2 segments");
+            helper.assertTrue(parts.get(0).getId() == jumper.getId() + 1 && parts.get(1).getId() == jumper.getId() + 2, "Segment ids out of sequence");
+            double bowOffset = parts.get(0).getX() - jumper.getX();
+            double sternOffset = parts.get(1).getX() - jumper.getX();
+            helper.assertTrue(Math.abs(bowOffset + JumperGeometry.SEGMENT_OFFSET) < 0.01, "Bow segment misplaced: " + bowOffset);
+            helper.assertTrue(Math.abs(sternOffset - JumperGeometry.SEGMENT_OFFSET) < 0.01, "Stern segment misplaced: " + sternOffset);
+            helper.assertTrue(jumper.onGround(), "Jumper on the floor should count as landed");
+            helper.assertTrue(!jumper.isPodsOut(), "Pods should be retracted when landed");
+            helper.succeed();
+        });
+    }
+
+    public static void ignoresKnockback(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 5, 12, 0);
+        helper.runAfterDelay(2, () -> {
+            Vec3 start = jumper.position();
+            helper.getLevel().explode(null, jumper.getX() + 2, jumper.getY() + 1, jumper.getZ(), 3.0f, Level.ExplosionInteraction.NONE);
+            jumper.push(2, 1, 2);
+            jumper.setDeltaMovement(jumper.getDeltaMovement().add(3, 0, 3));
+            helper.runAfterDelay(20, () -> {
+                helper.assertTrue(jumper.position().distanceTo(start) < 0.01, "Jumper was moved by " + jumper.position().subtract(start));
+                helper.assertTrue(jumper.hull().integrity() < 1f, "Explosion should still damage the hull");
+                helper.succeed();
+            });
+        });
+    }
+
+    public static void crashesWithoutEnergy(GameTestHelper helper) {
+        PuddleJumperEntity jumper = spawnJumper(helper, 12, 9, 12, 0);
+        helper.runAfterDelay(1, () -> jumper.energy().set(0));
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(jumper.onGround(), "Jumper without energy did not fall");
+            float lost = 1 - jumper.hull().integrity();
+            helper.assertTrue(lost > 0.02f, "No crash damage: " + lost);
+            helper.assertTrue(lost <= ServerConfig.HULL.maxImpactFraction() + 0.001f, "More than the maximum impact damage: " + lost);
+            helper.succeed();
+        });
+    }
+
+    public static void impactDamageCurve(GameTestHelper helper) {
+        float max = ServerConfig.HULL.maxImpactFraction();
+        helper.assertTrue(JumperHull.impactFraction(0.3, 0) == 0, "Brushing an obstacle causes damage");
+        helper.assertTrue(JumperHull.impactFraction(0, 0.7) == 0, "Landing at full sink rate causes damage");
+        helper.assertTrue(JumperHull.impactFraction(0.7, 0) > 0.1f, "Medium impact too harmless");
+        helper.assertTrue(JumperHull.impactFraction(1.0, 0) == max, "Full speed impact is not maximal");
+        helper.assertTrue(JumperHull.impactFraction(5, 5) == max, "Impact damage exceeds the maximum");
+        helper.succeed();
+    }
+
+    // a wall at z = 11 with a 3 x 3 opening (x 11..13, y 4..6); the jumper (2.86 wide, 2.2 high) fits with 0.07 to spare
+    private static final int WALL_Z = 11;
+
+    private static void buildWallWithOpening(GameTestHelper helper) {
+        for (int x = 5; x <= 19; x++) {
+            for (int y = 2; y <= 8; y++) {
+                boolean opening = x >= 11 && x <= 13 && y >= 4 && y <= 6;
+                if (!opening) helper.setBlock(new BlockPos(x, y, WALL_Z), Blocks.STONE);
+            }
+        }
+    }
+
+    /** Flies the jumper towards the wall (+z) without a pilot: 0.5 blocks per tick, slowing down by drag. */
+    private static PuddleJumperEntity launchTowardsWall(GameTestHelper helper, double x) {
+        buildWallWithOpening(helper);
+        PuddleJumperEntity jumper = spawnJumper(helper, x, 4.2, 5, 0);
+        helper.runAfterDelay(1, () -> jumper.core().continueAfterTeleport(new Vec3d(0, 0, 0.5), jumper.getYRot()));
+        return jumper;
+    }
+
+    /** Slightly off the opening (0.33 blocks into the frame): edge guidance slides the ship through. */
+    public static void edgeGuidanceSlipsThroughOpening(GameTestHelper helper) {
+        PuddleJumperEntity jumper = launchTowardsWall(helper, 12.1);
+        double wallZ = helper.absoluteVec(new Vec3(0, 0, WALL_Z + 1)).z;
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(jumper.getZ() > wallZ, "Jumper did not pass the opening, stopped at z " + (jumper.getZ() - wallZ) + " behind the wall");
+            helper.assertTrue(jumper.hull().integrity() == 1f, "Guided pass damaged the hull");
+            helper.succeed();
+        });
+    }
+
+    /** Clearly off the opening (more than the guidance range into the frame): the ship stays in front of the wall. */
+    public static void edgeGuidanceIgnoresWideMiss(GameTestHelper helper) {
+        PuddleJumperEntity jumper = launchTowardsWall(helper, 13.3);
+        double wallZ = helper.absoluteVec(new Vec3(0, 0, WALL_Z)).z;
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(jumper.getZ() < wallZ, "Jumper passed although it missed the opening by a block");
+            helper.succeed();
+        });
+    }
+}

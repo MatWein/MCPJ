@@ -58,7 +58,7 @@ public class ForgePuddleJumperEntity extends PuddleJumperEntity {
     @Override
     public void onAddedToWorld() {
         super.onAddedToWorld();
-        onAddedToLevel();
+        onJoinedLevel();
     }
 
     @Override

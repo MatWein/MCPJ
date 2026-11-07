@@ -90,3 +90,9 @@ tasks.named('processResources', ProcessResources).configure {
 tasks.matching { it.name == 'runGametest' }.configureEach {
     doFirst { delete file('run-gametest/world') }
 }
+
+// code shared with other Minecraft versions or loaders (see shared/ and the README); compiled as part of this module
+sourceSets.main.java {
+    srcDir(rootProject.file('shared/fabric/java'))
+    srcDir(rootProject.file('shared/fabric_1.20.1-1.21.1/java'))
+}

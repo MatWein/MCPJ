@@ -3,6 +3,7 @@ package de.mcpj.core.util;
 import de.mcpj.core.math.BlockPosition;
 
 import java.util.List;
+import java.util.UUID;
 
 /** Persistent key-value data of a ship or block (the platform stores it, e.g. as NBT). */
 public interface SaveData {
@@ -23,4 +24,10 @@ public interface SaveData {
     List<BlockPosition> getPositions(String key);
 
     void putPositions(String key, List<BlockPosition> positions);
+
+    /** The stored id, or null if there is none. */
+    UUID getUuid(String key);
+
+    /** Stores the id; null stores nothing. */
+    void putUuid(String key, UUID id);
 }

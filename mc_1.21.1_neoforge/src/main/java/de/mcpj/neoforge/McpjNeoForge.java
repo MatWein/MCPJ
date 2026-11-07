@@ -1,7 +1,7 @@
 package de.mcpj.neoforge;
 
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
-import de.mcpj.mc.gametest.McpjGameTests;
+import de.mcpj.mc.gametest.McpjGameTestGenerator;
 import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.gametest.GameTestHooks;
 import de.mcpj.mc.platform.McpjPlatform;
@@ -27,6 +27,6 @@ public final class McpjNeoForge {
         NeoForgeObjects.register(modBus);
         modBus.addListener(NeoForgeNetwork::register);
         ServerEvents.register(modBus, NeoForge.EVENT_BUS);
-        modBus.addListener(RegisterGameTestsEvent.class, event -> event.register(McpjGameTests.class));
+        modBus.addListener(RegisterGameTestsEvent.class, event -> event.register(McpjGameTestGenerator.class));
     }
 }

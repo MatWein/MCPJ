@@ -2,7 +2,6 @@ package de.mcpj.mc.client.input;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.mcpj.mc.platform.McpjPlatform;
-import de.mcpj.mc.client.PilotContext;
 import de.mcpj.mc.Mcpj;
 import net.minecraft.client.KeyMapping;
 

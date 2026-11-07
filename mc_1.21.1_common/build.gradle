@@ -30,9 +30,15 @@ tasks.withType(JavaCompile).configureEach {
 }
 tasks.named('compileJava', JavaCompile).configure { options.compilerArgs += ['-Xmaxerrs', '2000'] }
 
-// Minecraft code that compiles unchanged against every supported version (mc_core_common) is part of this module;
+// Minecraft code that compiles unchanged against every supported version (shared/mc_all) is part of this module;
 // the loader modules take it along with the rest of this source set
 sourceSets.main {
-    java.srcDir(rootProject.file('mc_core_common/src/main/java'))
-    resources.srcDir(rootProject.file('mc_core_common/src/main/resources'))
+    java.srcDir(rootProject.file('shared/mc_all/java'))
+    resources.srcDir(rootProject.file('shared/mc_all/resources'))
+}
+
+// code shared with other Minecraft versions or loaders (see shared/ and the README); compiled as part of this module
+sourceSets.main.java {
+    srcDir(rootProject.file('shared/mc_1.20.1-1.21.1/java'))
+    srcDir(rootProject.file('shared/mc_1.21.1-26.3/java'))
 }

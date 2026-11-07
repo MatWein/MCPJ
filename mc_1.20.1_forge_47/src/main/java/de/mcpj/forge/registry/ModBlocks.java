@@ -1,12 +1,8 @@
 package de.mcpj.forge.registry;
 
-import de.mcpj.mc.block.JumperProjectorBlock;
 import de.mcpj.forge.McpjMod;
-import de.mcpj.mc.block.ChargingPadBlock;
+import de.mcpj.mc.registry.McpjObjects;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -14,23 +10,8 @@ import net.minecraftforge.registries.RegistryObject;
 public final class ModBlocks {
     static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, McpjMod.MOD_ID);
 
-    private static final float PAD_HARDNESS = 3.5f;
-    private static final float PAD_BLAST_RESISTANCE = 6.0f;
-
-    public static final RegistryObject<Block> CHARGING_PAD = BLOCKS.register("charging_pad",
-            () -> new ChargingPadBlock(BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.METAL)
-                    .strength(PAD_HARDNESS, PAD_BLAST_RESISTANCE)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.METAL)
-                    .lightLevel(ChargingPadBlock::lightLevel)));
-    public static final RegistryObject<Block> JUMPER_PROJECTOR = BLOCKS.register("jumper_projector",
-            () -> new JumperProjectorBlock(BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.METAL)
-                    .strength(PAD_HARDNESS, PAD_BLAST_RESISTANCE)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.METAL)
-                    .lightLevel(JumperProjectorBlock::lightLevel)));
+    public static final RegistryObject<Block> CHARGING_PAD = BLOCKS.register(McpjObjects.CHARGING_PAD, McpjObjects::chargingPad);
+    public static final RegistryObject<Block> JUMPER_PROJECTOR = BLOCKS.register(McpjObjects.JUMPER_PROJECTOR, McpjObjects::jumperProjector);
 
     private ModBlocks() {}
 }

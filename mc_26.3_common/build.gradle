@@ -29,7 +29,7 @@ tasks.named('compileJava', JavaCompile).configure { options.compilerArgs += ['-X
 // One test instance per entry of McpjGameTests (test("name", maxTicks, ...)): data/mcpj/test_instance/<name>.json.
 // The list in Java is the only place for test names and time limits.
 def testInstances = layout.buildDirectory.dir('generated/testInstances')
-def testList = file('src/main/java/de/mcpj/mc/gametest/McpjGameTests.java')
+def testList = rootProject.file('shared/mc_all/java/de/mcpj/mc/gametest/McpjGameTests.java')
 def generateTestInstances = tasks.register('generateTestInstances') {
     inputs.file(testList)
     outputs.dir(testInstances)
@@ -51,9 +51,14 @@ def generateTestInstances = tasks.register('generateTestInstances') {
 }
 sourceSets.main.resources.srcDir(generateTestInstances)
 
-// Minecraft code that compiles unchanged against every supported version (mc_core_common) is part of this module;
+// Minecraft code that compiles unchanged against every supported version (shared/mc_all) is part of this module;
 // the loader modules take it along with the rest of this source set
 sourceSets.main {
-    java.srcDir(rootProject.file('mc_core_common/src/main/java'))
-    resources.srcDir(rootProject.file('mc_core_common/src/main/resources'))
+    java.srcDir(rootProject.file('shared/mc_all/java'))
+    resources.srcDir(rootProject.file('shared/mc_all/resources'))
+}
+
+// code shared with other Minecraft versions or loaders (see shared/ and the README); compiled as part of this module
+sourceSets.main.java {
+    srcDir(rootProject.file('shared/mc_1.21.1-26.3/java'))
 }

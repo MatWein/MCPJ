@@ -1,5 +1,8 @@
 package de.mcpj.mc.gametest;
 
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
 import de.mcpj.mc.Mcpj;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import de.mcpj.mc.platform.McpjPlatform;
@@ -47,5 +50,10 @@ final class GameTestCompat {
     /** A new lightning bolt, not yet in the world. */
     static LightningBolt lightning(GameTestHelper helper) {
         return EntityType.LIGHTNING_BOLT.create(helper.getLevel());
+    }
+
+    /** Minecraft 1.20.1 has no way to name the exact target spot: each loader's GameTestHooks does it. */
+    static Entity changeDimension(Entity entity, ServerLevel destination, Vec3 position, float yaw) {
+        throw new UnsupportedOperationException("Minecraft 1.20.1: the loader changes dimensions (GameTestHooks)");
     }
 }

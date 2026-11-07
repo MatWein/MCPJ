@@ -4,11 +4,13 @@ import com.mojang.serialization.Codec;
 import de.mcpj.core.math.BlockPosition;
 import de.mcpj.core.util.SaveData;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * The core's save data in Minecraft's save format (positions as packed longs, as in 1.20.1). Minecraft separates
@@ -88,5 +90,16 @@ public final class NbtSaveData implements SaveData {
     @Override
     public void putPositions(String key, List<BlockPosition> positions) {
         out().store(key, PACKED_POSITIONS, positions.stream().map(pos -> Convert.toMc(pos).asLong()).toList());
+    }
+
+    @Nullable
+    @Override
+    public UUID getUuid(String key) {
+        return in().read(key, UUIDUtil.CODEC).orElse(null);
+    }
+
+    @Override
+    public void putUuid(String key, @Nullable UUID id) {
+        out().storeNullable(key, UUIDUtil.CODEC, id);
     }
 }

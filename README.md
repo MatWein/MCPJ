@@ -161,21 +161,22 @@ warning threshold.
 ## Building
 
 The project is split into modules so the game logic does not have to be rewritten for every Minecraft version
-or mod loader:
+or mod loader. Code is written once and placed as widely as it compiles:
 
 | Module | Contents |
 |---|---|
 | `core/` | the game logic in plain Java 17, without any Minecraft or mod loader API; version-independent assets |
-| `mc_1.20.1_common/` | vanilla Minecraft 1.20.1 code shared by both loaders (entities, blocks, rendering, HUD, input, network messages, game tests); compiled into each loader module, never shipped on its own |
-| `mc_1.20.1_forge_47/` | Forge 47: registration, network transport, config, events, part entities, Forge Energy, Just Stargate Mod |
-| `mc_1.20.1_fabric/` | Fabric: registration, network transport, TOML config with server sync, mixins, hull segments, Team Reborn Energy (optional) |
-| `mc_core_common/` | Minecraft code and resources that compile unchanged against every supported version; no build of its own, each `mc_<version>_common` compiles it in |
-| `mc_1.21.1_common/` | vanilla Minecraft 1.21.1 code shared by both loaders, including the vanilla mixins both loaders use (like 26.3) |
-| `mc_1.21.1_neoforge/` | NeoForge: registration, payloads, config, events, part entities, energy capability |
-| `mc_1.21.1_fabric/` | Fabric: registration, payloads, TOML config with server sync, hull segments, explosion and key mixins |
-| `mc_26.3_common/` | vanilla Minecraft 26.3 code shared by both loaders, including vanilla mixins both loaders use (camera, keys, attack, hiding the pilot, cloak) |
-| `mc_26.3_neoforge/` | NeoForge: registration, payloads, config, events, part entities, energy capability |
-| `mc_26.3_fabric/` | Fabric: registration, payloads, TOML config with server sync, hull segments, explosion mixin |
+| `shared/mc_all/` | Minecraft code that compiles unchanged against every supported version: the entities, blocks, item, cargo, rules, HUD, input, camera, sounds, game tests, `McpjObjects` (builds all objects); also shared resources (block states, block and item models) |
+| `shared/<range>/` | code shared by some versions or loaders only: `mc_1.20.1-1.21.1` (old rendering, interpolation, NBT saving, annotation game tests), `mc_1.21.1-26.3` (payload messages, some mixins), `fabric`, `fabric_1.20.1-1.21.1`, `fabric_1.21.1-26.3`, `neoforge` (see `shared/README.md`) |
+| `mc_<version>_common/` | what only that Minecraft version has: the compat classes (see below), its renderer where it differs, mixins, resources (recipes, structure); compiled into each loader module of that version, never shipped on its own |
+| `mc_<version>_<loader>/` | the loader's side: registration, network transport, config, events, energy API, mod metadata, plus the loader's own compat classes |
+
+Version differences live in small compat classes with the same methods in every version, so the shared code can
+call them: `McCompat` / `ClientCompat` / `GameTestCompat` for single calls, and per-version base classes for
+overridden Minecraft methods whose signatures differ (`JumperEntityCompat`, `DroneEntityCompat`,
+`SavedBlockEntity`, `ModEntityBlock`, `ModItem`; on the loader side `SegmentEntityCompat`, `PartEntityCompat`,
+`FabricCompat`, `NeoForgeEnergy`, `NeoForgeClientServices`). Each module lists the `shared/` folders it compiles in
+its `build.gradle`.
 
 Each loader module builds its own jar: `mcpj-<version>+mc<minecraft version>-<loader>.jar` in `<module>/build/libs/`.
 Gradle 9 runs on Java 25 (Gradle finds or downloads it, as well as Java 17 for the 1.20.1 modules and Java 21 for the 1.21.1 modules). Build plugins: ModDevGradle (Forge 1.20.1 via `legacyforge`, NeoForge) and Fabric Loom.
@@ -234,18 +235,19 @@ core/src/main/java/de/mcpj/core/       game logic without Minecraft or a mod loa
   render/                              OBJ mesh, shield bubble, ion plumes, attitude (VertexSink: drawn by the platform)
   math/  util/                         vectors, boxes, units, save data
 core/src/test/                         unit tests of the game logic (no Minecraft)
-mc_1.20.1_common/src/main/java/de/mcpj/mc/
+shared/mc_all/java/de/mcpj/mc/
   entity/  block/  item/               entities and blocks hosting the core logic (loader hooks are abstract)
-  client/                              rendering, HUD, input, camera, sounds
-  network/  rules/  platform/          messages, gameplay rules, McpjPlatform (what a loader provides)
-  gametest/                            the game test cases (registered by each loader)
-mc_core_common/src/main/java/de/mcpj/mc/  the part of the packages above that is identical in all Minecraft versions
-                                       (version differences via McCompat / ClientCompat / GameTestCompat)
-mc_1.21.1_common/ and mc_26.3_common/src/main/java/de/mcpj/mc/
-                                       as mc_1.20.1_common, plus registry/McpjObjects (builds all objects) and mixin/
-mc_1.21.1_neoforge/, mc_1.21.1_fabric/  as their 26.3 counterparts
-mc_26.3_neoforge/src/main/java/de/mcpj/neoforge/  registry, entity (part entities), block (energy), network, config, event, client
-mc_26.3_fabric/src/main/java/de/mcpj/fabric/      registry, entity (segments), block, network, config, client, mixin
+  client/                              HUD, input, camera, sounds, targeting
+  network/  rules/  platform/          gameplay rules, McpjPlatform (what a loader provides)
+  registry/  gametest/                 McpjObjects; the game test cases and their list (McpjGameTests)
+shared/<range>/java/                   the same packages, for some versions or loaders only (see Building)
+mc_<version>_common/src/main/java/de/mcpj/mc/
+  compat/  */...Compat, Saved*, Mod*   the version's compat classes
+  client/render/  mixin/  network/     renderer, mixins and messages where the version needs its own
+mc_1.21.1_neoforge/, mc_26.3_neoforge/src/main/java/de/mcpj/neoforge/
+                                       main class, client setup, energy and client services, compat
+mc_1.21.1_fabric/, mc_26.3_fabric/src/main/java/de/mcpj/fabric/
+                                       client setup, client services, segment compat, FabricCompat
 mc_1.20.1_fabric/src/main/java/de/mcpj/fabric/
   registry/  entity/  block/  network/ config/  compat/  client/  gametest/
   mixin/                               hooks Fabric has no events for (segments, cloak, camera, keys, ...)
@@ -253,7 +255,7 @@ mc_1.20.1_forge_47/src/main/java/de/mcpj/forge/
   registry/  entity/  block/           registration, part entity segments, Forge Energy
   network/  config/  client/           SimpleChannel, Forge config adapter, Forge client events
   event/  compat/                      Forge events (rules, travel, id migration), Just Stargate Mod
-  gametest/                            game test registration (Forge annotations)
+  gametest/                            game test hooks and registration
 tools/                                 texture, logo, test structure and preview scripts
 ```
 
