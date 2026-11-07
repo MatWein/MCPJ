@@ -258,14 +258,6 @@ mc_1.20.1_forge_47/src/main/java/de/mcpj/forge/
 tools/                                 texture, logo, test structure and preview scripts
 ```
 
-### Model
-
-`models/entity/puddle_jumper.obj` and the texture atlas `textures/entity/puddle_jumper.png` are checked in as they
-are; there is no generator for them anymore. The atlas regions used by the Java code (ion plume) are documented
-in `IonPlumeRenderer`. `tools/preview.py` renders preview images of the current model.
-
-The mod logo `core/src/main/resources/mcpj_logo.png` is rendered from the model by `tools/make_logo.py`.
-
 ## License
 
 MIT, see [LICENSE](LICENSE).
