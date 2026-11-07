@@ -1,9 +1,18 @@
-# MCPJ
+# MCPJ - Puddle Jumper
 
-MCPJ adds a flyable Puddle Jumper from *Stargate Atlantis* to Minecraft Forge 1.20.1 (Forge 47.4.16).
+> **Developed entirely by AI.** All code of this mod, its tools and this documentation were written by an AI
+> (Claude by Anthropic); the human side was ideas, playtesting and feedback.
+
+MCPJ adds a flyable Puddle Jumper from *Stargate Atlantis* to Minecraft. It is an unofficial fan mod.
+
+| Minecraft | Loaders |
+|---|---|
+| 1.20.1 | Forge (47.4.16+), Fabric (with Fabric API) |
+| 26.3 | NeoForge, Fabric (with Fabric API) |
+
 It works on its own; other mods such as Just Stargate Mod or Mekanism are optional.
-About 10 blocks long, with cloak, shield, cargo hold, retractable drive pods, homing drones,
-headlights and an energy system that works with any Forge Energy mod.
+About 10 blocks long, with seats for seven players, cloak, shield, cargo hold, retractable drive pods, homing
+drones, headlights and an energy system that works with any Forge Energy mod.
 
 ## Getting started
 
@@ -231,7 +240,7 @@ mc_1.20.1_forge_47/src/main/java/de/mcpj/forge/
   network/  config/  client/           SimpleChannel, Forge config adapter, Forge client events
   event/  compat/                      Forge events (rules, travel, id migration), Just Stargate Mod
   gametest/                            game test registration (Forge annotations)
-tools/                                 texture, test structure and preview scripts
+tools/                                 texture, logo, test structure and preview scripts
 ```
 
 ### Model
@@ -239,3 +248,9 @@ tools/                                 texture, test structure and preview scrip
 `models/entity/puddle_jumper.obj` and the texture atlas `textures/entity/puddle_jumper.png` are checked in as they
 are; there is no generator for them anymore. The atlas regions used by the Java code (ion plume) are documented
 in `IonPlumeRenderer`. `tools/preview.py` renders preview images of the current model.
+
+The mod logo `core/src/main/resources/mcpj_logo.png` is rendered from the model by `tools/make_logo.py`.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

@@ -5,8 +5,13 @@
   "name": "${mod_name}",
   "description": "${mod_description}",
   "authors": ["${mod_authors}"],
-  "license": "All-Rights-Reserved",
-  "icon": "assets/mcpj/textures/item/puddle_jumper.png",
+  "license": "MIT",
+  "icon": "mcpj_logo.png",
+  "contact": {
+    "homepage": "https://github.com/MatWein/MCPJ",
+    "sources": "https://github.com/MatWein/MCPJ",
+    "issues": "https://github.com/MatWein/MCPJ/issues"
+  },
   "environment": "*",
   "accessWidener": "mcpj.classtweaker",
   "entrypoints": {
