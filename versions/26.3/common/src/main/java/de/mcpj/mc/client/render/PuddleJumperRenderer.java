@@ -37,6 +37,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         @Nullable Jumper core;
         float partialTick;
         boolean ownShip;
+        /** First person aboard: the own ship is not drawn at all (others still see it). */
         boolean pilotView;
         boolean cloaked;
         float construction;
@@ -75,14 +76,14 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
 
     @Override
     protected float getShadowRadius(State state) {
-        return state.cloaked || state.construction >= 0 ? 0 : JumperLook.SHADOW_RADIUS;
+        return state.cloaked || state.construction >= 0 || state.pilotView ? 0 : JumperLook.SHADOW_RADIUS;
     }
 
     @Override
     public void submit(State state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
         ObjMesh model = ModelCache.jumper();
         Jumper core = state.core;
-        if (model == null || core == null || state.hidden) return;
+        if (model == null || core == null || state.hidden || state.pilotView) return;
         float partialTick = state.partialTick;
         JumperAnimation animation = core.animation();
         ShipStyle style = style(state.cloaked, state.ownShip, state.construction, state.lightCoords);
@@ -93,7 +94,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
 
         poseStack.pushPose();
         poseStack.scale(JumperGeometry.MODEL_SCALE, JumperGeometry.MODEL_SCALE, JumperGeometry.MODEL_SCALE);
-        if (style.visible && !state.pilotView) renderPart(model, "hull", poseStack, collector, style);
+        if (style.visible) renderPart(model, "hull", poseStack, collector, style);
         renderPods(animation, model, poseStack, collector, style, partialTick, time);
         poseStack.popPose();
 

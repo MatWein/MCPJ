@@ -47,6 +47,11 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
         Jumper core = jumper.core();
         JumperAnimation animation = core.animation();
         boolean ownShip = minecraft.player != null && jumper.hasPassenger(minecraft.player);
+        // first person aboard: the own ship is not drawn at all (others still see it)
+        if (ownShip && minecraft.options.getCameraType().isFirstPerson() && minecraft.getCameraEntity() == minecraft.player) {
+            shadowRadius = 0;
+            return;
+        }
         boolean cloaked = JumperLook.isCloaked(core, partialTick);
         float construction = jumper.constructionProgress();
         ShipStyle style = style(cloaked, ownShip, construction, light);
@@ -58,8 +63,7 @@ public class PuddleJumperRenderer<T extends PuddleJumperEntity> extends EntityRe
 
         poseStack.pushPose();
         poseStack.scale(JumperGeometry.MODEL_SCALE, JumperGeometry.MODEL_SCALE, JumperGeometry.MODEL_SCALE);
-        boolean pilotView = ownShip && minecraft.options.getCameraType().isFirstPerson() && minecraft.getCameraEntity() == minecraft.player;
-        if (style.visible && !pilotView) renderPart(model, "hull", poseStack, buffers, style);
+        if (style.visible) renderPart(model, "hull", poseStack, buffers, style);
         renderPods(animation, model, poseStack, buffers, style, partialTick, time);
         poseStack.popPose();
 

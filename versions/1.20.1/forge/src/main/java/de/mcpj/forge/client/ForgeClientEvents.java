@@ -51,6 +51,12 @@ public final class ForgeClientEvents {
     @SubscribeEvent
     public static void onComputeCamera(ViewportEvent.ComputeCameraAngles event) {
         JumperCamera.onCameraSetup(event.getCamera(), (float) event.getPartialTick());
+        // Forge applies the event's angles after this handler
+        JumperCamera.Angles fixed = JumperCamera.fixedView(event.getCamera(), (float) event.getPartialTick());
+        if (fixed != null) {
+            event.setYaw(fixed.yaw());
+            event.setPitch(fixed.pitch());
+        }
     }
 
     @SubscribeEvent

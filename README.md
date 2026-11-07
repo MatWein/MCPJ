@@ -60,8 +60,9 @@ All jumper keys can be rebound under *Options → Controls → MCPJ*.
 ## Features
 
 **Flight.** The jumper is inert: it accelerates and turns gently and coasts. Without input it brakes and hovers in
-place, even after the pilot leaves it mid-air. Boarding switches to third person, leaving restores the previous view.
-The engine glows and trails ion plumes while airborne and is silent when landed. Edge guidance slides the ship past an edge it
+place, even after the pilot leaves it mid-air. Boarding switches to third person, leaving restores the previous
+view. In first person (`F5`) the own ship is hidden and the view looks straight ahead along the bow. The engine
+glows and trails ion plumes while airborne and is silent when landed. Edge guidance slides the ship past an edge it
 barely touches (up to half a block sideways or up/down, `flight.edgeGuidance` in the server config), e.g. into a
 stargate.
 
