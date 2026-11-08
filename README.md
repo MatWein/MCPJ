@@ -204,7 +204,7 @@ or mod loader. Code is written once and placed as widely as it compiles:
 |---|---|
 | `core/` | the game logic in plain Java 17, without any Minecraft or mod loader API; version-independent assets |
 | `shared/mc/all/` | Minecraft code that compiles unchanged against every supported version: the entities, blocks, item, cargo, rules, HUD, input, camera, sounds, game tests, `McpjObjects` (builds all objects); also shared resources (block states, block and item models) |
-| `shared/<area>/<range>/` | code shared by some versions or loaders only: `mc/1.20.1-1.21.1` (old rendering, interpolation, NBT saving, annotation game tests), `mc/1.21.1-26.3` (payload messages, some mixins), `fabric/all`, `fabric/1.20.1-1.21.1`, `fabric/1.21.1-26.3`, `neoforge/all` (see `shared/README.md`) |
+| `shared/<area>/<range>/` | code shared by some versions or loaders only: `mc/1.20.1-1.21.1` (old rendering, interpolation, NBT saving, annotation game tests), `mc/1.21.1-26.3` (payload messages, some mixins), `fabric/all`, `fabric/1.20.1-1.21.1`, `fabric/1.21.1-26.3`, `neoforge/all` |
 | `versions/<version>/` | one folder per Minecraft version; its `gradle.properties` holds everything that differs between versions (Minecraft, Java, loader and API versions, which `shared/` folders are compiled in) |
 | `versions/<version>/common/` | what only that Minecraft version has: the compat classes (see below), its renderer where it differs, mixins, resources (recipes, structure); compiled into each loader module of that version, never shipped on its own |
 | `versions/<version>/<loader>/` | the loader's side (`forge`, `neoforge`, `fabric`): registration, network transport, config, events, energy API, mod metadata, plus the loader's own compat classes |
@@ -264,43 +264,6 @@ set in `versions/1.20.1/gradle.properties`. None of these mods is required: `-Ps
 
 On Fabric the settings live in `config/mcpj-server.toml` and `config/mcpj-client.toml` (same keys as on Forge); a
 server sends its settings to joining players. The only required dependency is the Fabric API.
-
-## Project layout
-
-```
-core/src/main/java/de/mcpj/core/       game logic without Minecraft or a mod loader (plain Java 17)
-  config/                              all settings (ConfigBuilder: implemented per platform)
-  jumper/                              the ship: flight, energy, hull, shield/cloak/lights, pods, weapons, animation;
-                                       JumperHost/JumperSync are what a platform provides
-  drone/  pad/                         homing drone, charging pad
-  targeting/  hud/                     target cycling, HUD content (lines, warnings, colors)
-  render/                              OBJ mesh, shield bubble, ion plumes, attitude (VertexSink: drawn by the platform)
-  math/  util/                         vectors, boxes, units, save data
-core/src/test/                         unit tests of the game logic (no Minecraft)
-shared/mc/all/java/de/mcpj/mc/
-  entity/  block/  item/               entities and blocks hosting the core logic (loader hooks are abstract)
-  client/                              HUD, input, camera, sounds, targeting
-  network/  rules/  platform/          gameplay rules, McpjPlatform (what a loader provides)
-  registry/  gametest/                 McpjObjects; the game test cases and their list (McpjGameTests)
-shared/<area>/<range>/java/            the same packages, for some versions or loaders only (see Building)
-versions/<version>/common/src/main/java/de/mcpj/mc/
-  compat/  */...Compat, Saved*, Mod*   the version's compat classes
-  client/render/  mixin/  network/     renderer, mixins and messages where the version needs its own
-versions/1.21.1/neoforge/, versions/26.3/neoforge/src/main/java/de/mcpj/neoforge/
-                                       main class, client setup, energy and client services, compat
-versions/1.21.1/fabric/, versions/26.3/fabric/src/main/java/de/mcpj/fabric/
-                                       client setup, client services, segment compat, FabricCompat
-versions/1.20.1/fabric/src/main/java/de/mcpj/fabric/
-  registry/  entity/  block/  network/ config/  compat/  client/  gametest/
-  mixin/                               hooks Fabric has no events for (segments, cloak, camera, keys, ...)
-versions/1.20.1/forge/src/main/java/de/mcpj/forge/
-  registry/  entity/  block/           registration, part entity segments, Forge Energy
-  network/  config/  client/           SimpleChannel, Forge config adapter, Forge client events
-  event/  compat/                      Forge events (rules, travel, id migration), Just Stargate Mod
-  gametest/                            game test hooks and registration
-build-logic/                           Gradle convention plugins of the modules
-tools/                                 texture, logo, test structure and preview scripts
-```
 
 ## License
 
