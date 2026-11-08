@@ -33,11 +33,14 @@ class FakeJumperHost implements JumperHost, JumperSync {
     final List<JumperSound> sounds = new ArrayList<>();
     final Random random = new Random(1);
 
-    boolean cloaked, shielded, lightsOn, podsOut;
+    boolean cloaked, shielded, lightsOn, podsOut, locked;
     int hurtTime, hurtDirection = 1, energy, capacity = 1, energyFlow, arrivals;
     float hurtWobble, hullIntegrity = 1f;
     Vec3d arrivalVelocity = Vec3d.ZERO;
     String navigation = "";
+
+    @Override public boolean locked() { return locked; }
+    @Override public void setLocked(boolean locked) { this.locked = locked; }
 
     /** Advances the world by one server tick in the same order as the platform does. */
     void serverTick(Jumper jumper) {

@@ -59,6 +59,11 @@ final class ForgePlatform implements McpjPlatform {
     }
 
     @Override
+    public Item jumperKeyItem() {
+        return ModItems.JUMPER_KEY.get();
+    }
+
+    @Override
     public BlockEntityType<? extends ChargingPadBlockEntity> chargingPadType() {
         return ModBlockEntities.CHARGING_PAD.get();
     }

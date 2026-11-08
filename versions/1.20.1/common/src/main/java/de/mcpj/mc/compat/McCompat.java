@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -88,6 +89,15 @@ public final class McCompat {
     /** The result of a successful use or interaction (Minecraft 1.20.1/1.21.1 tell client and server apart). */
     public static InteractionResult success(Level level) {
         return InteractionResult.sidedSuccess(level.isClientSide());
+    }
+
+    /** Text stored on the item, empty if there is none. */
+    public static String itemText(ItemStack stack, String key) {
+        return stack.hasTag() ? stack.getTag().getString(key) : "";
+    }
+
+    public static void setItemText(ItemStack stack, String key, String value) {
+        stack.getOrCreateTag().putString(key, value);
     }
 
     /** A message above the hotbar. */

@@ -1,6 +1,5 @@
 package de.mcpj.mc.client.targeting;
 
-import de.mcpj.mc.client.PilotContext;
 import de.mcpj.core.hud.HudColors;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.client.Camera;
@@ -41,17 +40,14 @@ public final class TargetMarkers {
      */
     public static void collect(Matrix4f view, Matrix4f projection, Camera camera, float partialTick) {
         MARKERS.clear();
-        PuddleJumperEntity jumper = PilotContext.pilotedJumper();
-        if (jumper == null) return;
+        List<Entity> entities = MarkedEntities.current();
+        if (entities.isEmpty()) return;
         Minecraft minecraft = Minecraft.getInstance();
         Matrix4f viewProjection = new Matrix4f(projection).mul(view);
         int width = minecraft.getWindow().getGuiScaledWidth();
         int height = minecraft.getWindow().getGuiScaledHeight();
         Vec3 cameraPosition = camera.getPosition();
 
-        List<Entity> entities = new ArrayList<>(TargetSelector.candidates(jumper));
-        Entity selected = TargetSelector.target();
-        if (selected != null && !entities.contains(selected)) entities.add(selected);
         for (Entity entity : entities) {
             Marker marker = project(entity, interpolatedBox(entity, partialTick, cameraPosition), viewProjection, width, height);
             if (marker != null) MARKERS.add(marker);
@@ -88,7 +84,7 @@ public final class TargetMarkers {
     /** HUD: draws the markers collected in this frame. */
     public static void render(GuiGraphics graphics) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.options.hideGui || minecraft.player == null || !PilotContext.isPiloting()) return;
+        if (minecraft.options.hideGui || minecraft.player == null) return;
         for (Marker marker : MARKERS) drawMarker(graphics, minecraft, marker);
     }
 

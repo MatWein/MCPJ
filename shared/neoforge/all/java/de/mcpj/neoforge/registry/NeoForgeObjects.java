@@ -9,12 +9,11 @@ import de.mcpj.neoforge.entity.NeoForgePuddleJumperEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -23,6 +22,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class NeoForgeObjects {
     private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, Mcpj.MOD_ID);
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, Mcpj.MOD_ID);
+    private static final DeferredRegister<CreativeModeTab> CREATIVE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Mcpj.MOD_ID);
     private static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, Mcpj.MOD_ID);
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Mcpj.MOD_ID);
     private static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(Registries.SOUND_EVENT, Mcpj.MOD_ID);
@@ -30,10 +30,18 @@ public final class NeoForgeObjects {
     public static final DeferredHolder<Block, Block> CHARGING_PAD = BLOCKS.register(McpjObjects.CHARGING_PAD, McpjObjects::chargingPad);
     public static final DeferredHolder<Block, Block> JUMPER_PROJECTOR = BLOCKS.register(McpjObjects.JUMPER_PROJECTOR, McpjObjects::jumperProjector);
     public static final DeferredHolder<Item, Item> PUDDLE_JUMPER_ITEM = ITEMS.register(McpjObjects.PUDDLE_JUMPER, McpjObjects::jumperItem);
+    public static final DeferredHolder<Item, Item> JUMPER_KEY_ITEM = ITEMS.register(McpjObjects.JUMPER_KEY, McpjObjects::jumperKeyItem);
     public static final DeferredHolder<Item, Item> CHARGING_PAD_ITEM =
             ITEMS.register(McpjObjects.CHARGING_PAD, () -> McpjObjects.chargingPadItem(CHARGING_PAD.get()));
     public static final DeferredHolder<Item, Item> JUMPER_PROJECTOR_ITEM =
             ITEMS.register(McpjObjects.JUMPER_PROJECTOR, () -> McpjObjects.jumperProjectorItem(JUMPER_PROJECTOR.get()));
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = CREATIVE_TABS.register(McpjObjects.CREATIVE_TAB,
+            () -> McpjObjects.creativeTab(CreativeModeTab.builder(), PUDDLE_JUMPER_ITEM).displayItems((parameters, output) -> {
+                output.accept(PUDDLE_JUMPER_ITEM.get());
+                output.accept(JUMPER_KEY_ITEM.get());
+                output.accept(CHARGING_PAD_ITEM.get());
+                output.accept(JUMPER_PROJECTOR_ITEM.get());
+            }).build());
     public static final DeferredHolder<EntityType<?>, EntityType<NeoForgePuddleJumperEntity>> PUDDLE_JUMPER =
             ENTITY_TYPES.register(McpjObjects.PUDDLE_JUMPER, () -> McpjObjects.jumperType(NeoForgePuddleJumperEntity::new));
     public static final DeferredHolder<EntityType<?>, EntityType<DroneEntity>> DRONE =
@@ -50,17 +58,9 @@ public final class NeoForgeObjects {
     public static void register(IEventBus modBus) {
         BLOCKS.register(modBus);
         ITEMS.register(modBus);
+        CREATIVE_TABS.register(modBus);
         ENTITY_TYPES.register(modBus);
         BLOCK_ENTITY_TYPES.register(modBus);
         SOUND_EVENTS.register(modBus);
-        modBus.addListener(NeoForgeObjects::onBuildContents);
-    }
-
-    private static void onBuildContents(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
-            event.accept(PUDDLE_JUMPER_ITEM.get());
-            event.accept(CHARGING_PAD_ITEM.get());
-            event.accept(JUMPER_PROJECTOR_ITEM.get());
-        }
     }
 }

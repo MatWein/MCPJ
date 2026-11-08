@@ -39,6 +39,11 @@ final class FabricPlatform implements McpjPlatform {
     }
 
     @Override
+    public Item jumperKeyItem() {
+        return FabricObjects.JUMPER_KEY_ITEM;
+    }
+
+    @Override
     public BlockEntityType<JumperProjectorBlockEntity> projectorType() {
         return FabricObjects.JUMPER_PROJECTOR_ENTITY;
     }

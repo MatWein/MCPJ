@@ -61,7 +61,11 @@ public final class McpjGameTests {
             test("hull_segments_never_travel_alone", 100, JumperTravelTestCases::hullSegmentsNeverTravelAlone),
             test("seated_pilot_does_not_travel_alone", 100, JumperTravelTestCases::seatedPilotDoesNotTravelAlone),
             test("teleport_within_dimension_keeps_pilot", 100, JumperTravelTestCases::teleportWithinDimensionKeepsPilot),
-            test("destroyed_segment_destroys_ship", 100, JumperTravelTestCases::destroyedSegmentDestroysShip));
+            test("destroyed_segment_destroys_ship", 100, JumperTravelTestCases::destroyedSegmentDestroysShip),
+            test("key_locks_and_unlocks_the_jumper", 40, JumperLockTestCases::keyLocksAndUnlocksTheJumper),
+            test("carried_key_boards_locked_jumper", 40, JumperLockTestCases::carriedKeyBoardsLockedJumper),
+            test("other_keys_do_not_fit", 40, JumperLockTestCases::otherKeysDoNotFit),
+            test("cargo_does_not_swallow_its_key", 80, JumperLockTestCases::cargoDoesNotSwallowItsKey));
 
     private McpjGameTests() {}
 

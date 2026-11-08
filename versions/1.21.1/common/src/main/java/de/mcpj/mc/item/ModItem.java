@@ -15,10 +15,10 @@ public abstract class ModItem extends Item {
     }
 
     /** The lines below the item name. */
-    protected abstract void addTooltip(Consumer<Component> tooltip);
+    protected abstract void addTooltip(ItemStack stack, Consumer<Component> tooltip);
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        addTooltip(tooltip::add);
+        addTooltip(stack, tooltip::add);
     }
 }

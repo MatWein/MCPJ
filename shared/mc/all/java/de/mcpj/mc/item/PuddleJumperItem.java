@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -42,7 +43,7 @@ public class PuddleJumperItem extends ModItem {
     }
 
     @Override
-    protected void addTooltip(Consumer<Component> tooltip) {
+    protected void addTooltip(ItemStack stack, Consumer<Component> tooltip) {
         tooltip.accept(Component.translatable("item.mcpj.puddle_jumper.desc").withStyle(ChatFormatting.GRAY));
     }
 }

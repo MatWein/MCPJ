@@ -25,6 +25,7 @@ public final class Jumper {
     private final JumperLights lights;
     private final JumperAnimation animation;
     private final JumperNavigation navigation;
+    private final JumperLock lock;
 
     private Vec3d lastServerPosition = Vec3d.ZERO;
     private Vec3d serverVelocity = Vec3d.ZERO;
@@ -42,6 +43,7 @@ public final class Jumper {
         this.lights = new JumperLights(this);
         this.animation = new JumperAnimation(this);
         this.navigation = new JumperNavigation(host.sync());
+        this.lock = new JumperLock(host.sync());
     }
 
     public JumperHost host() {
@@ -86,6 +88,10 @@ public final class Jumper {
 
     public JumperNavigation navigation() {
         return navigation;
+    }
+
+    public JumperLock lock() {
+        return lock;
     }
 
     // ------------------------------------------------------------------ ticking

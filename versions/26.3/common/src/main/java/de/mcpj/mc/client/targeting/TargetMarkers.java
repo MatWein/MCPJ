@@ -1,6 +1,5 @@
 package de.mcpj.mc.client.targeting;
 
-import de.mcpj.mc.client.PilotContext;
 import de.mcpj.core.hud.HudColors;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
 import net.minecraft.client.Minecraft;
@@ -35,8 +34,10 @@ public final class TargetMarkers {
     private TargetMarkers() {}
 
     /** Projects the targets to screen boxes with the camera of the frame just rendered (for {@link #render}). */
-    private static void collect(Minecraft minecraft, PuddleJumperEntity jumper) {
+    private static void collect(Minecraft minecraft) {
         MARKERS.clear();
+        List<Entity> entities = MarkedEntities.current();
+        if (entities.isEmpty()) return;
         CameraRenderState camera = minecraft.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
         if (!camera.initialized) return;
         Matrix4f viewProjection = new Matrix4f(camera.projectionMatrix).mul(camera.viewRotationMatrix);
@@ -44,9 +45,6 @@ public final class TargetMarkers {
         int height = minecraft.getWindow().getGuiScaledHeight();
         float partialTick = camera.cameraEntityPartialTicks;
 
-        List<Entity> entities = new ArrayList<>(TargetSelector.candidates(jumper));
-        Entity selected = TargetSelector.target();
-        if (selected != null && !entities.contains(selected)) entities.add(selected);
         for (Entity entity : entities) {
             Marker marker = project(entity, interpolatedBox(entity, partialTick, camera.pos), viewProjection, width, height);
             if (marker != null) MARKERS.add(marker);
@@ -80,12 +78,11 @@ public final class TargetMarkers {
         return onScreen ? new Marker(entity, minX, minY, maxX, maxY) : null;
     }
 
-    /** HUD: marks the targets around the piloted ship. */
+    /** HUD: marks the targets around the piloted ship and the ships the player has a key to. */
     public static void render(GuiGraphicsExtractor graphics) {
         Minecraft minecraft = Minecraft.getInstance();
-        PuddleJumperEntity jumper = PilotContext.pilotedJumper();
-        if (minecraft.gui.hud.isHidden() || minecraft.player == null || jumper == null) return;
-        collect(minecraft, jumper);
+        if (minecraft.gui.hud.isHidden() || minecraft.player == null) return;
+        collect(minecraft);
         for (Marker marker : MARKERS) drawMarker(graphics, minecraft, marker);
     }
 

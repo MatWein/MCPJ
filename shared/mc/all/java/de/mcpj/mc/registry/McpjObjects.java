@@ -8,18 +8,24 @@ import de.mcpj.mc.block.ChargingPadBlock;
 import de.mcpj.mc.block.ChargingPadBlockEntity;
 import de.mcpj.mc.entity.drone.DroneEntity;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.item.JumperKeyItem;
 import de.mcpj.mc.item.PuddleJumperItem;
 import de.mcpj.mc.compat.McCompat;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.material.MapColor;
+
+import java.util.function.Supplier;
 
 /**
  * Names and construction of MCPJ's blocks, items, entity types, block entity types and sounds. The loaders only
@@ -27,10 +33,12 @@ import net.minecraft.world.level.material.MapColor;
  */
 public final class McpjObjects {
     public static final String PUDDLE_JUMPER = "puddle_jumper";
+    public static final String JUMPER_KEY = "jumper_key";
     public static final String DRONE = "drone";
     public static final String CHARGING_PAD = "charging_pad";
     public static final String JUMPER_PROJECTOR = "jumper_projector";
     public static final String ENGINE = "engine";
+    public static final String CREATIVE_TAB = "mcpj";
 
     private static final float PAD_HARDNESS = 3.5f;
     private static final float PAD_BLAST_RESISTANCE = 6.0f;
@@ -71,6 +79,10 @@ public final class McpjObjects {
         return new PuddleJumperItem(McCompat.itemProperties(PUDDLE_JUMPER).stacksTo(1).rarity(Rarity.EPIC).fireResistant());
     }
 
+    public static Item jumperKeyItem() {
+        return new JumperKeyItem(McCompat.itemProperties(JUMPER_KEY).stacksTo(1).rarity(Rarity.RARE).fireResistant());
+    }
+
     public static Item chargingPadItem(Block pad) {
         return new BlockItem(pad, McCompat.blockItemProperties(CHARGING_PAD).rarity(Rarity.RARE));
     }
@@ -96,6 +108,14 @@ public final class McpjObjects {
     /** The charging pad's block entity type; the loader passes the constructor of its subclass (energy API). */
     public static <T extends ChargingPadBlockEntity> BlockEntityType<T> chargingPadEntity(BlockEntityType.BlockEntitySupplier<T> factory, Block pad) {
         return McCompat.blockEntityType(factory, pad);
+    }
+
+    /**
+     * The mod's own creative tab: title and icon. The loader adds the items itself, since the output type of
+     * displayItems is only accessible there (loaders widen it, plain Minecraft has it protected).
+     */
+    public static CreativeModeTab.Builder creativeTab(CreativeModeTab.Builder builder, Supplier<Item> icon) {
+        return builder.title(Component.translatable("itemGroup.mcpj")).icon(() -> new ItemStack(icon.get()));
     }
 
     public static SoundEvent engineSound() {

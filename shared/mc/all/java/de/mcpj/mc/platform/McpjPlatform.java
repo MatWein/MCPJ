@@ -27,6 +27,8 @@ public interface McpjPlatform {
 
     Item jumperItem();
 
+    Item jumperKeyItem();
+
     BlockEntityType<? extends ChargingPadBlockEntity> chargingPadType();
 
     /** The loader's charging pad block entity (it adds the loader's energy API). */

@@ -21,6 +21,7 @@ public final class HudColors {
     private static final int MARKER_ENEMY_SELECTED = 0xFFFF2A20;
     private static final int MARKER_JUMPER = 0x9960D8FF;
     private static final int MARKER_JUMPER_SELECTED = 0xFF60D8FF;
+    private static final int MARKER_KEYED_JUMPER = 0xFFFFE020;
     private static final int RGB_MASK = 0x00FFFFFF;
     private static final int HALF_ALPHA = 0x80000000;
     private static final int BLINK_HALF_PERIOD = 10;
@@ -32,6 +33,7 @@ public final class HudColors {
         return switch (kind) {
             case ENEMY -> selected ? MARKER_ENEMY_SELECTED : MARKER_ENEMY;
             case JUMPER -> selected ? MARKER_JUMPER_SELECTED : MARKER_JUMPER;
+            case KEYED_JUMPER -> MARKER_KEYED_JUMPER;
             case NEUTRAL -> selected ? MARKER_NEUTRAL_SELECTED : MARKER_NEUTRAL;
         };
     }

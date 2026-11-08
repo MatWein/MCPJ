@@ -10,6 +10,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -93,6 +96,15 @@ public final class McCompat {
     /** The result of a successful use or interaction. */
     public static InteractionResult success(Level level) {
         return InteractionResult.SUCCESS;
+    }
+
+    /** Text stored on the item, empty if there is none. */
+    public static String itemText(ItemStack stack, String key) {
+        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr(key, "");
+    }
+
+    public static void setItemText(ItemStack stack, String key, String value) {
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.putString(key, value));
     }
 
     /** A message above the hotbar. */

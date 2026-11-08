@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "E",
+    "I",
+    "R"
+  ],
+  "key": {
+    "E": "minecraft:emerald",
+    "I": "minecraft:iron_ingot",
+    "R": "minecraft:redstone"
+  },
+  "result": {
+    "id": "mcpj:jumper_key",
+    "count": 1
+  }
+}

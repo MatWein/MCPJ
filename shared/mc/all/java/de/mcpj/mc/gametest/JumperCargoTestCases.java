@@ -26,6 +26,7 @@ public final class JumperCargoTestCases {
         jumper.setCloaked(true);
         jumper.core().navigation().apply(NavigationAction.ADD, JumperNavigation.NONE, "Home", new BlockPosition(1, 70, -2), "minecraft:overworld");
         jumper.core().navigation().apply(NavigationAction.SELECT, 0, "", new BlockPosition(0, 0, 0), "");
+        jumper.core().lock().useKey(null, jumper.getUUID());
         PuddleJumperEntity copy = GameTestCompat.saveAndLoad(helper, jumper);
         helper.assertTrue(copy != null, "Could not create jumper");
         ItemStack first = copy.cargo().getItem(0);
@@ -33,6 +34,8 @@ public final class JumperCargoTestCases {
         helper.assertTrue(first.is(Items.DIAMOND) && first.getCount() == 17, "First slot wrong");
         helper.assertTrue(last.is(Items.ENDER_PEARL) && last.getCount() == 3, "Last slot wrong");
         helper.assertTrue(copy.isCloaked(), "Cloak state not saved");
+        helper.assertTrue(copy.core().lock().locked(), "Lock not saved");
+        helper.assertTrue(copy.getUUID().equals(jumper.getUUID()), "Id not saved, the key would no longer fit");
         Waypoint destination = copy.core().navigation().destination();
         helper.assertTrue(destination != null && destination.name().equals("Home") && destination.y() == 70, "Navigation not saved");
         helper.succeed();

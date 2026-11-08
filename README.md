@@ -27,9 +27,11 @@ drones, headlights and an energy system that works with any Forge Energy mod.
 
 ## Getting started
 
-- Creative inventory, tab **Tools & Utilities**: *Puddle Jumper*, *Jumper Charging Pad* and *Jumper Projector*
+- Creative inventory, own tab **MCPJ**: *Puddle Jumper*, *Puddle Jumper Key*, *Jumper Charging Pad* and
+  *Jumper Projector*
 - Survival: craft the **Jumper Charging Pad** (8 emeralds around a redstone dust) and the **Jumper Projector**
-  (the same with diamonds in the 4 corners); the projector builds jumpers (see below)
+  (the same with diamonds in the 4 corners); the projector builds jumpers (see below). The **Puddle Jumper Key** is an
+  emerald above an iron ingot above a redstone dust
 
 Use the item on the ground and the jumper appears facing your view direction.
 New jumpers start with 20 % energy.
@@ -93,6 +95,14 @@ explosions, hits, mobs and water currents.
 **Seats.** The jumper seats seven players: the pilot in the bow, two seats behind and four in the rear compartment
 (right-click to board). The first one to board pilots; when the pilot leaves, the next passenger moves up and takes
 the controls. Only the pilot steers, fires and sees the HUD.
+
+**Key.** Right-click a jumper with a blank *Puddle Jumper Key* to pair the key with that ship and lock it; every
+further right-click with it unlocks or locks the ship. A locked jumper can only be boarded, and its cargo hold only
+opened, by someone carrying its key anywhere in the inventory (sneaking with the key in hand opens the cargo hold).
+Locking throws out passengers without the key. A paired jumper does not accept a second key. The lock does not protect
+the hull: a jumper whose key is lost can still be destroyed. While you carry a paired key, its jumper is marked with a
+yellow frame on your screen, even when cloaked, as far as your client knows the ship (tracking range, 160 blocks at
+most).
 
 **Passengers** cannot be hurt while seated; the hull takes the hits instead (only `/kill` and the void still apply).
 Mobs that go for the pilot therefore attack the ship: melee mobs hit the hull once they stand next to it, arrows and

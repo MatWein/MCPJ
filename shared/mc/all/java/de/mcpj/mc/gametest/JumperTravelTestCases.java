@@ -14,6 +14,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.UUID;
 
 import static de.mcpj.mc.gametest.GameTestSupport.spawnJumper;
 
@@ -29,6 +30,8 @@ public final class JumperTravelTestCases {
         jumper.hurt(helper.getLevel().damageSources().generic(), 24f);
         float hull = jumper.hull().integrity();
         jumper.core().navigation().apply(NavigationAction.ADD, JumperNavigation.NONE, "Base", new BlockPosition(5, 64, 5), "minecraft:overworld");
+        UUID jumperId = jumper.getUUID();
+        jumper.core().lock().useKey(null, jumperId);
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         Entity arrived = GameTestHooks.get().changeDimension(jumper, nether, NETHER_TARGET, 90f);
         helper.assertTrue(arrived instanceof PuddleJumperEntity, "Jumper did not arrive");
@@ -39,6 +42,8 @@ public final class JumperTravelTestCases {
             helper.assertTrue(moved.hull().integrity() == hull, "Hull not kept: " + moved.hull().integrity());
             helper.assertTrue(moved.cargo().getItem(3).is(Items.DIAMOND), "Cargo not kept");
             helper.assertTrue(moved.core().navigation().waypoints().size() == 1, "Navigation not kept");
+            helper.assertTrue(moved.core().lock().locked(), "Lock not kept");
+            helper.assertTrue(moved.getUUID().equals(jumperId), "Id not kept, the key would no longer fit");
         } finally {
             moved.discard();
         }

@@ -11,6 +11,7 @@ public final class ModItems {
     static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, McpjMod.MOD_ID);
 
     public static final RegistryObject<Item> PUDDLE_JUMPER = ITEMS.register(McpjObjects.PUDDLE_JUMPER, McpjObjects::jumperItem);
+    public static final RegistryObject<Item> JUMPER_KEY = ITEMS.register(McpjObjects.JUMPER_KEY, McpjObjects::jumperKeyItem);
     public static final RegistryObject<Item> CHARGING_PAD = ITEMS.register(McpjObjects.CHARGING_PAD,
             () -> McpjObjects.chargingPadItem(ModBlocks.CHARGING_PAD.get()));
     public static final RegistryObject<Item> JUMPER_PROJECTOR = ITEMS.register(McpjObjects.JUMPER_PROJECTOR,

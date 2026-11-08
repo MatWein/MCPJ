@@ -53,6 +53,11 @@ public interface JumperSync {
 
     void setNavigation(String navigation);
 
+    /** Closed with its key: only someone carrying the key gets in (see JumperLock). */
+    boolean locked();
+
+    void setLocked(boolean locked);
+
     Vec3d arrivalVelocity();
 
     int arrivals();

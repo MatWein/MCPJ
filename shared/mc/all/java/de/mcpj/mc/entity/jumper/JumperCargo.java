@@ -3,6 +3,7 @@ package de.mcpj.mc.entity.jumper;
 import de.mcpj.mc.compat.McCompat;
 import de.mcpj.core.config.CargoConfig;
 import de.mcpj.core.config.ServerConfig;
+import de.mcpj.mc.item.JumperKeyItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundTakeItemEntityPacket;
 import net.minecraft.server.level.ServerLevel;
@@ -36,7 +37,7 @@ public final class JumperCargo extends SimpleContainer {
 
     @Override
     public boolean stillValid(Player player) {
-        return jumper.isAlive() && player.distanceToSqr(jumper) < MAX_USE_DISTANCE * MAX_USE_DISTANCE;
+        return jumper.isAlive() && jumper.mayUse(player) && player.distanceToSqr(jumper) < MAX_USE_DISTANCE * MAX_USE_DISTANCE;
     }
 
     void open(Player player) {
@@ -56,7 +57,7 @@ public final class JumperCargo extends SimpleContainer {
 
     private void pickUpNearbyItems(double range) {
         AABB area = jumper.fullBoundingBox().inflate(range, PICKUP_VERTICAL_RANGE, range);
-        for (ItemEntity item : jumper.level().getEntitiesOfClass(ItemEntity.class, area, i -> i.isAlive() && !i.hasPickUpDelay())) {
+        for (ItemEntity item : jumper.level().getEntitiesOfClass(ItemEntity.class, area, i -> i.isAlive() && !i.hasPickUpDelay() && !isOwnKey(i.getItem()))) {
             ItemStack stack = item.getItem();
             ItemStack rest = addItem(stack.copy());
             int taken = stack.getCount() - rest.getCount();
@@ -65,6 +66,11 @@ public final class JumperCargo extends SimpleContainer {
             if (rest.isEmpty()) item.discard();
             else item.setItem(rest);
         }
+    }
+
+    /** Collected into the hold of the locked ship, its key would be out of reach for good. */
+    private boolean isOwnKey(ItemStack stack) {
+        return jumper.getUUID().equals(JumperKeyItem.pairedJumper(stack));
     }
 
     private void announcePickup(ItemEntity item, int count) {

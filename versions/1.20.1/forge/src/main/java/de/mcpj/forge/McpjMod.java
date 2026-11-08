@@ -7,7 +7,6 @@ import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.forge.compat.StargateCompat;
 import de.mcpj.forge.config.ForgeConfigs;
 import de.mcpj.forge.network.ModNetwork;
-import de.mcpj.forge.registry.ModCreativeTabs;
 import de.mcpj.forge.registry.ModRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -29,7 +28,6 @@ public final class McpjMod {
         context.registerConfig(ModConfig.Type.SERVER, ForgeConfigs.SERVER);
         context.registerConfig(ModConfig.Type.CLIENT, ForgeConfigs.CLIENT);
         modBus.addListener(McpjMod::onCommonSetup);
-        modBus.addListener(ModCreativeTabs::onBuildContents);
         StargateCompat.register();
     }
 

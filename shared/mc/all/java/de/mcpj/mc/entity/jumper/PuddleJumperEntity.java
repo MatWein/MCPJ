@@ -1,5 +1,7 @@
 package de.mcpj.mc.entity.jumper;
 
+import de.mcpj.mc.compat.McCompat;
+import de.mcpj.mc.item.JumperKeyItem;
 import de.mcpj.mc.platform.McpjPlatform;
 import de.mcpj.mc.util.Convert;
 import de.mcpj.mc.util.SyncedDataDefiner;
@@ -13,6 +15,7 @@ import de.mcpj.core.jumper.JumperGeometry;
 import de.mcpj.core.jumper.JumperHost;
 import de.mcpj.core.jumper.JumperHull;
 import de.mcpj.core.jumper.JumperLights;
+import de.mcpj.core.jumper.JumperLock;
 import de.mcpj.core.jumper.JumperMedium;
 import de.mcpj.core.jumper.JumperParticle;
 import de.mcpj.core.jumper.JumperSound;
@@ -38,6 +41,8 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -63,6 +68,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
@@ -92,6 +98,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
     private static final EntityDataAccessor<Float> CONSTRUCTION = define(EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> CONSTRUCTION_HIDDEN = define(EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<String> NAVIGATION = define(EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> LOCKED = define(EntityDataSerializers.BOOLEAN);
 
     private static final byte SHIELD_HIT_EVENT = 60;
     /** Eye height relative to the ship's height (entity type builder, or JumperEntityCompat in Minecraft 1.20.1). */
@@ -144,6 +151,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         entityData.define(CONSTRUCTION, JumperConstruction.DONE);
         entityData.define(CONSTRUCTION_HIDDEN, false);
         entityData.define(NAVIGATION, "");
+        entityData.define(LOCKED, false);
     }
 
     @Override
@@ -286,6 +294,16 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
     @Override
     public void setNavigation(String navigation) {
         entityData.set(NAVIGATION, navigation);
+    }
+
+    @Override
+    public boolean locked() {
+        return entityData.get(LOCKED);
+    }
+
+    @Override
+    public void setLocked(boolean locked) {
+        entityData.set(LOCKED, locked);
     }
 
     @Override
@@ -719,7 +737,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
 
     @Override
     protected boolean canAddPassenger(Entity passenger) {
-        return getPassengers().size() < JumperGeometry.SEAT_COUNT && passenger instanceof Player;
+        return getPassengers().size() < JumperGeometry.SEAT_COUNT && passenger instanceof Player player && mayUse(player);
     }
 
     @Override
@@ -738,10 +756,21 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         return location != null ? location : super.getDismountLocationForPassenger(passenger);
     }
 
-    /** Right-click: board the ship, or open the cargo hold while sneaking. */
+    /** A locked ship only lets in someone carrying its key. */
+    public boolean mayUse(Player player) {
+        return !core.lock().locked() || JumperKeyItem.pairedJumpers(player).contains(getUUID());
+    }
+
+    /** Right-click: use a held key, board the ship, or open the cargo hold while sneaking. */
     @Override
-    protected InteractionResult interactWith(Player player) {
+    public InteractionResult interactWith(Player player, InteractionHand hand) {
         if (construction.isActive()) return InteractionResult.PASS;
+        ItemStack held = player.getItemInHand(hand);
+        if (JumperKeyItem.isKey(held) && !player.isSecondaryUseActive()) return useKey(player, held);
+        if (!mayUse(player)) {
+            if (!level().isClientSide()) McCompat.overlayMessage(player, Component.translatable("message.mcpj.jumper_locked"));
+            return interactionSuccess();
+        }
         if (player.isSecondaryUseActive()) {
             if (!level().isClientSide()) openCustomInventoryScreen(player);
             return interactionSuccess();
@@ -749,6 +778,19 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         if (!canAddPassenger(player)) return InteractionResult.PASS;
         if (level().isClientSide()) return InteractionResult.SUCCESS;
         return player.startRiding(this) ? InteractionResult.CONSUME : InteractionResult.PASS;
+    }
+
+    private InteractionResult useKey(Player player, ItemStack key) {
+        if (level().isClientSide()) return InteractionResult.SUCCESS;
+        JumperLock.KeyResult result = core.lock().useKey(JumperKeyItem.pairedJumper(key), getUUID());
+        if (result == JumperLock.KeyResult.PAIRED) JumperKeyItem.pair(key, getUUID());
+        if (result == JumperLock.KeyResult.PAIRED || result == JumperLock.KeyResult.LOCKED) {
+            List.copyOf(getPassengers()).stream()
+                    .filter(passenger -> passenger instanceof Player seated && !mayUse(seated))
+                    .forEach(Entity::stopRiding);
+        }
+        McCompat.overlayMessage(player, Component.translatable("message.mcpj.key_" + result.name().toLowerCase(Locale.ROOT)));
+        return InteractionResult.CONSUME;
     }
 
     @Override
@@ -849,6 +891,7 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         core.energy().load(data);
         core.lights().load(data);
         core.navigation().load(data);
+        core.lock().load(data);
     }
 
     @Override
@@ -859,5 +902,6 @@ public abstract class PuddleJumperEntity extends JumperEntityCompat implements H
         core.energy().save(data);
         core.lights().save(data);
         core.navigation().save(data);
+        core.lock().save(data);
     }
 }

@@ -45,7 +45,7 @@ public abstract class JumperEntityCompat extends Entity {
 
     protected abstract void defineJumperData(SyncedDataDefiner data);
 
-    protected abstract InteractionResult interactWith(Player player);
+    public abstract InteractionResult interactWith(Player player, InteractionHand hand);
 
     protected abstract boolean hurtJumper(DamageSource source, float amount);
 
@@ -124,7 +124,7 @@ public abstract class JumperEntityCompat extends Entity {
 
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
-        return interactWith(player);
+        return interactWith(player, hand);
     }
 
     @Override

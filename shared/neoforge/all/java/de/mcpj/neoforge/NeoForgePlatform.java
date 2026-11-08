@@ -41,6 +41,11 @@ final class NeoForgePlatform implements McpjPlatform {
     }
 
     @Override
+    public Item jumperKeyItem() {
+        return NeoForgeObjects.JUMPER_KEY_ITEM.get();
+    }
+
+    @Override
     public BlockEntityType<JumperProjectorBlockEntity> projectorType() {
         return NeoForgeObjects.JUMPER_PROJECTOR_ENTITY.get();
     }

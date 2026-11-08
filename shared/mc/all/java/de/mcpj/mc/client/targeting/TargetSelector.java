@@ -6,6 +6,7 @@ import de.mcpj.core.targeting.TargetCycle;
 import de.mcpj.core.targeting.TargetKind;
 import de.mcpj.mc.util.Convert;
 import de.mcpj.mc.entity.jumper.PuddleJumperEntity;
+import de.mcpj.mc.item.JumperKeyItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
@@ -55,7 +56,10 @@ public final class TargetSelector {
 
     public static TargetKind kind(Entity entity) {
         if (entity instanceof Enemy) return TargetKind.ENEMY;
-        if (entity instanceof PuddleJumperEntity) return TargetKind.JUMPER;
+        if (entity instanceof PuddleJumperEntity) {
+            LocalPlayer player = Minecraft.getInstance().player;
+            return player != null && JumperKeyItem.pairedJumpers(player).contains(entity.getUUID()) ? TargetKind.KEYED_JUMPER : TargetKind.JUMPER;
+        }
         return TargetKind.NEUTRAL;
     }
 
